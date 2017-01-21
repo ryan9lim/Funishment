@@ -5,35 +5,46 @@ import ReactDOM from 'react-dom';
 class Main extends React.Component{
   constructor(props) {
     super(props);
+    this.clickButton = this.clickButton.bind(this);
+    this.callMeBack = this.callMeBack.bind(this);
     this.pubnubDemo = new PubNub({
       publishKey: 'pub-c-89d8d3f5-9d58-4c24-94e7-1c89f243296a',
       subscribeKey: 'sub-c-99748e0e-df8d-11e6-989b-02ee2ddab7fe'
     });
     this.state = {
-      uuid: Math.floor(Math.random * 256);
+      uuid: Math.floor(Math.random() * 256)
+    }
+  }
+  callMeBack(status, response) {
+    if (status.error) {
+      console.log(status);
+    } else {
+      console.log("message Published w/ timetoken", response.timetoken, this.state.uuid.toString() );
     }
   }
   componentWillMount(){
-    pubnub.publish(
-      {
-        message: {
-          user: this.state.uuid.toString()
-        },
-        channel: 'testChannel'
+    this.pubnubDemo.publish(
+    {
+      message: {
+        user: this.state.uuid.toString()
       },
-      function (status, response) {
-        if (status.error) {
-          console.log(status);
-        } else {
-          console.log("message Published w/ timetoken", response.timetoken);
-        }
+      channel: 'testChannel'
+    },
+      this.callMeBack
+    );
+    this.pubnubDemo.addListener({
+      message: function(message){
+        console.log(message);
       }
-    this.clickButton = this.clickButton.bind(this);
+    })
+    this.pubnubDemo.subscribe({
+      channels: ['testChannel']
+    })
   }
   clickButton() {
-    var random = Math.floor(Math.random * 2);
+    var random = Math.floor(Math.random() * 2);
     if (random == 0) {
-      pubnub.publish(
+      this.pubnubDemo.publish(
       {
         message: {
           buttonPressed: 'true',
@@ -51,7 +62,7 @@ class Main extends React.Component{
       );
         // Post to friend's Twitter
       } else {
-        pubnub.publish(
+        this.pubnubDemo.publish(
         {
           message: {
             buttonPressed: 'true',
@@ -73,7 +84,7 @@ class Main extends React.Component{
     render() {
       return (
         <button type="button"
-        onclick={this.clickButton}
+        onClick={this.clickButton}
         className='btn btn-lg btn-default'>
         Click on button
         </button>
