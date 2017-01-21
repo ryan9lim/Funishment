@@ -7,41 +7,41 @@
 </head>
 
 <body>
-  <div id="reactEntry"></div>
+ <div id="reactEntry">
+ </div>
 
-  <!-- Include the PubNub Library -->
-  <script src="https://cdn.pubnub.com/sdk/javascript/pubnub.4.3.3.js"></script>
+ <!-- Include the PubNub Library -->
+ <script src="https://cdn.pubnub.com/sdk/javascript/pubnub.4.3.3.js"></script>
+ <!-- Instantiate PubNub -->
+ <script type="text/javascript">
 
-  <!-- Instantiate PubNub -->
-  <script type="text/javascript">
+  var pubnubDemo = new PubNub({
+    publishKey: 'pub-c-89d8d3f5-9d58-4c24-94e7-1c89f243296a',
+    subscribeKey: 'sub-c-99748e0e-df8d-11e6-989b-02ee2ddab7fe'
+  });
 
-    var pubnubDemo = new PubNub({
-        publishKey: 'pub-c-89d8d3f5-9d58-4c24-94e7-1c89f243296a',
-        subscribeKey: 'sub-c-99748e0e-df8d-11e6-989b-02ee2ddab7fe'
-    });
-    
-    function buttonPressed(){
-      pubnub.publish(
+  function buttonPressed(){
+    pubnub.publish(
     {
-        message: {
-          buttonPressed: 'true'
-        },
-        channel: 'testChannel'
+      message: {
+        buttonPressed: 'true'
+      },
+      channel: 'testChannel'
     },
     function (status, response) {
-        if (status.error) {
-            console.log(status);
-        } else {
-            console.log("message Published w/ timetoken", response.timetoken);
-        }
+      if (status.error) {
+        console.log(status);
+      } else {
+        console.log("message Published w/ timetoken", response.timetoken);
+      }
     }
-);
+    );
 
-    }
-  </script>
-  <!-- Attach React components -->
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-  <script src='js/bootstrap.min.js'></script>  
-  <script type="text/javascript" src='static/bundle.js'></script>
+  }
+</script>
+<!-- Attach React components -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src='js/bootstrap.min.js'></script>  
+<script type="text/javascript" src='static/bundle.js'></script>
 </body>
 </html>

@@ -28,5 +28,9 @@ class SampleChild extends React.Component{
   }
 }
 
+function clickButton() {
+
+}
+
 export default Hello;
 
