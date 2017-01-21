@@ -19888,7 +19888,8 @@
 	    _this.state = {
 	      score: 0,
 	      countdown: 3,
-	      isSelected: false
+	      isSelected: false,
+	      totalReady: 0
 	    };
 	    return _this;
 	  }
@@ -19920,6 +19921,27 @@
 	          score: response.message.newCount
 	        });
 	      }
+	      if (response.message.readyCount != null) {
+	        console.log("total ready: ", response.message.readyCount);
+	        this.setState({
+	          totalReady: response.message.readyCount
+	        });
+	      }
+	      var component = this;
+	      this.pubnubDemo.hereNow({
+	        channels: ["testChannel"],
+	        includeUUIDs: true,
+	        includeState: true
+	      }, function (status, response) {
+	        console.log("hello", response);
+	        if (component.state.totalReady == response.totalOccupancy) {
+	          console.log("hihireadytogo");
+	          component.startCountdown();
+	        } else {
+	          console.log("Not ready yet, occupancy is ", response.totalOccupancy);
+	        }
+	      });
+
 	      console.log(response.message);
 	    }
 	    /*
@@ -19985,7 +20007,8 @@
 	    value: function gameStart() {
 	      this.pubnubDemo.publish({
 	        message: {
-	          buttonPressed: 'true'
+	          buttonPressed: 'true',
+	          readyCount: this.state.totalReady + 1
 	        },
 	        channel: 'testChannel'
 	      }, function (status, response) {
@@ -19997,7 +20020,7 @@
 	      });
 
 	      // TODO: Do the following only if all users are in
-	      this.startCountdown();
+	      //this.startCountdown();
 	    }
 	  }, {
 	    key: 'startCountdown',

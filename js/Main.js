@@ -18,13 +18,14 @@ class Main extends React.Component{
     this.state = {
       score: 0,
       countdown: 3,
-      isSelected: false
+      isSelected: false,
+      totalReady: 0
     }
   }
   /*
    * Callback of element initialization
    */
-  componentWillMount(){
+   componentWillMount(){
     this.pubnubDemo.addListener({
       message: this.updateMessageOnListener,
       presence: function(presenceEvent){
@@ -43,12 +44,36 @@ class Main extends React.Component{
         score: response.message.newCount
       });
     }
+    if (response.message.readyCount != null) {
+      console.log("total ready: ", response.message.readyCount);
+      this.setState({
+        totalReady: response.message.readyCount
+      })
+    }
+    var component = this;
+    this.pubnubDemo.hereNow(
+    {
+      channels: ["testChannel"],
+      includeUUIDs: true,
+      includeState: true
+    },
+    function (status, response) {
+      console.log("hello", response);
+      if(component.state.totalReady == response.totalOccupancy){
+        console.log("hihireadytogo");
+        component.startCountdown();
+      }
+      else{
+        console.log("Not ready yet, occupancy is ", response.totalOccupancy);
+      }
+    });
+
     console.log(response.message);
   }
   /*
    * Main button of game clicked
    */
-  clickButton() {
+   clickButton() {
     var random = Math.floor(Math.random() * 2);
 
     // Win
@@ -102,11 +127,12 @@ class Main extends React.Component{
     /*
      * Send start message to the channel
      */
-    gameStart() {
+     gameStart() {
       this.pubnubDemo.publish(
       {
         message: {
           buttonPressed: 'true',
+          readyCount: this.state.totalReady + 1
         },
         channel: 'testChannel'
       },
@@ -120,7 +146,7 @@ class Main extends React.Component{
       );
 
       // TODO: Do the following only if all users are in
-      this.startCountdown();
+      //this.startCountdown();
     }
     startCountdown() {
       if (this.state.countdown <= 0) {
@@ -143,18 +169,18 @@ class Main extends React.Component{
 
       return (
         <div>
-          <button type="button"
-          onClick={this.gameStart}
-          className='btn btn-lg btn-default'>
-          Start
-          </button>
-          <button type="button"
-          onClick={this.clickButton}
-          className='btn btn-lg btn-default'>
-          Click on button
-          </button>
-          <h1> COUNTDOWN: {this.state.countdown} </h1>
-          <h1> Current Score: {this.state.score} </h1>
+        <button type="button"
+        onClick={this.gameStart}
+        className='btn btn-lg btn-default'>
+        Start
+        </button>
+        <button type="button"
+        onClick={this.clickButton}
+        className='btn btn-lg btn-default'>
+        Click on button
+        </button>
+        <h1> COUNTDOWN: {this.state.countdown} </h1>
+        <h1> Current Score: {this.state.score} </h1>
         </div>
         )
       }
