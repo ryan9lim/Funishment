@@ -5,7 +5,6 @@ import ClassNames from 'classnames';
 class Main extends React.Component{
   constructor(props) {
     super(props);
-    this.clickButton = this.clickButton.bind(this);
     this.getReady = this.getReady.bind(this);
     this.startCountdown = this.startCountdown.bind(this);
     this.gameStart = this.gameStart.bind(this);
@@ -19,15 +18,11 @@ class Main extends React.Component{
     });
     this.state = {
       isHost: false,
-      score: 0,
       gameStarted: false,
       countdown: 3,
       isSelected: false,
       isReady: false,
-      totalReady: 0,
-      highTime: 0,
-      clicked: false,
-      cleared: false
+      usersReady: []
     }
 
     this.channelName = 'testChannel21'
@@ -59,6 +54,22 @@ class Main extends React.Component{
     if (presenceEvent.action == "leave" || presenceEvent.action == "timeout"){
       console.log(presenceEvent.uuid + " has left.")
       console.log("Occupancy is now at ",presenceEvent.occupancy);
+      if (this.state.isHost) {
+          if ((index = tempArray.indexOf(presenceEvent.uuid)) > -1){
+            tempArray.splice(index,1)
+          }
+          this.setState({
+            usersReady: tempArray
+          })
+
+          this.pubnubDemo.setState({
+            state: {
+              usersReady: tempArray
+            },
+            uuid: this.pubnubDemo.getUUID(),
+            channels: [this.channelName]
+          })
+      }
     }
     if ((presenceEvent.action == "leave" || presenceEvent.action == "timeout") && presenceEvent.state.host == true){
       console.log(presenceEvent.uuid + " is no longer Host.")
@@ -70,13 +81,19 @@ class Main extends React.Component{
       function(status,response){
         if(response.channels[this.channelName].occupants[0].uuid == this.pubnubDemo.getUUID()) {
           console.log("You, "+ presenceEvent.uuid + ", are Host.")
+          var tempArray = presenceEvent.state.usersReady
+          if ((index = tempArray.indexOf(presenceEvent.uuid)) > -1){
+            tempArray.splice(index,1)
+          }
           this.setState({
-            isHost: true
+            isHost: true,
+            usersReady: tempArray
           })
 
           this.pubnubDemo.setState({
             state: {
-              "host": true
+              "host": true,
+              usersReady: tempArray
             },
             uuid: this.pubnubDemo.getUUID(),
             channels: [this.channelName]
@@ -112,51 +129,52 @@ class Main extends React.Component{
 
   updateMessageOnListener(response) {
     // GAME IS STARTING
-    if(response.message.game == "start"){
+    if(response.message.game == "start_countdown"){
       if(this.state.isReady){
-        console.log("Total people playing: ", this.state.totalReady);
+        console.log("People playing: ", response.message.usersPlaying);
         this.startCountdown();
       }
     }
 
-    if (response.message.readyCount != null) {
+    if(this.state.isHost && response.message.ready != null){
+      var tempArray = this.state.usersReady
+      tempArray.append(response.message.ready);
       this.setState({
-        totalReady: response.message.readyCount
-      })
-      console.log("total ready: ", response.message.readyCount);
-    }
-    console.log(response.message);
-  }
-  
-    /*
-     * Send start message to the channel
-     */
-     getReady() {
-      // TODO fix only host
-      if(!this.state.isReady){
-        this.pubnubDemo.publish(
-        {
-          message: {
-            buttonPressed: 'true',
-            readyCount: this.state.totalReady + 1
-          },
-          channel: this.channelName
+        usersReady: tempArray
+      });
+      this.pubnubDemo.setState({
+        state: {
+          usersReady: tempArray
         },
-        function (status, response) {
-          if (status.error) {
-            console.log(status);
-          } else {
-            console.log("message Published w/ timetoken", response.timetoken);
-          }
+        uuid: this.pubnubDemo.getUUID(),
+        channels: [this.channelName]
+      })
+    }
+  }
+   getReady() {
+    if(!this.state.isReady){
+      this.pubnubDemo.publish(
+      {
+        message: {
+          ready: this.pubnubDemo.getUUID()
+        },
+        channel: this.channelName
+      },
+      function (status, response) {
+        if (status.error) {
+          console.log(status);
+        } else {
+          console.log("message Published w/ timetoken", response.timetoken);
         }
-        );
-        this.setState({
-          isReady: true
-        });
       }
+      );
+      this.setState({
+        isReady: true
+      });
+    }
 
-      // TODO: Do the following only if all users are in
-      //this.startCountdown();
+    // TODO: Do the following only if all users are in
+    //this.startCountdown();
     }
     gameStart() {
       if(!this.state.isHost)
@@ -164,7 +182,8 @@ class Main extends React.Component{
       this.pubnubDemo.publish(
       {
         message: {
-          game: 'start'
+          game: 'start_countdown',
+          usersPlaying: this.state.usersReady
         },
         channel: this.channelName
       },
