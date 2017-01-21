@@ -43,7 +43,7 @@ class Main extends React.Component{
     if (response.message.newCount != null) {
       console.log("response is", response);
       console.log("found a new count and it is", response.message.newCount);
-      if(response.message.uuid != this.state.uuid) {
+      if(response.message.uuid != this.pubnubDemo.getUUID()) {
         console.log("opponent clicked");
         if (Math.abs(response.timetoken - this.state.highTime) < 50000000) {
           this.pubnubDemo.publish(
@@ -113,7 +113,7 @@ class Main extends React.Component{
           buttonPressed: 'true',
           targetUser: 'friend',
           newCount: this.state.score + 1,
-          uuid: this.state.uuid
+          uuid: this.pubnubDemo.getUUID()
         },
         channel: 'testChannel'
       },
