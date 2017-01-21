@@ -1,4 +1,7 @@
+<!DOCTYPE html>
+<html>
 <head>
+  <title>Funishment</title>
 </head>
 
 <body>
@@ -14,8 +17,27 @@
         publishKey: 'pub-c-89d8d3f5-9d58-4c24-94e7-1c89f243296a',
         subscribeKey: 'sub-c-99748e0e-df8d-11e6-989b-02ee2ddab7fe'
     });
+    
+    function buttonPressed(){
+      pubnub.publish(
+    {
+        message: {
+          buttonPressed: 'true'
+        },
+        channel: 'testChannel'
+    },
+    function (status, response) {
+        if (status.error) {
+            console.log(status);
+        } else {
+            console.log("message Published w/ timetoken", response.timetoken);
+        }
+    }
+);
 
+    }
   </script>
   <!-- Attach React components -->
   <script type="text/javascript" src='static/bundle.js'></script>
 </body>
+</html>
