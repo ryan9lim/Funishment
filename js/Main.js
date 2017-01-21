@@ -21,7 +21,8 @@ class Main extends React.Component{
       isSelected: false,
       totalReady: 0,
       highTime: 0,
-      clicked: false
+      clicked: false,
+      cleared: false
     }
   }
   /*
@@ -57,10 +58,13 @@ class Main extends React.Component{
             },
             channel: 'testChannel'
           });
-          this.setState({
-            score: 0,
-            highTime: response.timetoken
-          });
+          if (!this.state.cleared) {
+            this.setState({
+              cleared: true,
+              score: 0,
+              highTime: response.timetoken
+            });
+          }
         } else {
           this.setState({
             score: response.message.newCount,
