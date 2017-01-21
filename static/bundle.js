@@ -57,7 +57,7 @@
 
 	var _Hello2 = _interopRequireDefault(_Hello);
 
-	var _Main = __webpack_require__(161);
+	var _Main = __webpack_require__(160);
 
 	var _Main2 = _interopRequireDefault(_Main);
 
@@ -65,7 +65,7 @@
 
 	var _react2 = _interopRequireDefault(_react);
 
-	var _reactDom = __webpack_require__(160);
+	var _reactDom = __webpack_require__(161);
 
 	var _reactDom2 = _interopRequireDefault(_reactDom);
 
@@ -153,6 +153,8 @@
 
 	  return SampleChild;
 	}(_react2.default.Component);
+
+	function clickButton() {}
 
 	exports.default = Hello;
 
@@ -19847,15 +19849,6 @@
 
 	'use strict';
 
-	module.exports = __webpack_require__(5);
-
-
-/***/ },
-/* 161 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 	var _Hello = __webpack_require__(2);
@@ -19866,7 +19859,7 @@
 
 	var _react2 = _interopRequireDefault(_react);
 
-	var _reactDom = __webpack_require__(160);
+	var _reactDom = __webpack_require__(161);
 
 	var _reactDom2 = _interopRequireDefault(_reactDom);
 
@@ -19884,15 +19877,29 @@
 	  function Main(props) {
 	    _classCallCheck(this, Main);
 
-	    return _possibleConstructorReturn(this, (Main.__proto__ || Object.getPrototypeOf(Main)).call(this, props));
+	    var _this = _possibleConstructorReturn(this, (Main.__proto__ || Object.getPrototypeOf(Main)).call(this, props));
+
+	    _this.clickButton = _this.clickButton.bind(_this);
+	    return _this;
 	  }
 
 	  _createClass(Main, [{
+	    key: 'clickButton',
+	    value: function clickButton() {
+	      var random = Math.floor(Math.random * 2);
+	      if (random == 0) {
+	        // Post to friend's Twitter
+	      } else {
+	          // Friend posts to your Twitter
+	        }
+	    }
+	  }, {
 	    key: 'render',
 	    value: function render() {
 	      return _react2.default.createElement(
 	        'button',
 	        { type: 'button',
+	          onclick: this.clickButton,
 	          className: 'btn btn-lg btn-default' },
 	        'Click on button'
 	      );
@@ -19903,6 +19910,15 @@
 	}(_react2.default.Component);
 
 	module.exports = Main;
+
+/***/ },
+/* 161 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	module.exports = __webpack_require__(5);
+
 
 /***/ }
 /******/ ]);
