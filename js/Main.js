@@ -88,10 +88,10 @@ class Main extends React.Component{
     }
 
     if (response.message.readyCount != null) {
-      console.log("total ready: ", response.message.readyCount);
       this.setState({
         totalReady: response.message.readyCount
       })
+      console.log("total ready: ", response.message.readyCount);
     }
     // var component = this;
     // this.pubnubDemo.hereNow(
