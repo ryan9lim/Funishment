@@ -1,4 +1,3 @@
-import Hello from './Hello';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import ClassNames from 'classnames';
@@ -7,8 +6,9 @@ class Main extends React.Component{
   constructor(props) {
     super(props);
     this.clickButton = this.clickButton.bind(this);
-    this.gameStart = this.gameStart.bind(this);
+    this.getReady = this.getReady.bind(this);
     this.startCountdown = this.startCountdown.bind(this);
+    this.gameStart = this.gameStart.bind(this);
     this.updateMessageOnListener = this.updateMessageOnListener.bind(this);
     this.pubnubDemo = new PubNub({
       publishKey: 'pub-c-89d8d3f5-9d58-4c24-94e7-1c89f243296a',
@@ -20,8 +20,14 @@ class Main extends React.Component{
     this.state = {
       isHost: false,
       score: 0,
+      gameStarted: false,
       countdown: 3,
-      isSelected: false
+      isSelected: false,
+      isReady: false,
+      totalReady: 0,
+      highTime: 0,
+      clicked: false,
+      cleared: false
     }
 
     this.channelName = 'testChannel21'
@@ -50,8 +56,10 @@ class Main extends React.Component{
     }
 
     //if host leaves, someone else takes over
-    if (presenceEvent.action == "leave" || presenceEvent.action == "timeout") 
+    if (presenceEvent.action == "leave" || presenceEvent.action == "timeout"){
       console.log(presenceEvent.uuid + " has left.")
+      console.log("Occupancy is now at ",presenceEvent.occupancy);
+    }
     if ((presenceEvent.action == "leave" || presenceEvent.action == "timeout") && presenceEvent.state.host == true){
       console.log(presenceEvent.uuid + " is no longer Host.")
       this.pubnubDemo.hereNow({
@@ -83,7 +91,6 @@ class Main extends React.Component{
    * Callback of element initialization
    */
    componentWillMount(){
-
     this.pubnubDemo.setState({
         state: {
           "host": false
@@ -104,52 +111,36 @@ class Main extends React.Component{
   }
 
   updateMessageOnListener(response) {
-    if (response.message.newCount != null) {
-      console.log("found a new count and it is", response.message.newCount);
+    // GAME IS STARTING
+    if(response.message.game == "start"){
+      if(this.state.isReady){
+        console.log("Total people playing: ", this.state.totalReady);
+        this.startCountdown();
+      }
+    }
+
+    if (response.message.readyCount != null) {
       this.setState({
-        score: response.message.newCount
-      });
+        totalReady: response.message.readyCount
+      })
+      console.log("total ready: ", response.message.readyCount);
     }
     console.log(response.message);
   }
-  /*
-   * Main button of game clicked
-   */
-   clickButton() {
-    var random = Math.floor(Math.random() * 2);
-
-    // Win
-    // if (random == 0) {
-      this.pubnubDemo.publish(
-      {
-        message: {
-          buttonPressed: 'true',
-          targetUser: 'friend',
-          newCount: this.state.score + 1
-        },
-        channel: 'testChannel'
-      },
-      function (status, response) {
-        if (status.error) {
-          console.log(status);
-        } else {
-          console.log("message Published w/ timetoken", response.timetoken);
-        }
-      }
-      );
-      this.setState({
-        score: this.state.score + 1
-      })
-        // Post to friend's Twitter
-      /* } else {
-        // Lose
+  
+    /*
+     * Send start message to the channel
+     */
+     getReady() {
+      // TODO fix only host
+      if(!this.state.isReady){
         this.pubnubDemo.publish(
         {
           message: {
             buttonPressed: 'true',
-            targetUser: 'me'
+            readyCount: this.state.totalReady + 1
           },
-          channel: 'testChannel'
+          channel: this.channelName
         },
         function (status, response) {
           if (status.error) {
@@ -159,23 +150,23 @@ class Main extends React.Component{
           }
         }
         );
-        // Friend posts to your Twitter
-      }*/
+        this.setState({
+          isReady: true
+        });
+      }
 
-      this.setState({
-        isSelected: this.state.isSelected ? false : true
-      });
+      // TODO: Do the following only if all users are in
+      //this.startCountdown();
     }
-    /*
-     * Send start message to the channel
-     */
-     gameStart() {
+    gameStart() {
+      if(!this.state.isHost)
+        return
       this.pubnubDemo.publish(
       {
         message: {
-          buttonPressed: 'true',
+          game: 'start'
         },
-        channel: 'testChannel'
+        channel: this.channelName
       },
       function (status, response) {
         if (status.error) {
@@ -185,13 +176,13 @@ class Main extends React.Component{
         }
       }
       );
-
-      // TODO: Do the following only if all users are in
-      this.startCountdown();
     }
     startCountdown() {
       if (this.state.countdown <= 0) {
-        return;
+        console.log("GAME IS STARTING");
+        this.setState({
+          gameStarted: true
+        })
       } else {
         this.setState({
           countdown: this.state.countdown - 1
@@ -209,19 +200,20 @@ class Main extends React.Component{
       });
 
       return (
-        <div>
-        <button type="button"
-        onClick={this.gameStart}
-        className='btn btn-lg btn-default'>
-        Start
-        </button>
-        <button type="button"
-        onClick={this.clickButton}
-        className='btn btn-lg btn-default'>
-        Click on button
-        </button>
-        <h1> COUNTDOWN: {this.state.countdown} </h1>
-        <h1> Current Score: {this.state.score} </h1>
+        <div className='Index'>
+          <button type="button"
+          onClick={this.getReady}
+          className='btn btn-lg btn-default'>
+          Ready
+          </button>
+          <button type="button"
+          onClick={this.gameStart}
+          className='btn btn-lg btn-default'>
+          Start game
+          </button>
+          <h1> {this.state.isReady ? "READY" : "NOT READY YET"} </h1>
+          <h1> COUNTDOWN: {this.state.countdown} </h1>
+          <Game />
         </div>
         )
       }

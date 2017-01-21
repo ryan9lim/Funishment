@@ -21,6 +21,8 @@
     "bootstrap": "^3.3.7",
     "classnames": "^2.2.5",
     "react": "^0.14.7",
-    "react-dom": "^0.14.7"
+    "react-dom": "^0.14.7",
+    "store2": "^2.5.0",
+    "webpack-dev-server": "^1.16.2"
   }
 }

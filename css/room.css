@@ -1,0 +1,31 @@
+.Room .container{
+  margin-top: 150px;
+  text-align: center;
+}
+
+.Room p{
+  font-size: 63px;
+  text-align: center;
+}
+
+.Room button {
+  display: inline-block;
+  margin-left: 5px;
+}
+
+.Room .form-control {
+  display: inline-block;
+  width: 450px;
+}
+
+.Room .ChannelList {
+  margin-top: 20px;
+}
+
+.Room .ChannelList .btn {
+  margin: 5px;
+  width: 300px;
+  height: 100px;
+  text-align: center;
+  font-size: 14px;
+}
