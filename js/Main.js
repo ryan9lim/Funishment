@@ -212,7 +212,7 @@ class Main extends React.Component{
           Start game
           </button>
           <h1> {this.state.isReady ? "READY" : "NOT READY YET"} </h1>
-          <h1 style={{display: (this.state.gameStarted ? "block" : "none")}}> COUNTDOWN: {this.state.countdown} </h1>
+          <h1 style={{display: (this.state.gameStarted ? "none" : "block")}}> COUNTDOWN: {this.state.countdown} </h1>
           <Game gameStarted={this.state.gameStarted}/>
         </div>
         )
