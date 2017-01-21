@@ -18,15 +18,16 @@ class Main extends React.Component{
       heartbeatInterval: 5
     });
     this.state = {
-      isHost: false,
+      host: false,
       gameStarted: false,
       countdown: 3,
       isSelected: false,
       isReady: false,
-      usersReady: []
+      usersReady: [],
+      usersPlaying: null
     }
 
-    this.channelName = 'testChannel21'
+    this.channelName = 'testChannel1'
   }
 
 
@@ -39,7 +40,7 @@ class Main extends React.Component{
 
       console.log("You, " + presenceEvent.uuid + ", are Host.")
       this.setState({
-        isHost: true,
+        host: true,
         usersReady: []
       })
 
@@ -57,17 +58,22 @@ class Main extends React.Component{
     if (presenceEvent.action == "leave" || presenceEvent.action == "timeout"){
       console.log(presenceEvent.uuid + " has left.")
       console.log("Occupancy is now at ",presenceEvent.occupancy);
-      if (this.state.isHost) {
-          var index = tempArray.indexOf(presenceEvent.uuid) 
+      console.log(presenceEvent)
+      if (this.state.host) {
+        var tempArray = this.state.usersReady
+        var index = tempArray.indexOf(presenceEvent.uuid)
         if ( index > -1 ){
           tempArray.splice(index,1)
         }
+        console.log(tempArray.toString() + " is ready")
         this.setState({
+          host: this.state.host,
           usersReady: tempArray
         })
 
         this.pubnubDemo.setState({
           state: {
+            host: this.state.host,
             usersReady: tempArray
           },
           uuid: this.pubnubDemo.getUUID(),
@@ -87,11 +93,13 @@ class Main extends React.Component{
           console.log("You, "+ presenceEvent.uuid + ", are Host.")
           console.log(presenceEvent.state)
           var tempArray = presenceEvent.state.usersReady
-          if ((index = tempArray.indexOf(presenceEvent.uuid)) > -1){
+          var index = tempArray.indexOf(presenceEvent.uuid)
+          if (index > -1){
             tempArray.splice(index,1)
           }
+          console.log(tempArray.toString() + " is ready")
           this.setState({
-            isHost: true,
+            host: true,
             usersReady: tempArray
           })
 
@@ -114,12 +122,12 @@ class Main extends React.Component{
    */
    componentWillMount(){
     this.pubnubDemo.setState({
-        state: {
-          "host": false
-        },
-        uuid: this.pubnubDemo.getUUID(),
-        channels: [this.channelName]
-      })
+      state: {
+        "host": false
+      },
+      uuid: this.pubnubDemo.getUUID(),
+      channels: [this.channelName]
+    })
     this.pubnubDemo.addListener({
       message: this.updateMessageOnListener,
       presence: function(presenceEvent){
@@ -141,22 +149,32 @@ class Main extends React.Component{
       }
     }
 
-    if(this.state.isHost && response.message.ready != null){
+    if(this.state.host && response.message.ready != null){
       var tempArray = this.state.usersReady
       tempArray.push(response.message.ready);
+      console.log(tempArray.toString() + " is ready")
       this.setState({
+        host: this.state.host,
         usersReady: tempArray
       });
       this.pubnubDemo.setState({
         state: {
+          host: this.state.host,
           usersReady: tempArray
         },
         uuid: this.pubnubDemo.getUUID(),
         channels: [this.channelName]
       })
     }
+
+    if(response.message.usersPlaying != null){
+      console.log(response.message.usersPlaying.toString() + " are playing")
+      this.setState({
+        usersPlaying: response.message.usersPlaying
+      });
+    }
   }
-   getReady() {
+  getReady() {
     if(!this.state.isReady){
       this.pubnubDemo.publish(
       {
@@ -180,37 +198,37 @@ class Main extends React.Component{
 
     // TODO: Do the following only if all users are in
     //this.startCountdown();
-    }
-    gameStart() {
-      if(!this.state.isHost)
-        return
-      this.pubnubDemo.publish(
-      {
-        message: {
-          game: 'start_countdown',
-          usersPlaying: this.state.usersReady
-        },
-        channel: this.channelName
+  }
+  gameStart() {
+    if(!this.state.host)
+      return
+    this.pubnubDemo.publish(
+    {
+      message: {
+        game: 'start_countdown'
       },
-      function (status, response) {
-        if (status.error) {
-          console.log(status);
-        } else {
-          console.log("message Published w/ timetoken", response.timetoken);
-        }
-      }
-      );
-    }
-    startCountdown() {
-      if (this.state.countdown <= 0) {
-        console.log("GAME IS STARTING");
-        this.setState({
-          gameStarted: true
-        })
+      channel: this.channelName
+    },
+    function (status, response) {
+      if (status.error) {
+        console.log(status);
       } else {
-        this.setState({
-          countdown: this.state.countdown - 1
-        });
+        console.log("message Published w/ timetoken", response.timetoken);
+      }
+    }
+    );
+  }
+  startCountdown() {
+    if (this.state.countdown <= 0) {
+      console.log("GAME IS STARTING");
+      this.setState({
+        gameStarted: true,
+        usersPlaying: this.state.usersReady
+      })
+    } else {
+      this.setState({
+        countdown: this.state.countdown - 1
+      });
         setTimeout(this.startCountdown, 1000); // check again in a second
       }
     }
@@ -225,22 +243,22 @@ class Main extends React.Component{
 
       return (
         <div className='Index'>
-          <button type="button"
-          onClick={this.getReady}
-          className='btn btn-lg btn-default'>
-          Ready
-          </button>
-          <button type="button"
-          onClick={this.gameStart}
-          className='btn btn-lg btn-default'>
-          Start game
-          </button>
-          <h1> {this.state.isReady ? "READY" : "NOT READY YET"} </h1>
-          <h1 style={{display: (this.state.gameStarted ? "none" : "block")}}> COUNTDOWN: {this.state.countdown} </h1>
-          <Game gameStarted={this.state.gameStarted}/>
+        <button type="button"
+        onClick={this.getReady}
+        className='btn btn-lg btn-default'>
+        Ready
+        </button>
+        <button type="button"
+        onClick={this.gameStart}
+        className='btn btn-lg btn-default'>
+        Start game
+        </button>
+        <h1> {this.state.isReady ? "READY" : "NOT READY YET"} </h1>
+        <h1 style={{display: (this.state.gameStarted ? "none" : "block")}}> COUNTDOWN: {this.state.countdown} </h1>
+        <Game gameStarted={this.state.gameStarted}/>
         </div>
         )
-      }
     }
+  }
 
-    module.exports = Main;
+  module.exports = Main;
