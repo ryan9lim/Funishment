@@ -19877,84 +19877,139 @@
 	    var _this = _possibleConstructorReturn(this, (Main.__proto__ || Object.getPrototypeOf(Main)).call(this, props));
 
 	    _this.clickButton = _this.clickButton.bind(_this);
-	    _this.callMeBack = _this.callMeBack.bind(_this);
+	    _this.gameStart = _this.gameStart.bind(_this);
+	    _this.startCountdown = _this.startCountdown.bind(_this);
+	    _this.updateMessageOnListener = _this.updateMessageOnListener.bind(_this);
 	    _this.pubnubDemo = new PubNub({
 	      publishKey: 'pub-c-89d8d3f5-9d58-4c24-94e7-1c89f243296a',
-	      subscribeKey: 'sub-c-99748e0e-df8d-11e6-989b-02ee2ddab7fe'
+	      subscribeKey: 'sub-c-99748e0e-df8d-11e6-989b-02ee2ddab7fe',
+	      uuid: PubNub.generateUUID()
 	    });
 	    _this.state = {
-	      uuid: Math.floor(Math.random() * 256),
+	      score: 0,
+	      countdown: 3,
 	      isSelected: false
 	    };
 	    return _this;
 	  }
+	  /*
+	   * Callback of element initialization
+	   */
+
 
 	  _createClass(Main, [{
-	    key: 'callMeBack',
-	    value: function callMeBack(status, response) {
-	      if (status.error) {
-	        console.log(status);
-	      } else {
-	        console.log("message Published w/ timetoken", response.timetoken, this.state.uuid.toString());
-	      }
-	    }
-	  }, {
 	    key: 'componentWillMount',
 	    value: function componentWillMount() {
-	      this.pubnubDemo.publish({
-	        message: {
-	          user: this.state.uuid.toString()
-	        },
-	        channel: 'testChannel'
-	      }, this.callMeBack);
 	      this.pubnubDemo.addListener({
-	        message: function message(_message) {
-	          console.log(_message);
+	        message: this.updateMessageOnListener,
+	        presence: function presence(presenceEvent) {
+	          console.log(presenceEvent);
 	        }
 	      });
 	      this.pubnubDemo.subscribe({
-	        channels: ['testChannel']
+	        channels: ['testChannel'],
+	        withPresence: true
 	      });
 	    }
+	  }, {
+	    key: 'updateMessageOnListener',
+	    value: function updateMessageOnListener(response) {
+	      if (response.message.newCount != null) {
+	        console.log("found a new count and it is", response.message.newCount);
+	        this.setState({
+	          score: response.message.newCount
+	        });
+	      }
+	      console.log(response.message);
+	    }
+	    /*
+	     * Main button of game clicked
+	     */
+
 	  }, {
 	    key: 'clickButton',
 	    value: function clickButton() {
 	      var random = Math.floor(Math.random() * 2);
-	      if (random == 0) {
-	        this.pubnubDemo.publish({
-	          message: {
-	            buttonPressed: 'true',
-	            targetUser: 'friend'
-	          },
-	          channel: 'testChannel'
-	        }, function (status, response) {
-	          if (status.error) {
-	            console.log(status);
-	          } else {
-	            console.log("message Published w/ timetoken", response.timetoken);
-	          }
-	        });
-	        // Post to friend's Twitter
-	      } else {
-	        this.pubnubDemo.publish({
+
+	      // Win
+	      // if (random == 0) {
+	      this.pubnubDemo.publish({
+	        message: {
+	          buttonPressed: 'true',
+	          targetUser: 'friend',
+	          newCount: this.state.score + 1
+	        },
+	        channel: 'testChannel'
+	      }, function (status, response) {
+	        if (status.error) {
+	          console.log(status);
+	        } else {
+	          console.log("message Published w/ timetoken", response.timetoken);
+	        }
+	      });
+	      this.setState({
+	        score: this.state.score + 1
+	      });
+	      // Post to friend's Twitter
+	      /* } else {
+	        // Lose
+	        this.pubnubDemo.publish(
+	        {
 	          message: {
 	            buttonPressed: 'true',
 	            targetUser: 'me'
 	          },
 	          channel: 'testChannel'
-	        }, function (status, response) {
+	        },
+	        function (status, response) {
 	          if (status.error) {
 	            console.log(status);
 	          } else {
 	            console.log("message Published w/ timetoken", response.timetoken);
 	          }
-	        });
+	        }
+	        );
 	        // Friend posts to your Twitter
-	      }
+	      }*/
 
 	      this.setState({
 	        isSelected: this.state.isSelected ? false : true
 	      });
+	    }
+	    /*
+	     * Send start message to the channel
+	     */
+
+	  }, {
+	    key: 'gameStart',
+	    value: function gameStart() {
+	      this.pubnubDemo.publish({
+	        message: {
+	          buttonPressed: 'true'
+	        },
+	        channel: 'testChannel'
+	      }, function (status, response) {
+	        if (status.error) {
+	          console.log(status);
+	        } else {
+	          console.log("message Published w/ timetoken", response.timetoken);
+	        }
+	      });
+
+	      // TODO: Do the following only if all users are in
+	      this.startCountdown();
+	    }
+	  }, {
+	    key: 'startCountdown',
+	    value: function startCountdown() {
+	      if (this.state.countdown <= 0) {
+	        return;
+	      } else {
+	        this.setState({
+	          countdown: this.state.countdown - 1
+	        });
+	        setTimeout(this.startCountdown, 1000); // check again in a second
+	      }
 	    }
 	  }, {
 	    key: 'render',
@@ -19968,11 +20023,36 @@
 	      });
 
 	      return _react2.default.createElement(
-	        'button',
-	        { type: 'button',
-	          onClick: this.clickButton,
-	          className: cssClasses },
-	        'Click on button'
+	        'div',
+	        null,
+	        _react2.default.createElement(
+	          'button',
+	          { type: 'button',
+	            onClick: this.gameStart,
+	            className: 'btn btn-lg btn-default' },
+	          'Start'
+	        ),
+	        _react2.default.createElement(
+	          'button',
+	          { type: 'button',
+	            onClick: this.clickButton,
+	            className: 'btn btn-lg btn-default' },
+	          'Click on button'
+	        ),
+	        _react2.default.createElement(
+	          'h1',
+	          null,
+	          ' COUNTDOWN: ',
+	          this.state.countdown,
+	          ' '
+	        ),
+	        _react2.default.createElement(
+	          'h1',
+	          null,
+	          ' Current Score: ',
+	          this.state.score,
+	          ' '
+	        )
 	      );
 	    }
 	  }]);
