@@ -19925,16 +19925,16 @@
 	        if (response.message.uuid != this.pubnubDemo.getUUID()) {
 	          console.log("opponent clicked");
 	          if (Math.abs(response.timetoken - this.state.highTime) < 50000000) {
-	            this.pubnubDemo.publish({
-	              message: {
-	                buttonPressed: 'true',
-	                targetUser: 'friend',
-	                newCount: 0,
-	                uuid: this.pubnubDemo.getUUID()
-	              },
-	              channel: 'testChannel'
-	            });
 	            if (!this.state.cleared) {
+	              this.pubnubDemo.publish({
+	                message: {
+	                  buttonPressed: 'true',
+	                  targetUser: 'friend',
+	                  newCount: 0,
+	                  uuid: this.pubnubDemo.getUUID()
+	                },
+	                channel: 'testChannel'
+	              });
 	              this.setState({
 	                cleared: true,
 	                score: 0,
