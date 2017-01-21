@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import ClassNames from 'classnames';
+import Game from './Game';
 
 class Main extends React.Component{
   constructor(props) {
@@ -213,7 +214,7 @@ class Main extends React.Component{
           </button>
           <h1> {this.state.isReady ? "READY" : "NOT READY YET"} </h1>
           <h1> COUNTDOWN: {this.state.countdown} </h1>
-          <Game />
+          <Game gameStarted={this.state.gameStarted}/>
         </div>
         )
       }
