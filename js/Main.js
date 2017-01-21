@@ -21,7 +21,8 @@ class Main extends React.Component{
       isSelected: false,
       totalReady: 0,
       highTime: 0,
-      clicked: false
+      clicked: false,
+      cleared: false
     }
   }
   /*
@@ -42,6 +43,7 @@ class Main extends React.Component{
   updateMessageOnListener(response) {
     if (response.message.newCount != null) {
       console.log("response is", response);
+      console.log("my own uuid is", this.pubnubDemo.getUUID());
       console.log("found a new count and it is", response.message.newCount);
       if(response.message.uuid != this.pubnubDemo.getUUID()) {
         console.log("opponent clicked");
@@ -52,14 +54,17 @@ class Main extends React.Component{
               buttonPressed: 'true',
               targetUser: 'friend',
               newCount: 0,
-              uuid: this.state.uuid
+              uuid: this.pubnubDemo.getUUID()
             },
             channel: 'testChannel'
           });
-          this.setState({
-            score: 0,
-            highTime: response.timetoken
-          });
+          if (!this.state.cleared) {
+            this.setState({
+              cleared: true,
+              score: 0,
+              highTime: response.timetoken
+            });
+          }
         } else {
           this.setState({
             score: response.message.newCount,
