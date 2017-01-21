@@ -1,6 +1,7 @@
 import Hello from './Hello';
 import React from 'react';
 import ReactDOM from 'react-dom';
+import ClassNames from 'classnames';
 
 class Main extends React.Component{
   constructor(props) {
@@ -15,7 +16,8 @@ class Main extends React.Component{
     });
     this.state = {
       score: 0,
-      countdown: 3
+      countdown: 3,
+      isSelected: false
     }
   }
   callMeBack(status, response) {
@@ -91,6 +93,10 @@ class Main extends React.Component{
         );
         // Friend posts to your Twitter
       }
+
+      this.setState({
+        isSelected: this.state.isSelected ? false : true
+      });
     }
     /*
      * Send start message to the channel
@@ -116,7 +122,6 @@ class Main extends React.Component{
       this.startCountdown();
     }
     startCountdown() {
-      console.log(this.state.countdown);
       if (this.state.countdown <= 0) {
         return;
       } else {
@@ -128,6 +133,14 @@ class Main extends React.Component{
       }
     }
     render() {
+      const cssClasses = ClassNames({
+        'btn': true, 
+        'btn-lg': true, 
+        'btn-default': true,
+        'Button': true,
+        'is-selected': this.state.isSelected
+      });
+
       return (
         <div>
           <button type="button"

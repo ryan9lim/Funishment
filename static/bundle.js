@@ -19863,6 +19863,10 @@
 
 	var _reactDom2 = _interopRequireDefault(_reactDom);
 
+	var _classnames = __webpack_require__(162);
+
+	var _classnames2 = _interopRequireDefault(_classnames);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -19889,7 +19893,8 @@
 	    });
 	    _this.state = {
 	      score: 0,
-	      countdown: 3
+	      countdown: 3,
+	      isSelected: false
 	    };
 	    return _this;
 	  }
@@ -19965,6 +19970,10 @@
 	        });
 	        // Friend posts to your Twitter
 	      }
+
+	      this.setState({
+	        isSelected: this.state.isSelected ? false : true
+	      });
 	    }
 	    /*
 	     * Send start message to the channel
@@ -19992,7 +20001,6 @@
 	  }, {
 	    key: 'startCountdown',
 	    value: function startCountdown() {
-	      console.log(this.state.countdown);
 	      if (this.state.countdown <= 0) {
 	        return;
 	      } else {
@@ -20006,6 +20014,14 @@
 	  }, {
 	    key: 'render',
 	    value: function render() {
+	      var cssClasses = (0, _classnames2.default)({
+	        'btn': true,
+	        'btn-lg': true,
+	        'btn-default': true,
+	        'Button': true,
+	        'is-selected': this.state.isSelected
+	      });
+
 	      return _react2.default.createElement(
 	        'div',
 	        null,
@@ -20053,6 +20069,60 @@
 	'use strict';
 
 	module.exports = __webpack_require__(5);
+
+
+/***/ },
+/* 162 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
+	  Copyright (c) 2016 Jed Watson.
+	  Licensed under the MIT License (MIT), see
+	  http://jedwatson.github.io/classnames
+	*/
+	/* global define */
+
+	(function () {
+		'use strict';
+
+		var hasOwn = {}.hasOwnProperty;
+
+		function classNames () {
+			var classes = [];
+
+			for (var i = 0; i < arguments.length; i++) {
+				var arg = arguments[i];
+				if (!arg) continue;
+
+				var argType = typeof arg;
+
+				if (argType === 'string' || argType === 'number') {
+					classes.push(arg);
+				} else if (Array.isArray(arg)) {
+					classes.push(classNames.apply(null, arg));
+				} else if (argType === 'object') {
+					for (var key in arg) {
+						if (hasOwn.call(arg, key) && arg[key]) {
+							classes.push(key);
+						}
+					}
+				}
+			}
+
+			return classes.join(' ');
+		}
+
+		if (typeof module !== 'undefined' && module.exports) {
+			module.exports = classNames;
+		} else if (true) {
+			// register as 'classnames', consistent with npm package name
+			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_RESULT__ = function () {
+				return classNames;
+			}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+		} else {
+			window.classNames = classNames;
+		}
+	}());
 
 
 /***/ }
