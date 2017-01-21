@@ -39,12 +39,14 @@ class Main extends React.Component{
 
       console.log("You, " + presenceEvent.uuid + ", are Host.")
       this.setState({
-        isHost: true
+        isHost: true,
+        usersReady: []
       })
 
       this.pubnubDemo.setState({
         state: {
-          "host": true
+          "host": true,
+          usersReady: []
         },
         uuid: this.pubnubDemo.getUUID(),
         channels: [this.channelName]
@@ -56,20 +58,21 @@ class Main extends React.Component{
       console.log(presenceEvent.uuid + " has left.")
       console.log("Occupancy is now at ",presenceEvent.occupancy);
       if (this.state.isHost) {
-          if ((index = tempArray.indexOf(presenceEvent.uuid)) > -1){
-            tempArray.splice(index,1)
-          }
-          this.setState({
-            usersReady: tempArray
-          })
+          var index = tempArray.indexOf(presenceEvent.uuid) 
+        if ( index > -1 ){
+          tempArray.splice(index,1)
+        }
+        this.setState({
+          usersReady: tempArray
+        })
 
-          this.pubnubDemo.setState({
-            state: {
-              usersReady: tempArray
-            },
-            uuid: this.pubnubDemo.getUUID(),
-            channels: [this.channelName]
-          })
+        this.pubnubDemo.setState({
+          state: {
+            usersReady: tempArray
+          },
+          uuid: this.pubnubDemo.getUUID(),
+          channels: [this.channelName]
+        })
       }
     }
     if ((presenceEvent.action == "leave" || presenceEvent.action == "timeout") && presenceEvent.state.host == true){
@@ -82,6 +85,7 @@ class Main extends React.Component{
       function(status,response){
         if(response.channels[this.channelName].occupants[0].uuid == this.pubnubDemo.getUUID()) {
           console.log("You, "+ presenceEvent.uuid + ", are Host.")
+          console.log(presenceEvent.state)
           var tempArray = presenceEvent.state.usersReady
           if ((index = tempArray.indexOf(presenceEvent.uuid)) > -1){
             tempArray.splice(index,1)
@@ -139,7 +143,7 @@ class Main extends React.Component{
 
     if(this.state.isHost && response.message.ready != null){
       var tempArray = this.state.usersReady
-      tempArray.append(response.message.ready);
+      tempArray.push(response.message.ready);
       this.setState({
         usersReady: tempArray
       });
