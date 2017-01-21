@@ -19,7 +19,7 @@ class Game extends React.Component {
       discard: [],
       hand: ['test1', 'test2', 'test3','test4','test5']
     }
-    this.gameChannel = 'gameChannel01'
+    this.gameChannel = 'gameChannel001'
   }
   /*
    * Callback of element initialization
@@ -42,30 +42,29 @@ class Game extends React.Component {
     if (response.message.dealing) {
       var indexInUsers = -1;
       var i;
-      for (i = 0; i < response.message.usersPlaying.length; i++) {
-        if(response.message.usersPlaying[i] == this.props.pubnubDemo.getUUID()) {
+      for (i = 0; i < this.props.usersPlaying.length; i++) {
+        if(this.props.usersPlaying[i] == this.props.pubnubDemo.getUUID()) {
           indexInUsers = i;
           break;
         }
       }
 
       console.log("current user has index in array of ", indexInUsers);
-      console.log("array of users is ", response.message.usersPlaying);
-      console.log("size of array of users is ", response.message.usersPlaying.length);
+      console.log("array of users is ", this.props.usersPlaying);
+      console.log("size of array of users is ", this.props.usersPlaying.length);
     
       if (indexInUsers == response.message.nextToDraw) {
         var han = response.message.deck.slice(0,5);
         var deq = response.message.deck.slice(5);
 
-        if (response.message.nextToDraw + 1 < response.message.usersPlaying.length) {
+        if (response.message.nextToDraw + 1 < this.props.usersPlaying.length) {
           this.props.pubnubDemo.publish({
             message: {
               dealing: true,
               nextToDraw: response.message.nextToDraw+1,
-              deck: deq,
-              usersPlaying: response.message.usersPlaying
+              deck: deq
             },
-            channel: this.props.gameChannel
+            channel: this.gameChannel
           });
         } else {
           this.props.pubnubDemo.publish({
@@ -74,7 +73,7 @@ class Game extends React.Component {
               fixDeckAfterDeal: true,
               deck: deq
             },
-            channel: this.props.gameChannel
+            channel: this.gameChannel
           });
         }
 
@@ -101,8 +100,7 @@ class Game extends React.Component {
       message: {
         dealing: true,
         nextToDraw: 0,
-        deck: deq,
-        usersPlaying: this.props.usersPlaying
+        deck: deq
       },
       channel: this.gameChannel
     });

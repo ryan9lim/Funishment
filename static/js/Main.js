@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import ClassNames from 'classnames';
 import Game from './Game';
 import TweetInput from './TweetInput';
+import Store from 'store2';
 
 class Main extends React.Component{
   constructor(props) {
@@ -28,13 +29,14 @@ class Main extends React.Component{
       usersPlaying: null
     }
 
-    this.channelName = 'testChannel0'
+    this.channelName = Store.get('channelName');
+    this.channelName = 'testChannel001'
   }
 
 
   assignHost(presenceEvent){
     if (presenceEvent.action == "join"){
-      console.log(presenceEvent.uuid + " has joined.")
+      console.log(presenceEvent.uuid + " has joined " + presenceEvent.channel)
     }
     // first one here is host
     if (presenceEvent.action == "join" && presenceEvent.occupancy == 1){
@@ -201,12 +203,13 @@ class Main extends React.Component{
     //this.startCountdown();
   }
   gameStart() {
-    if(!this.state.host)
+    if(!this.state.host || !this.state.isReady)
       return
     this.pubnubDemo.publish(
     {
       message: {
-        game: 'start_countdown'
+        game: 'start_countdown',
+        usersPlaying: this.state.usersReady
       },
       channel: this.channelName
     },
@@ -222,9 +225,9 @@ class Main extends React.Component{
   startCountdown() {
     if (this.state.countdown <= 0) {
       console.log("GAME IS STARTING");
+      console.log(this.state.usersPlaying)
       this.setState({
         gameStarted: true,
-        usersPlaying: this.state.usersReady
       })
     } else {
       this.setState({
