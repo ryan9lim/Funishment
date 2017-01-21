@@ -26,6 +26,12 @@ class Main extends React.Component{
   componentWillMount(){
     this.pubnubDemo.addListener({
       message: function(message){
+        if (message.newCount != null) {
+          console.log("found a new count and it is", message.newCount);
+          this.setState({
+            score: message.newCount
+          });
+        }
         console.log(message);
       },
       presence: function(presenceEvent){
@@ -33,7 +39,7 @@ class Main extends React.Component{
       }
     })
     this.pubnubDemo.subscribe({
-      channels: ['testChannel']
+      channels: ['testChannel'],
       withPresence: true
     })
   }
@@ -44,12 +50,16 @@ class Main extends React.Component{
     var random = Math.floor(Math.random() * 2);
 
     // Win
-    if (random == 0) {
+    // if (random == 0) {
+      this.setState({
+        score: this.state.score + 1
+      })
       this.pubnubDemo.publish(
       {
         message: {
           buttonPressed: 'true',
-          targetUser: 'friend'
+          targetUser: 'friend',
+          newCount: this.state.score
         },
         channel: 'testChannel'
       },
@@ -62,7 +72,7 @@ class Main extends React.Component{
       }
       );
         // Post to friend's Twitter
-      } else {
+      /* } else {
         // Lose
         this.pubnubDemo.publish(
         {
@@ -81,7 +91,7 @@ class Main extends React.Component{
         }
         );
         // Friend posts to your Twitter
-      }
+      }*/
 
       this.setState({
         isSelected: this.state.isSelected ? false : true
@@ -115,7 +125,6 @@ class Main extends React.Component{
         return;
       } else {
         this.setState({
-          score: this.state.score,
           countdown: this.state.countdown - 1
         });
         setTimeout(this.startCountdown, 1000); // check again in a second
