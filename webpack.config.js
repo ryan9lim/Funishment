@@ -1,8 +1,8 @@
 var webpack = require('webpack');  
 module.exports = {  
   entry: {
-    "index": "./js/index.js",
-    "room" : "./js/room.js"
+    "index": "./static/js/index.js",
+    "room" : "./static/js/room.js"
   },
   output: {
     path: __dirname + '/static',

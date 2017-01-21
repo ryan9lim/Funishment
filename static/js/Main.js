@@ -2,11 +2,11 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import ClassNames from 'classnames';
 import Game from './Game';
+import TweetInput from './TweetInput';
 
 class Main extends React.Component{
   constructor(props) {
     super(props);
-    this.clickButton = this.clickButton.bind(this);
     this.getReady = this.getReady.bind(this);
     this.startCountdown = this.startCountdown.bind(this);
     this.gameStart = this.gameStart.bind(this);
@@ -215,6 +215,7 @@ class Main extends React.Component{
           <h1> {this.state.isReady ? "READY" : "NOT READY YET"} </h1>
           <h1> COUNTDOWN: {this.state.countdown} </h1>
           <Game gameStarted={this.state.gameStarted}/>
+          <TweetInput />
         </div>
         )
       }
