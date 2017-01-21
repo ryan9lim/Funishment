@@ -18,7 +18,9 @@ class Main extends React.Component{
     this.state = {
       score: 0,
       countdown: 3,
-      isSelected: false
+      isSelected: false,
+      highTime: 0,
+      clicked: false
     }
   }
   /*
@@ -39,9 +41,32 @@ class Main extends React.Component{
   updateMessageOnListener(response) {
     if (response.message.newCount != null) {
       console.log("found a new count and it is", response.message.newCount);
-      this.setState({
-        score: response.message.newCount
-      });
+      if(response.uuid != this.state.uuid) {
+        if (Math.abs(response.timetoken - this.state.highTime) < 50000000) {
+          this.pubnubDemo.publish(
+          {
+            message: {
+              buttonPressed: 'true',
+              targetUser: 'friend',
+              newCount: 0
+            },
+            channel: 'testChannel'
+          });
+          this.setState({
+            score: 0,
+            highTime: response.timetoken
+          });
+        } else {
+          this.setState({
+            score: response.message.newCount,
+            highTime: response.timetoken
+          });
+        }
+      } else {
+        this.setState({
+          highTime: response.timetoken
+        });
+      }
     }
     console.log(response.message);
   }
@@ -53,6 +78,7 @@ class Main extends React.Component{
 
     // Win
     // if (random == 0) {
+    if(!this.state.clicked) {
       this.pubnubDemo.publish(
       {
         message: {
@@ -70,9 +96,6 @@ class Main extends React.Component{
         }
       }
       );
-      this.setState({
-        score: this.state.score + 1
-      })
         // Post to friend's Twitter
       /* } else {
         // Lose
@@ -96,9 +119,12 @@ class Main extends React.Component{
       }*/
 
       this.setState({
+        score: this.state.score + 1,
+        clicked: true,
         isSelected: this.state.isSelected ? false : true
       });
     }
+  }
     /*
      * Send start message to the channel
      */
@@ -155,6 +181,8 @@ class Main extends React.Component{
           </button>
           <h1> COUNTDOWN: {this.state.countdown} </h1>
           <h1> Current Score: {this.state.score} </h1>
+          <h1> Most Recent Time: {this.state.highTime} </h1>
+          <h1> {this.state.clicked ? "CLICKED" : "NOT YET CLICKED"} </h1>
         </div>
         )
       }
