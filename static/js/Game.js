@@ -19,7 +19,7 @@ class Game extends React.Component {
       discard: [],
       hand: ['test1', 'test2', 'test3','test4','test5']
     }
-    this.gameChannel = 'gameChannel2'
+    this.gameChannel = 'gameChannel6'
   }
   /*
    * Callback of element initialization
@@ -48,19 +48,23 @@ class Game extends React.Component {
           break;
         }
       }
+
+      console.log("current user has index in array of ", indexInUsers);
     
       if (indexInUsers == response.message.nextToDraw) {
         var han = response.message.deck.slice(0,5);
         var deq = response.message.deck.slice(5);
 
-        this.props.pubnubDemo.publish({
-          message: {
-            dealing: true,
-            nextToDraw: response.message.nextToDraw+1,
-            deck: deq
-          },
-          channel: this.props.gameChannel
-        });
+        if (response.message.nextToDraw + 1 < this.props.usersPlaying.length) {
+          this.props.pubnubDemo.publish({
+            message: {
+              dealing: true,
+              nextToDraw: response.message.nextToDraw+1,
+              deck: deq
+            },
+            channel: this.props.gameChannel
+          });
+        }
 
         this.setState({
           handDealt: true,

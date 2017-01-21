@@ -19823,7 +19823,7 @@
 	      usersPlaying: null
 	    };
 
-	    _this.channelName = 'testChannel4';
+	    _this.channelName = 'testChannel23';
 	    return _this;
 	  }
 
@@ -20188,7 +20188,7 @@
 	      discard: [],
 	      hand: ['test1', 'test2', 'test3', 'test4', 'test5']
 	    };
-	    _this.gameChannel = 'gameChannel2';
+	    _this.gameChannel = 'gameChannel6';
 	    return _this;
 	  }
 	  /*
@@ -20225,18 +20225,22 @@
 	          }
 	        }
 
+	        console.log("current user has index in array of ", indexInUsers);
+
 	        if (indexInUsers == response.message.nextToDraw) {
 	          var han = response.message.deck.slice(0, 5);
 	          var deq = response.message.deck.slice(5);
 
-	          this.props.pubnubDemo.publish({
-	            message: {
-	              dealing: true,
-	              nextToDraw: response.message.nextToDraw + 1,
-	              deck: deq
-	            },
-	            channel: this.props.gameChannel
-	          });
+	          if (response.message.nextToDraw + 1 < this.props.usersPlaying.length) {
+	            this.props.pubnubDemo.publish({
+	              message: {
+	                dealing: true,
+	                nextToDraw: response.message.nextToDraw + 1,
+	                deck: deq
+	              },
+	              channel: this.props.gameChannel
+	            });
+	          }
 
 	          this.setState({
 	            handDealt: true,
