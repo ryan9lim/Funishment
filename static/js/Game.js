@@ -64,6 +64,15 @@ class Game extends React.Component {
             },
             channel: this.props.gameChannel
           });
+        } else {
+          this.props.pubnubDemo.publish({
+            message: {
+              dealing: false,
+              fixDeckAfterDeal: true,
+              deck: deq
+            },
+            channel: this.props.gameChannel
+          });
         }
 
         this.setState({
@@ -72,6 +81,10 @@ class Game extends React.Component {
           hand: han
         });
       }
+    } else if (response.message.fixDeckAfterDeal){
+      this.setState({
+        deck: response.message.deck
+      });
     }
   }
   dealCards() {
