@@ -19863,7 +19863,7 @@
 
 	var _reactDom2 = _interopRequireDefault(_reactDom);
 
-	var _classnames = __webpack_require__(162);
+	var _classnames = __webpack_require__(!(function webpackMissingModule() { var e = new Error("Cannot find module \"classnames\""); e.code = 'MODULE_NOT_FOUND'; throw e; }()));
 
 	var _classnames2 = _interopRequireDefault(_classnames);
 
@@ -19895,7 +19895,9 @@
 	    _this.state = {
 	      score: 0,
 	      countdown: 3,
-	      isSelected: false
+	      isSelected: false,
+	      highTime: 0,
+	      clicked: false
 	    };
 	    return _this;
 	  }
@@ -19923,9 +19925,31 @@
 	    value: function updateMessageOnListener(response) {
 	      if (response.message.newCount != null) {
 	        console.log("found a new count and it is", response.message.newCount);
-	        this.setState({
-	          score: response.message.newCount
-	        });
+	        if (response.uuid != this.state.uuid) {
+	          if (Math.abs(response.timetoken - this.state.highTime) < 50000000) {
+	            this.pubnubDemo.publish({
+	              message: {
+	                buttonPressed: 'true',
+	                targetUser: 'friend',
+	                newCount: 0
+	              },
+	              channel: 'testChannel'
+	            });
+	            this.setState({
+	              score: 0,
+	              highTime: response.timetoken
+	            });
+	          } else {
+	            this.setState({
+	              score: response.message.newCount,
+	              highTime: response.timetoken
+	            });
+	          }
+	        } else {
+	          this.setState({
+	            highTime: response.timetoken
+	          });
+	        }
 	      }
 	      console.log(response.message);
 	    }
@@ -19940,48 +19964,49 @@
 
 	      // Win
 	      // if (random == 0) {
-	      this.pubnubDemo.publish({
-	        message: {
-	          buttonPressed: 'true',
-	          targetUser: 'friend',
-	          newCount: this.state.score + 1
-	        },
-	        channel: 'testChannel'
-	      }, function (status, response) {
-	        if (status.error) {
-	          console.log(status);
-	        } else {
-	          console.log("message Published w/ timetoken", response.timetoken);
-	        }
-	      });
-	      this.setState({
-	        score: this.state.score + 1
-	      });
-	      // Post to friend's Twitter
-	      /* } else {
-	        // Lose
-	        this.pubnubDemo.publish(
-	        {
+	      if (!this.state.clicked) {
+	        this.pubnubDemo.publish({
 	          message: {
 	            buttonPressed: 'true',
-	            targetUser: 'me'
+	            targetUser: 'friend',
+	            newCount: this.state.score + 1
 	          },
 	          channel: 'testChannel'
-	        },
-	        function (status, response) {
+	        }, function (status, response) {
 	          if (status.error) {
 	            console.log(status);
 	          } else {
 	            console.log("message Published w/ timetoken", response.timetoken);
 	          }
-	        }
-	        );
-	        // Friend posts to your Twitter
-	      }*/
+	        });
+	        // Post to friend's Twitter
+	        /* } else {
+	          // Lose
+	          this.pubnubDemo.publish(
+	          {
+	            message: {
+	              buttonPressed: 'true',
+	              targetUser: 'me'
+	            },
+	            channel: 'testChannel'
+	          },
+	          function (status, response) {
+	            if (status.error) {
+	              console.log(status);
+	            } else {
+	              console.log("message Published w/ timetoken", response.timetoken);
+	            }
+	          }
+	          );
+	          // Friend posts to your Twitter
+	        }*/
 
-	      this.setState({
-	        isSelected: this.state.isSelected ? false : true
-	      });
+	        this.setState({
+	          score: this.state.score + 1,
+	          clicked: true,
+	          isSelected: this.state.isSelected ? false : true
+	        });
+	      }
 	    }
 	    /*
 	     * Send start message to the channel
@@ -20059,6 +20084,20 @@
 	          ' Current Score: ',
 	          this.state.score,
 	          ' '
+	        ),
+	        _react2.default.createElement(
+	          'h1',
+	          null,
+	          ' Most Recent Time: ',
+	          this.state.highTime,
+	          ' '
+	        ),
+	        _react2.default.createElement(
+	          'h1',
+	          null,
+	          ' ',
+	          this.state.clicked ? "CLICKED" : "NOT YET CLICKED",
+	          ' '
 	        )
 	      );
 	    }
@@ -20076,60 +20115,6 @@
 	'use strict';
 
 	module.exports = __webpack_require__(5);
-
-
-/***/ },
-/* 162 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
-	  Copyright (c) 2016 Jed Watson.
-	  Licensed under the MIT License (MIT), see
-	  http://jedwatson.github.io/classnames
-	*/
-	/* global define */
-
-	(function () {
-		'use strict';
-
-		var hasOwn = {}.hasOwnProperty;
-
-		function classNames () {
-			var classes = [];
-
-			for (var i = 0; i < arguments.length; i++) {
-				var arg = arguments[i];
-				if (!arg) continue;
-
-				var argType = typeof arg;
-
-				if (argType === 'string' || argType === 'number') {
-					classes.push(arg);
-				} else if (Array.isArray(arg)) {
-					classes.push(classNames.apply(null, arg));
-				} else if (argType === 'object') {
-					for (var key in arg) {
-						if (hasOwn.call(arg, key) && arg[key]) {
-							classes.push(key);
-						}
-					}
-				}
-			}
-
-			return classes.join(' ');
-		}
-
-		if (typeof module !== 'undefined' && module.exports) {
-			module.exports = classNames;
-		} else if (true) {
-			// register as 'classnames', consistent with npm package name
-			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_RESULT__ = function () {
-				return classNames;
-			}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-		} else {
-			window.classNames = classNames;
-		}
-	}());
 
 
 /***/ }
