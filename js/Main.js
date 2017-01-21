@@ -19,7 +19,7 @@ class Main extends React.Component{
       score: 0,
       countdown: 3,
       isSelected: false,
-      totalReady: 0
+      totalReady: 0,
       highTime: 0,
       clicked: false
     }
@@ -195,18 +195,6 @@ class Main extends React.Component{
 
       return (
         <div>
-        <button type="button"
-        onClick={this.gameStart}
-        className='btn btn-lg btn-default'>
-        Start
-        </button>
-        <button type="button"
-        onClick={this.clickButton}
-        className='btn btn-lg btn-default'>
-        Click on button
-        </button>
-        <h1> COUNTDOWN: {this.state.countdown} </h1>
-        <h1> Current Score: {this.state.score} </h1>
           <button type="button"
           onClick={this.gameStart}
           className='btn btn-lg btn-default'>
