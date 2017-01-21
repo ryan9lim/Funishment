@@ -5,7 +5,7 @@ import ReactDOM from 'react-dom';
 class Main extends React.Component{
   constructor(props) {
     super(props);
-    this.clickButton = this.clickButton.bind{this};
+    this.clickButton = this.clickButton.bind(this);
   }
   clickButton() {
       var random = Math.floor(Math.random * 2);
