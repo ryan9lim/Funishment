@@ -1,10 +1,9 @@
 # Funishment
 
-To get React set up, execute
-   'npm install -g webpack'
-   'npm install'
+The easiest way to run the app:
 
-This will install all the JS libraries specified in package.json in the /node_modules folder
+1. Leave one tab running 'webpack --watch'
+2. Leave one tab running 'python app.py'
 
-To build the React app, execute
-   'webpack --watch'
+The index page is hosted at 'localhost:8080/'
+The room page is hosted at 'localhost:8080/room'
