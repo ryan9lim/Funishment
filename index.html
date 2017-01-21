@@ -6,6 +6,18 @@
 <body>
   <div id="reactEntry"></div>
 
+  <!-- Include the PubNub Library -->
+  <script src="https://cdn.pubnub.com/sdk/javascript/pubnub.4.3.3.js"></script>
+
+  <!-- Instantiate PubNub -->
+  <script type="text/javascript">
+
+    var pubnubDemo = new PubNub({
+        publishKey: 'pub-c-89d8d3f5-9d58-4c24-94e7-1c89f243296a',
+        subscribeKey: 'sub-c-99748e0e-df8d-11e6-989b-02ee2ddab7fe'
+    });
+
+  </script>
   <!-- Attach React components -->
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
   <script src='js/bootstrap.min.js'></script>  
