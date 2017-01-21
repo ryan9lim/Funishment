@@ -14,7 +14,8 @@ class Game extends React.Component {
   }
   render() {
     return (
-      <div className='Game'>
+      <div className='Game' style={{display: (this.props.gameStarted ? "block" : "none")}}>
+        TEST THIS SHOULD BE INVISIBLE
       </div>
     )
   }

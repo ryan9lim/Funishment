@@ -6,7 +6,6 @@ import Game from './Game';
 class Main extends React.Component{
   constructor(props) {
     super(props);
-    this.clickButton = this.clickButton.bind(this);
     this.getReady = this.getReady.bind(this);
     this.startCountdown = this.startCountdown.bind(this);
     this.gameStart = this.gameStart.bind(this);
@@ -213,7 +212,7 @@ class Main extends React.Component{
           Start game
           </button>
           <h1> {this.state.isReady ? "READY" : "NOT READY YET"} </h1>
-          <h1> COUNTDOWN: {this.state.countdown} </h1>
+          <h1 style={{display: (this.state.gameStarted ? "block" : "none")}}> COUNTDOWN: {this.state.countdown} </h1>
           <Game gameStarted={this.state.gameStarted}/>
         </div>
         )
