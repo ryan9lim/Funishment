@@ -9,6 +9,7 @@ class Main extends React.Component{
     this.clickButton = this.clickButton.bind(this);
     this.gameStart = this.gameStart.bind(this);
     this.startCountdown = this.startCountdown.bind(this);
+    this.updateMessageOnListener = this.updateMessageOnListener.bind(this);
     this.pubnubDemo = new PubNub({
       publishKey: 'pub-c-89d8d3f5-9d58-4c24-94e7-1c89f243296a',
       subscribeKey: 'sub-c-99748e0e-df8d-11e6-989b-02ee2ddab7fe',
@@ -25,15 +26,7 @@ class Main extends React.Component{
    */
   componentWillMount(){
     this.pubnubDemo.addListener({
-      message: function(message){
-        if (message.newCount != null) {
-          console.log("found a new count and it is", message.newCount);
-          this.setState({
-            score: message.newCount
-          });
-        }
-        console.log(message);
-      },
+      message: this.updateMessageOnListener,
       presence: function(presenceEvent){
         console.log(presenceEvent);
       }
@@ -43,6 +36,15 @@ class Main extends React.Component{
       withPresence: true
     })
   }
+  updateMessageOnListener(response) {
+    if (response.message.newCount != null) {
+      console.log("found a new count and it is", response.message.newCount);
+      this.setState({
+        score: response.message.newCount
+      });
+    }
+    console.log(response.message);
+  }
   /*
    * Main button of game clicked
    */
@@ -51,15 +53,12 @@ class Main extends React.Component{
 
     // Win
     // if (random == 0) {
-      this.setState({
-        score: this.state.score + 1
-      })
       this.pubnubDemo.publish(
       {
         message: {
           buttonPressed: 'true',
           targetUser: 'friend',
-          newCount: this.state.score
+          newCount: this.state.score + 1
         },
         channel: 'testChannel'
       },
@@ -71,6 +70,9 @@ class Main extends React.Component{
         }
       }
       );
+      this.setState({
+        score: this.state.score + 1
+      })
         // Post to friend's Twitter
       /* } else {
         // Lose

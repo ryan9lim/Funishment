@@ -19886,7 +19886,7 @@
 	    _this.clickButton = _this.clickButton.bind(_this);
 	    _this.gameStart = _this.gameStart.bind(_this);
 	    _this.startCountdown = _this.startCountdown.bind(_this);
-	    _this.callMeBack = _this.callMeBack.bind(_this);
+	    _this.updateMessageOnListener = _this.updateMessageOnListener.bind(_this);
 	    _this.pubnubDemo = new PubNub({
 	      publishKey: 'pub-c-89d8d3f5-9d58-4c24-94e7-1c89f243296a',
 	      subscribeKey: 'sub-c-99748e0e-df8d-11e6-989b-02ee2ddab7fe',
@@ -19899,37 +19899,16 @@
 	    };
 	    return _this;
 	  }
+	  /*
+	   * Callback of element initialization
+	   */
+
 
 	  _createClass(Main, [{
-	    key: 'callMeBack',
-	    value: function callMeBack(status, response) {
-	      if (status.error) {
-	        console.log(status);
-	      } else {
-	        console.log("message Published w/ timetoken", response.timetoken);
-	      }
-	    }
-	    /*
-	     * Callback of element initialization
-	     */
-
-	  }, {
 	    key: 'componentWillMount',
 	    value: function componentWillMount() {
-	      this.pubnubDemo.publish({
-	        message: {},
-	        channel: 'testChannel'
-	      }, this.callMeBack);
 	      this.pubnubDemo.addListener({
-	        message: function message(_message) {
-	          if (_message.newCount != null) {
-	            console.log("found a new count and it is", _message.newCount);
-	            this.setState({
-	              score: _message.newCount
-	            });
-	          }
-	          console.log(_message);
-	        },
+	        message: this.updateMessageOnListener,
 	        presence: function presence(presenceEvent) {
 	          console.log(presenceEvent);
 	        }
@@ -19938,6 +19917,17 @@
 	        channels: ['testChannel'],
 	        withPresence: true
 	      });
+	    }
+	  }, {
+	    key: 'updateMessageOnListener',
+	    value: function updateMessageOnListener(response) {
+	      if (response.message.newCount != null) {
+	        console.log("found a new count and it is", response.message.newCount);
+	        this.setState({
+	          score: response.message.newCount
+	        });
+	      }
+	      console.log(response.message);
 	    }
 	    /*
 	     * Main button of game clicked
@@ -19950,14 +19940,11 @@
 
 	      // Win
 	      // if (random == 0) {
-	      this.setState({
-	        score: this.state.score + 1
-	      });
 	      this.pubnubDemo.publish({
 	        message: {
 	          buttonPressed: 'true',
 	          targetUser: 'friend',
-	          newCount: this.state.score
+	          newCount: this.state.score + 1
 	        },
 	        channel: 'testChannel'
 	      }, function (status, response) {
@@ -19966,6 +19953,9 @@
 	        } else {
 	          console.log("message Published w/ timetoken", response.timetoken);
 	        }
+	      });
+	      this.setState({
+	        score: this.state.score + 1
 	      });
 	      // Post to friend's Twitter
 	      /* } else {
