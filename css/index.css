@@ -1,0 +1,18 @@
+#reactEntry button {
+  border-radius: 25px;
+  border: 1px solid #3A6BFF;
+  color: #3A6BFF;
+  font-size: 12px;
+}
+
+#reactEntry button.is-selected {
+  border: 1px solid #3A6BFF;
+  background-color: #3A6BFF;
+  color: #FFFFFF;
+}
+
+#reactEntry button:hover {
+  border: 1px solid #668CFF;
+  background-color: #668CFF;
+  color: #FFFFFF;
+}

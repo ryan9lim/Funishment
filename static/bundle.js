@@ -57,7 +57,7 @@
 
 	var _Hello2 = _interopRequireDefault(_Hello);
 
-	var _Main = __webpack_require__(160);
+	var _Main = __webpack_require__(161);
 
 	var _Main2 = _interopRequireDefault(_Main);
 
@@ -65,7 +65,7 @@
 
 	var _react2 = _interopRequireDefault(_react);
 
-	var _reactDom = __webpack_require__(161);
+	var _reactDom = __webpack_require__(160);
 
 	var _reactDom2 = _interopRequireDefault(_reactDom);
 
@@ -19849,6 +19849,15 @@
 
 	'use strict';
 
+	module.exports = __webpack_require__(5);
+
+
+/***/ },
+/* 161 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 	var _Hello = __webpack_require__(2);
@@ -19859,9 +19868,13 @@
 
 	var _react2 = _interopRequireDefault(_react);
 
-	var _reactDom = __webpack_require__(161);
+	var _reactDom = __webpack_require__(160);
 
 	var _reactDom2 = _interopRequireDefault(_reactDom);
+
+	var _classnames = __webpack_require__(162);
+
+	var _classnames2 = _interopRequireDefault(_classnames);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -19880,27 +19893,101 @@
 	    var _this = _possibleConstructorReturn(this, (Main.__proto__ || Object.getPrototypeOf(Main)).call(this, props));
 
 	    _this.clickButton = _this.clickButton.bind(_this);
+	    _this.callMeBack = _this.callMeBack.bind(_this);
+	    _this.pubnubDemo = new PubNub({
+	      publishKey: 'pub-c-89d8d3f5-9d58-4c24-94e7-1c89f243296a',
+	      subscribeKey: 'sub-c-99748e0e-df8d-11e6-989b-02ee2ddab7fe'
+	    });
+	    _this.state = {
+	      uuid: Math.floor(Math.random() * 256),
+	      isSelected: false
+	    };
 	    return _this;
 	  }
 
 	  _createClass(Main, [{
+	    key: 'callMeBack',
+	    value: function callMeBack(status, response) {
+	      if (status.error) {
+	        console.log(status);
+	      } else {
+	        console.log("message Published w/ timetoken", response.timetoken, this.state.uuid.toString());
+	      }
+	    }
+	  }, {
+	    key: 'componentWillMount',
+	    value: function componentWillMount() {
+	      this.pubnubDemo.publish({
+	        message: {
+	          user: this.state.uuid.toString()
+	        },
+	        channel: 'testChannel'
+	      }, this.callMeBack);
+	      this.pubnubDemo.addListener({
+	        message: function message(_message) {
+	          console.log(_message);
+	        }
+	      });
+	      this.pubnubDemo.subscribe({
+	        channels: ['testChannel']
+	      });
+	    }
+	  }, {
 	    key: 'clickButton',
 	    value: function clickButton() {
-	      var random = Math.floor(Math.random * 2);
+	      var random = Math.floor(Math.random() * 2);
 	      if (random == 0) {
+	        this.pubnubDemo.publish({
+	          message: {
+	            buttonPressed: 'true',
+	            targetUser: 'friend'
+	          },
+	          channel: 'testChannel'
+	        }, function (status, response) {
+	          if (status.error) {
+	            console.log(status);
+	          } else {
+	            console.log("message Published w/ timetoken", response.timetoken);
+	          }
+	        });
 	        // Post to friend's Twitter
 	      } else {
-	          // Friend posts to your Twitter
-	        }
+	        this.pubnubDemo.publish({
+	          message: {
+	            buttonPressed: 'true',
+	            targetUser: 'me'
+	          },
+	          channel: 'testChannel'
+	        }, function (status, response) {
+	          if (status.error) {
+	            console.log(status);
+	          } else {
+	            console.log("message Published w/ timetoken", response.timetoken);
+	          }
+	        });
+	        // Friend posts to your Twitter
+	      }
+
+	      this.setState({
+	        isSelected: this.state.isSelected ? false : true
+	      });
 	    }
 	  }, {
 	    key: 'render',
 	    value: function render() {
+	      var cssClasses = (0, _classnames2.default)({
+	        'btn': true,
+	        'btn-lg': true,
+	        'btn-default': true,
+	        'Button': true,
+	        'is-selected': this.state.isSelected
+	      });
+
 	      return _react2.default.createElement(
 	        'button',
 	        { type: 'button',
-	          onclick: this.clickButton,
-	          className: 'btn btn-lg btn-default' },
+	          onClick: this.clickButton,
+	          className: cssClasses },
 	        'Click on button'
 	      );
 	    }
@@ -19912,12 +19999,57 @@
 	module.exports = Main;
 
 /***/ },
-/* 161 */
+/* 162 */
 /***/ function(module, exports, __webpack_require__) {
 
-	'use strict';
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
+	  Copyright (c) 2016 Jed Watson.
+	  Licensed under the MIT License (MIT), see
+	  http://jedwatson.github.io/classnames
+	*/
+	/* global define */
 
-	module.exports = __webpack_require__(5);
+	(function () {
+		'use strict';
+
+		var hasOwn = {}.hasOwnProperty;
+
+		function classNames () {
+			var classes = [];
+
+			for (var i = 0; i < arguments.length; i++) {
+				var arg = arguments[i];
+				if (!arg) continue;
+
+				var argType = typeof arg;
+
+				if (argType === 'string' || argType === 'number') {
+					classes.push(arg);
+				} else if (Array.isArray(arg)) {
+					classes.push(classNames.apply(null, arg));
+				} else if (argType === 'object') {
+					for (var key in arg) {
+						if (hasOwn.call(arg, key) && arg[key]) {
+							classes.push(key);
+						}
+					}
+				}
+			}
+
+			return classes.join(' ');
+		}
+
+		if (typeof module !== 'undefined' && module.exports) {
+			module.exports = classNames;
+		} else if (true) {
+			// register as 'classnames', consistent with npm package name
+			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_RESULT__ = function () {
+				return classNames;
+			}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+		} else {
+			window.classNames = classNames;
+		}
+	}());
 
 
 /***/ }

@@ -1,6 +1,7 @@
 import Hello from './Hello';
 import React from 'react';
 import ReactDOM from 'react-dom';
+import ClassNames from 'classnames';
 
 class Main extends React.Component{
   constructor(props) {
@@ -12,7 +13,8 @@ class Main extends React.Component{
       subscribeKey: 'sub-c-99748e0e-df8d-11e6-989b-02ee2ddab7fe'
     });
     this.state = {
-      uuid: Math.floor(Math.random() * 256)
+      uuid: Math.floor(Math.random() * 256),
+      isSelected: false
     }
   }
   callMeBack(status, response) {
@@ -80,13 +82,25 @@ class Main extends React.Component{
         );
         // Friend posts to your Twitter
       }
+
+      this.setState({
+        isSelected: this.state.isSelected ? false : true
+      });
     }
     render() {
+      const cssClasses = ClassNames({
+        'btn': true, 
+        'btn-lg': true, 
+        'btn-default': true,
+        'Button': true,
+        'is-selected': this.state.isSelected
+      });
+
       return (
         <button type="button"
-        onClick={this.clickButton}
-        className='btn btn-lg btn-default'>
-        Click on button
+                onClick={this.clickButton}
+                className={cssClasses}>
+          Click on button
         </button>
         )
       }
