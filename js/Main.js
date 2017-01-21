@@ -7,18 +7,23 @@ class Main extends React.Component{
   constructor(props) {
     super(props);
     this.clickButton = this.clickButton.bind(this);
-    this.gameStart = this.gameStart.bind(this);
+    this.getReady = this.getReady.bind(this);
+    this.quit = this.quit.bind(this);
     this.startCountdown = this.startCountdown.bind(this);
+    this.gameStart = this.gameStart.bind(this);
     this.updateMessageOnListener = this.updateMessageOnListener.bind(this);
     this.pubnubDemo = new PubNub({
       publishKey: 'pub-c-89d8d3f5-9d58-4c24-94e7-1c89f243296a',
       subscribeKey: 'sub-c-99748e0e-df8d-11e6-989b-02ee2ddab7fe',
-      uuid: PubNub.generateUUID()
+      uuid: PubNub.generateUUID(),
+      presenceTimeout: 10
     });
     this.state = {
       score: 0,
+      gameStarted: false,
       countdown: 3,
       isSelected: false,
+      isReady: false,
       totalReady: 0,
       highTime: 0,
       clicked: false,
@@ -31,9 +36,7 @@ class Main extends React.Component{
    componentWillMount(){
     this.pubnubDemo.addListener({
       message: this.updateMessageOnListener,
-      presence: function(presenceEvent){
-        console.log(presenceEvent);
-      }
+      presence: this.updatePresence
     })
     this.pubnubDemo.subscribe({
       channels: ['testChannel'],
@@ -77,41 +80,63 @@ class Main extends React.Component{
         });
       }
     }
+
+    if(response.message.game == "start"){
+      if(this.state.isReady){
+        console.log("Total people playing: ", this.state.totalReady);
+        this.startCountdown();
+      }
+    }
+
     if (response.message.readyCount != null) {
       console.log("total ready: ", response.message.readyCount);
       this.setState({
         totalReady: response.message.readyCount
       })
     }
-    var component = this;
-    this.pubnubDemo.hereNow(
-    {
-      channels: ["testChannel"],
-      includeUUIDs: true,
-      includeState: true
-    },
-    function (status, response) {
-      console.log("hello", response);
-      if(component.state.totalReady == response.totalOccupancy){
-        console.log("hihireadytogo");
-        component.startCountdown();
-      }
-      else{
-        console.log("Not ready yet, occupancy is ", response.totalOccupancy);
-      }
-    });
+    // var component = this;
+    // this.pubnubDemo.hereNow(
+    // {
+    //   channels: ["testChannel"],
+    //   includeUUIDs: true,
+    //   includeState: true
+    // },
+    // function (status, response) {
+    //   console.log("hello", response);
+    //   if(component.state.totalReady == response.totalOccupancy){
+    //     console.log("hihireadytogo");
+    //     component.startCountdown();
+    //   }
+    //   else{
+    //     console.log("Not everyone is ready yet, occupancy is ", response.totalOccupancy);
+    //   }
+    // });
 
     console.log(response.message);
+  }
+  updatePresence(presenceEvent) {
+    if(presenceEvent.action == "timeout"){
+      console.log("Occupancy is now at ",presenceEvent.occupancy);
+    }
+    if(presenceEvent.action == "leave"){
+      console.log("Occupancy is now at ",presenceEvent.occupancy);
+    }
+    // if(this.state.totalReady == presenceEvent.occupancy){
+    //   console.log("hihireadytogo");
+    //   this.startCountdown();
+    // }
   }
   /*
    * Main button of game clicked
    */
    clickButton() {
-    var random = Math.floor(Math.random() * 2);
+    // var random = Math.floor(Math.random() * 2);
 
     // Win
     // if (random == 0) {
-    if(!this.state.clicked) {
+    // if(!this.state.gameStarted)
+    //   return;
+    if(!this.state.clicked && this.state.gameStarted) {
       this.pubnubDemo.publish(
       {
         message: {
@@ -162,12 +187,42 @@ class Main extends React.Component{
     /*
      * Send start message to the channel
      */
-     gameStart() {
+     getReady() {
+      if(!this.state.isReady){
+        this.pubnubDemo.publish(
+        {
+          message: {
+            buttonPressed: 'true',
+            readyCount: this.state.totalReady + 1
+          },
+          channel: 'testChannel'
+        },
+        function (status, response) {
+          if (status.error) {
+            console.log(status);
+          } else {
+            console.log("message Published w/ timetoken", response.timetoken);
+          }
+        }
+        );
+        this.setState({
+          isReady: true
+        });
+      }
+
+      // TODO: Do the following only if all users are in
+      //this.startCountdown();
+    }
+    quit(){
+      this.pubnubDemo.unsubscribe({
+          channels: ['testChannel']
+      });
+    }
+    gameStart() {
       this.pubnubDemo.publish(
       {
         message: {
-          buttonPressed: 'true',
-          readyCount: this.state.totalReady + 1
+          game: 'start'
         },
         channel: 'testChannel'
       },
@@ -179,13 +234,13 @@ class Main extends React.Component{
         }
       }
       );
-
-      // TODO: Do the following only if all users are in
-      //this.startCountdown();
     }
     startCountdown() {
       if (this.state.countdown <= 0) {
-        return;
+        console.log("GAME IS STARTING");
+        this.setState({
+          gameStarted: true
+        })
       } else {
         this.setState({
           countdown: this.state.countdown - 1
@@ -205,15 +260,26 @@ class Main extends React.Component{
       return (
         <div>
           <button type="button"
-          onClick={this.gameStart}
+          onClick={this.getReady}
           className='btn btn-lg btn-default'>
-          Start
+          Ready
           </button>
           <button type="button"
           onClick={this.clickButton}
           className='btn btn-lg btn-default'>
           Click on button
           </button>
+          <button type="button"
+          onClick={this.quit}
+          className='btn btn-lg btn-default'>
+          Click before exiting or refreshing
+          </button>
+          <button type="button"
+          onClick={this.gameStart}
+          className='btn btn-lg btn-default'>
+          Start game
+          </button>
+          <h1> {this.state.isReady ? "READY" : "NOT READY YET"} </h1>
           <h1> COUNTDOWN: {this.state.countdown} </h1>
           <h1> Current Score: {this.state.score} </h1>
           <h1> Most Recent Time: {this.state.highTime} </h1>
