@@ -1,11 +1,12 @@
 var webpack = require('webpack');  
 module.exports = {  
-  entry: [
-    "./js/app.js"
-  ],
+  entry: {
+    "index": "./js/app.js",
+    "room" : "./js/room.js"
+  },
   output: {
     path: __dirname + '/static',
-    filename: "bundle.js"
+    filename: "[name].js"
   },
   module: {
     loaders: [
