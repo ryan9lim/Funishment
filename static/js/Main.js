@@ -28,7 +28,7 @@ class Main extends React.Component{
       usersPlaying: null
     }
 
-    this.channelName = 'testChannel23'
+    this.channelName = 'testChannel0'
   }
 
 
