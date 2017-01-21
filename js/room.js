@@ -1,6 +1,7 @@
-import Hello from './Hello';
-import Main from './Main';
 import React from 'react';
 import ReactDOM from 'react-dom';
+import MainRoom from './MainRoom'
+// import App from './App';
 
-ReactDOM.render(<Main/>, document.getElementById('reactEntry'));
+ReactDOM.render(<MainRoom />, document.getElementById('reactEntry'));
+

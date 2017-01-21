@@ -1,4 +1,3 @@
-import Hello from './Hello';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import ClassNames from 'classnames';
@@ -142,7 +141,7 @@ class Main extends React.Component{
       });
 
       return (
-        <div>
+        <div className='Index'>
           <button type="button"
           onClick={this.gameStart}
           className='btn btn-lg btn-default'>

@@ -1,7 +1,7 @@
 var webpack = require('webpack');  
 module.exports = {  
   entry: {
-    "index": "./js/app.js",
+    "index": "./js/index.js",
     "room" : "./js/room.js"
   },
   output: {
