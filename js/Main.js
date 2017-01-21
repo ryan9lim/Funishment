@@ -13,29 +13,96 @@ class Main extends React.Component{
     this.pubnubDemo = new PubNub({
       publishKey: 'pub-c-89d8d3f5-9d58-4c24-94e7-1c89f243296a',
       subscribeKey: 'sub-c-99748e0e-df8d-11e6-989b-02ee2ddab7fe',
-      uuid: PubNub.generateUUID()
+      uuid: PubNub.generateUUID(),
+      presenceTimeout: 10,
+      heartbeatInterval: 5
     });
     this.state = {
+      isHost: false,
       score: 0,
       countdown: 3,
       isSelected: false
+    }
+
+    this.channelName = 'testChannel21'
+  }
+
+
+  assignHost(presenceEvent){
+    if (presenceEvent.action == "join"){
+      console.log(presenceEvent.uuid + " has joined.")
+    }
+    // first one here is host
+    if (presenceEvent.action == "join" && presenceEvent.occupancy == 1){
+
+      console.log("You, " + presenceEvent.uuid + ", are Host.")
+      this.setState({
+        isHost: true
+      })
+
+      this.pubnubDemo.setState({
+        state: {
+          "host": true
+        },
+        uuid: this.pubnubDemo.getUUID(),
+        channels: [this.channelName]
+      })
+    }
+
+    //if host leaves, someone else takes over
+    if (presenceEvent.action == "leave" || presenceEvent.action == "timeout") 
+      console.log(presenceEvent.uuid + " has left.")
+    if ((presenceEvent.action == "leave" || presenceEvent.action == "timeout") && presenceEvent.state.host == true){
+      console.log(presenceEvent.uuid + " is no longer Host.")
+      this.pubnubDemo.hereNow({
+        channels : [this.channelName],
+        includeUUIDs: true,
+        includeState: true
+      },
+      function(status,response){
+        if(response.channels[this.channelName].occupants[0].uuid == this.pubnubDemo.getUUID()) {
+          console.log("You, "+ presenceEvent.uuid + ", are Host.")
+          this.setState({
+            isHost: true
+          })
+
+          this.pubnubDemo.setState({
+            state: {
+              "host": true
+            },
+            uuid: this.pubnubDemo.getUUID(),
+            channels: [this.channelName]
+          })
+        } else {
+          console.log(response.channels[this.channelName].occupants[0].uuid + " is Host.")
+        }
+      }.bind(this))
     }
   }
   /*
    * Callback of element initialization
    */
-  componentWillMount(){
+   componentWillMount(){
+
+    this.pubnubDemo.setState({
+        state: {
+          "host": false
+        },
+        uuid: this.pubnubDemo.getUUID(),
+        channels: [this.channelName]
+      })
     this.pubnubDemo.addListener({
       message: this.updateMessageOnListener,
       presence: function(presenceEvent){
-        console.log(presenceEvent);
-      }
+        this.assignHost(presenceEvent);
+      }.bind(this)
     })
     this.pubnubDemo.subscribe({
-      channels: ['testChannel'],
+      channels: [this.channelName],
       withPresence: true
     })
   }
+
   updateMessageOnListener(response) {
     if (response.message.newCount != null) {
       console.log("found a new count and it is", response.message.newCount);
@@ -48,7 +115,7 @@ class Main extends React.Component{
   /*
    * Main button of game clicked
    */
-  clickButton() {
+   clickButton() {
     var random = Math.floor(Math.random() * 2);
 
     // Win
@@ -102,7 +169,7 @@ class Main extends React.Component{
     /*
      * Send start message to the channel
      */
-    gameStart() {
+     gameStart() {
       this.pubnubDemo.publish(
       {
         message: {
@@ -143,18 +210,18 @@ class Main extends React.Component{
 
       return (
         <div>
-          <button type="button"
-          onClick={this.gameStart}
-          className='btn btn-lg btn-default'>
-          Start
-          </button>
-          <button type="button"
-          onClick={this.clickButton}
-          className='btn btn-lg btn-default'>
-          Click on button
-          </button>
-          <h1> COUNTDOWN: {this.state.countdown} </h1>
-          <h1> Current Score: {this.state.score} </h1>
+        <button type="button"
+        onClick={this.gameStart}
+        className='btn btn-lg btn-default'>
+        Start
+        </button>
+        <button type="button"
+        onClick={this.clickButton}
+        className='btn btn-lg btn-default'>
+        Click on button
+        </button>
+        <h1> COUNTDOWN: {this.state.countdown} </h1>
+        <h1> Current Score: {this.state.score} </h1>
         </div>
         )
       }

@@ -19883,31 +19883,95 @@
 	    _this.pubnubDemo = new PubNub({
 	      publishKey: 'pub-c-89d8d3f5-9d58-4c24-94e7-1c89f243296a',
 	      subscribeKey: 'sub-c-99748e0e-df8d-11e6-989b-02ee2ddab7fe',
-	      uuid: PubNub.generateUUID()
+	      uuid: PubNub.generateUUID(),
+	      presenceTimeout: 10,
+	      heartbeatInterval: 5
 	    });
 	    _this.state = {
+	      isHost: false,
 	      score: 0,
 	      countdown: 3,
 	      isSelected: false
 	    };
+
+	    _this.channelName = 'testChannel21';
 	    return _this;
 	  }
-	  /*
-	   * Callback of element initialization
-	   */
-
 
 	  _createClass(Main, [{
+	    key: 'assignHost',
+	    value: function assignHost(presenceEvent) {
+	      if (presenceEvent.action == "join") {
+	        console.log(presenceEvent.uuid + " has joined.");
+	      }
+	      // first one here is host
+	      if (presenceEvent.action == "join" && presenceEvent.occupancy == 1) {
+
+	        console.log("You, " + presenceEvent.uuid + ", are Host.");
+	        this.setState({
+	          isHost: true
+	        });
+
+	        this.pubnubDemo.setState({
+	          state: {
+	            "host": true
+	          },
+	          uuid: this.pubnubDemo.getUUID(),
+	          channels: [this.channelName]
+	        });
+	      }
+
+	      //if host leaves, someone else takes over
+	      if (presenceEvent.action == "leave" || presenceEvent.action == "timeout") console.log(presenceEvent.uuid + " has left.");
+	      if ((presenceEvent.action == "leave" || presenceEvent.action == "timeout") && presenceEvent.state.host == true) {
+	        console.log(presenceEvent.uuid + " is no longer Host.");
+	        this.pubnubDemo.hereNow({
+	          channels: [this.channelName],
+	          includeUUIDs: true,
+	          includeState: true
+	        }, function (status, response) {
+	          if (response.channels[this.channelName].occupants[0].uuid == this.pubnubDemo.getUUID()) {
+	            console.log("You, " + presenceEvent.uuid + ", are Host.");
+	            this.setState({
+	              isHost: true
+	            });
+
+	            this.pubnubDemo.setState({
+	              state: {
+	                "host": true
+	              },
+	              uuid: this.pubnubDemo.getUUID(),
+	              channels: [this.channelName]
+	            });
+	          } else {
+	            console.log(response.channels[this.channelName].occupants[0].uuid + " is Host.");
+	          }
+	        }.bind(this));
+	      }
+	    }
+	    /*
+	     * Callback of element initialization
+	     */
+
+	  }, {
 	    key: 'componentWillMount',
 	    value: function componentWillMount() {
+
+	      this.pubnubDemo.setState({
+	        state: {
+	          "host": false
+	        },
+	        uuid: this.pubnubDemo.getUUID(),
+	        channels: [this.channelName]
+	      });
 	      this.pubnubDemo.addListener({
 	        message: this.updateMessageOnListener,
-	        presence: function presence(presenceEvent) {
-	          console.log(presenceEvent);
-	        }
+	        presence: function (presenceEvent) {
+	          this.assignHost(presenceEvent);
+	        }.bind(this)
 	      });
 	      this.pubnubDemo.subscribe({
-	        channels: ['testChannel'],
+	        channels: [this.channelName],
 	        withPresence: true
 	      });
 	    }
