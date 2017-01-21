@@ -30,7 +30,7 @@ class Main extends React.Component{
       cleared: false
     }
 
-    this.channelName = 'testChannel21'
+    this.channelName = 'testChannel4'
   }
 
 
@@ -204,16 +204,16 @@ class Main extends React.Component{
           <button type="button"
           onClick={this.getReady}
           className='btn btn-lg btn-default'>
-          Ready
+            Ready
           </button>
           <button type="button"
           onClick={this.gameStart}
           className='btn btn-lg btn-default'>
-          Start game
+            Start game
           </button>
           <h1> {this.state.isReady ? "READY" : "NOT READY YET"} </h1>
           <h1 style={{display: (this.state.gameStarted ? "none" : "block")}}> COUNTDOWN: {this.state.countdown} </h1>
-          <Game gameStarted={this.state.gameStarted}/>
+          <Game isHost={this.state.isHost} usersPlaying={this.state.usersPlaying} gameStarted={this.state.gameStarted} pubnubDemo={this.pubnubDemo} channelName={this.channelName}/>
         </div>
         )
       }
