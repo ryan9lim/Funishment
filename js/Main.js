@@ -8,7 +8,6 @@ class Main extends React.Component{
     super(props);
     this.clickButton = this.clickButton.bind(this);
     this.getReady = this.getReady.bind(this);
-    this.quit = this.quit.bind(this);
     this.startCountdown = this.startCountdown.bind(this);
     this.gameStart = this.gameStart.bind(this);
     this.updateMessageOnListener = this.updateMessageOnListener.bind(this);
@@ -213,11 +212,6 @@ class Main extends React.Component{
       // TODO: Do the following only if all users are in
       //this.startCountdown();
     }
-    quit(){
-      this.pubnubDemo.unsubscribe({
-          channels: ['testChannel']
-      });
-    }
     gameStart() {
       this.pubnubDemo.publish(
       {
@@ -268,11 +262,6 @@ class Main extends React.Component{
           onClick={this.clickButton}
           className='btn btn-lg btn-default'>
           Click on button
-          </button>
-          <button type="button"
-          onClick={this.quit}
-          className='btn btn-lg btn-default'>
-          Click before exiting or refreshing
           </button>
           <button type="button"
           onClick={this.gameStart}
