@@ -10,10 +10,8 @@ class Main extends React.Component{
     this.pubnubDemo = new PubNub({
       publishKey: 'pub-c-89d8d3f5-9d58-4c24-94e7-1c89f243296a',
       subscribeKey: 'sub-c-99748e0e-df8d-11e6-989b-02ee2ddab7fe'
+      uuid: PubNub.generateUUID()
     });
-    this.state = {
-      uuid: Math.floor(Math.random() * 256)
-    }
   }
   callMeBack(status, response) {
     if (status.error) {
@@ -35,10 +33,14 @@ class Main extends React.Component{
     this.pubnubDemo.addListener({
       message: function(message){
         console.log(message);
+      },
+      presence: function(presenceEvent){
+        console.log(presenceEvent);
       }
     })
     this.pubnubDemo.subscribe({
       channels: ['testChannel']
+      withPresence: true
     })
   }
   clickButton() {
