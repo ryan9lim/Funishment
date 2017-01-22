@@ -489,7 +489,8 @@ class Game extends React.Component {
     // update discard
     this.props.pubnubDemo.publish({
       message: {
-        discard: this.state.discard
+        discard: this.state.discard,
+        lastPlay: this.state.lastPlay
       },
       channel: this.gameChannel
     });
