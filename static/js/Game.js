@@ -815,7 +815,7 @@ class Game extends React.Component {
         </div>
 
         <div id='topCard' className={'Label ' + this.shouldHide(this.state.callStatus == 0)}>
-          Top Card of Discard Pile : {(this.state.discard.length > 0) ? this.translate(this.state.discard[0]) : ''}
+          Top Card of Discard Pile : <br/> {(this.state.discard.length > 0) ? this.translate(this.state.discard[0]) : ''}
         </div>
         <br />
         <div>
