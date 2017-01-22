@@ -20243,17 +20243,6 @@
 	      discard: [], // Discard Pile
 	      hand: [], // Current Player's hand
 	      callStatus: 0, // 1 is you win, -1 is you lose, 2 is someone else won, -2 is someone else lost
-<<<<<<< HEAD
-	      turn: 0,
-	      chosenCards: '',
-	      isTurn: false,
-	      canDeal: true,
-	      playing: false,
-	      cardToAdd: '',
-	      hasDrawn: false,
-	      points: 0,
-	      turnNumber: 1
-=======
 	      turn: 0, // Whose turn it is
 	      chosenCards: '', // Cards that have been chosen to be discarded
 	      isTurn: false, // Whether it is the current player's turn
@@ -20262,8 +20251,8 @@
 	      cardToAdd: '', // Which card being drawn and added to hand
 	      hasDrawn: false, // Completed draw phase of turn
 	      lastPlay: [], // Set of last few cards being played
-	      points: 0 // Current player's point total
->>>>>>> d06846d061dbacb4bdaff0288bb84f3489cef07d
+	      points: 0, // Current player's point total
+	      turnNumber: 1
 	    };
 
 	    // Channel for the game data to be sent on
@@ -20722,14 +20711,11 @@
 
 	      return true;
 	    }
-<<<<<<< HEAD
-=======
 
 	    /*
 	     * Callback handler for button that deals cards
 	     */
 
->>>>>>> d06846d061dbacb4bdaff0288bb84f3489cef07d
 	  }, {
 	    key: 'dealCards',
 	    value: function dealCards() {
@@ -20781,20 +20767,28 @@
 	  }, {
 	    key: 'drawFromDeck',
 	    value: function drawFromDeck() {
-	      var card = this.state.deck[0];
+	      var card = this.state.deck[0]; // Top card of deck
+
+	      // Update the deck in this user's state
 	      this.setState({
 	        deck: this.state.deck.slice(1)
 	      });
+
+	      // Current user's index in the array of usersPlaying
 	      var indexInUsers = this.getUserIndex();
 
+	      // Update the card to be added and whether the user has drawn in the user's state
 	      this.setState({
 	        cardToAdd: card,
 	        hasDrawn: true
 	      });
 
-	      // update deck
+	      // Update the deck
+	      // If there are cards left, just remove the card
+	      // If there are no cards left, reshuffle the discard (except top card) back into deck
 	      if (this.state.deck.length > 1) {
-	        // deck still valid
+	        // Deck still valid
+	        // Publish a packet with the new deck
 	        this.props.pubnubDemo.publish({
 	          message: {
 	            deck: this.state.deck.slice(1)
@@ -20802,8 +20796,9 @@
 	          channel: this.gameChannel
 	        });
 	      } else {
-	        // deck out and need to reshuffle discard into it
+	        // Deck out and need to reshuffle discard into it
 	        var newDeck = this.shuffle(this.state.discard.slice(1));
+	        // Publish a packet with the new deck
 	        this.props.pubnubDemo.publish({
 	          message: {
 	            deck: newDeck,
@@ -20814,17 +20809,31 @@
 	        });
 	      }
 	    }
+
+	    /*
+	     * Draw a card from the discard pile
+	     */
+
 	  }, {
 	    key: 'drawFromDiscard',
 	    value: function drawFromDiscard() {
-	      var card = this.state.discard.shift();
+	      var card = this.state.discard[0]; // Top card of discard
+
+	      // Update the discard in this user's state
+	      this.setState({
+	        discard: this.state.discard.slice(1)
+	      });
+
+	      // Current user's index in the array of usersPlaying
 	      var indexInUsers = this.getUserIndex();
+
+	      // Update the card to be added and whether the user has drawn in the user's state
 	      this.setState({
 	        cardToAdd: card,
 	        hasDrawn: true
 	      });
 
-	      // update discard
+	      // Publish packet telling users to update discard and lastPlay
 	      this.props.pubnubDemo.publish({
 	        message: {
 	          discard: this.state.discard,
@@ -20833,23 +20842,37 @@
 	        channel: this.gameChannel
 	      });
 	    }
+
+	    /*
+	     * Callback handler for playing a hand
+	     */
+
 	  }, {
 	    key: 'playHand',
 	    value: function playHand() {
 	      console.log("My turn to play!");
+	      // It is the current user's turn
 	      this.setState({
 	        isTurn: true
 	      });
 	    }
+
+	    /*
+	     * Callback handler for when Yusef is called
+	     */
+
 	  }, {
 	    key: 'yusef',
 	    value: function yusef() {
+	      // Cannot call Yusef until 3rd turn
 	      if (this.state.turnNumber < 3) {
 	        console.log("Can't call yusef yet!");
 	        return;
 	      }
-	      var myCount = this.summ(this.state.hand);
+	      var myCount = this.summ(this.state.hand); // Determine the score of the current user's hand
 	      console.log("called yusef with hand of value ", myCount);
+
+	      // Publish a packet for other users to check the Yusef call of the current user
 	      this.props.pubnubDemo.publish({
 	        message: {
 	          dealing: false,
@@ -20863,24 +20886,40 @@
 	        channel: this.gameChannel
 	      });
 	    }
+
+	    /*
+	     * Determine the score of a hand
+	     */
+
 	  }, {
 	    key: 'summ',
 	    value: function summ(arr) {
-	      var count = 0;
+	      var count = 0; // Initialize the count
 	      var i;
 	      console.log(this.state.hand);
+
+	      // For each card, add its value to the total count
 	      for (i = 0; i < this.state.hand.length; i++) {
 	        if (this.state.hand[i].charCodeAt(0) <= "9".charCodeAt(0) && this.state.hand[i].charCodeAt(0) >= "2".charCodeAt(0)) {
+	          // Card between 2 and 9
 	          count += this.state.hand[i].charCodeAt(0) - "0".charCodeAt(0);
 	        } else if (this.state.hand[i].slice(0, 1) == "A") {
+	          // Card is an Ace
 	          count += 1;
 	        } else {
+	          // Card is a royal (10 J Q K)
 	          count += 10;
 	        }
 	      }
+
 	      console.log(count);
 	      return count;
 	    }
+
+	    /*
+	     * Render the HTML for this React element
+	     */
+
 	  }, {
 	    key: 'render',
 	    value: function render() {
@@ -20928,8 +20967,6 @@
 	          this.state.lastPlay
 	        ),
 	        _react2.default.createElement(
-<<<<<<< HEAD
-=======
 	          'div',
 	          { id: 'topCard', style: { display: this.state.callStatus == 0 ? "block" : "none" } },
 	          'Top Card of Discard Pile: ',
@@ -20959,7 +20996,6 @@
 	          this.state.points
 	        ),
 	        _react2.default.createElement(
->>>>>>> d06846d061dbacb4bdaff0288bb84f3489cef07d
 	          'div',
 	          { style: { display: !this.state.canDeal ? "block" : "none" } },
 	          _react2.default.createElement(
