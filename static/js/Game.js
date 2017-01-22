@@ -793,45 +793,44 @@ class Game extends React.Component {
 
         {/* Deck Info */}
 
+        <div id='lastPlay' className={'Label ' + this.shouldHide(this.state.callStatus == 0)}>
+          Last Play : {this.state.lastPlay}
+        </div>
+        
         <div id='deck' 
-             className={this.shouldHide(this.state.callStatus == 0)}>
-          Deck Cards Left: {this.state.deck.length}
+             className={'Label ' + this.shouldHide(this.state.callStatus == 0)}>
+          Deck Cards Left : {this.state.deck.length}  
         </div>
 
-        <div id='discard' className={this.shouldHide(this.state.callStatus == 0)}>
-          Discard Pile Size: {this.state.discard.length}
+        <div id='discard' className={'Label ' + this.shouldHide(this.state.callStatus == 0)}>
+          Discard Pile Size : {this.state.discard.length}
         </div>
 
-        <div id='lastPlay' className={this.shouldHide(this.state.callStatus == 0)}>
-          Last Play: {this.state.lastPlay}
-        </div>
-
-        <div id='topCard' className={this.shouldHide(this.state.callStatus == 0)}>
-          Top Card of Discard Pile: {this.state.discard[0]}
+        <div id='topCard' className={'Label ' + this.shouldHide(this.state.callStatus == 0)}>
+          Top Card of Discard Pile : {this.state.discard[0]}
         </div>
         <br />
         <div>
           {Array(this.props.usersPlaying ? this.props.usersPlaying.length : 0).fill(" ").map((name, index) => 
-            (<div className='col-md-2' style={{display: ((index != this.getUserIndex()) ? "block" : "none")}}>Player {index+1} : Cards {this.state.allHands ? this.state.allHands[index] : 0}  </div>)
+            (<div className='Label' style={{display: ((index != this.getUserIndex()) ? "block" : "none")}}>Player {index+1}: <br/>Cards {this.state.allHands ? this.state.allHands[index] : 0}  </div>)
           )}
         </div>
-        <br />
-
-        <div id='points'>
-          Total Points: {this.state.points}
+        <div id='points' className="scoreboard">
+          Total Points : {this.state.points}
         </div>
+
 
         {/* Draw Buttons */}
 
-          <button className={'draw-button ' + this.shouldHide((this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn))} 
-                  onClick={this.drawFromDeck}>  
-            Draw from Deck 
-          </button>
+        <button className={'draw-button ' + this.shouldHide((this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn))} 
+                onClick={this.drawFromDeck}>  
+          Draw from Deck 
+        </button>
 
-          <button className={'draw-button ' + this.shouldHide((this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn  && this.state.discard.length > 0))} 
-                  onClick={this.drawFromDiscard}>  
-            Draw from Discarded Pile 
-          </button>
+        <button className={'draw-button ' + this.shouldHide((this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn  && this.state.discard.length > 0))} 
+                onClick={this.drawFromDiscard}>  
+          Draw from Discarded Pile 
+        </button>
 
           {/*<div id='hand' style={{display: ((this.state.callStatus == 0 && !(this.state.isTurn && this.state.hasDrawn)) ? "block" : "none")}}>
             {this.state.hand.map((name, index) => 
@@ -867,7 +866,9 @@ class Game extends React.Component {
                 <span> {this.translate(this.state.hand[index])} </span> 
               </button>)
           )}
+
         </div>
+
 
         {/* Submit Button */}
 

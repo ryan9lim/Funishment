@@ -8,14 +8,28 @@
   text-align: center;
 }
 
-.Room button {
-  display: inline-block;
-  margin-left: 5px;
-}
-
 .Room .form-control {
   display: inline-block;
-  width: 450px;
+}
+
+@media (max-width: 648px) {
+  .Room .form-control {
+    width: 300px;
+  }
+  .Room button {
+    margin-top: 5px;
+    width: 300px;
+  }
+}
+
+@media (min-width: 648px) {
+  .Room .form-control {
+    width: 450px;
+  }
+  .Room button {
+    width: 150px;
+    margin-left: 5px;
+  }
 }
 
 .Room .ChannelList {

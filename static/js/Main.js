@@ -329,7 +329,7 @@ class Main extends React.Component{
           </button>
           <button type="button" onClick={this.gameStart}
                   className={buttonCSS + ' start-button'}>
-            Start game
+            Start Game
           </button>
         </div>
 
