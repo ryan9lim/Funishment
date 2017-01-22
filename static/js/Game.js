@@ -730,6 +730,51 @@ class Game extends React.Component {
   }
 
   /*
+   * Translate from code to card in words
+   */
+  translate(str) {
+    var suit;
+    switch(str.slice(str.length - 1)) {
+      case "C":
+        suit = 'Clubs';
+        break;
+      case "D":
+        suit = 'Diamonds';
+        break;
+      case "H":
+        suit = 'Hearts';
+        break;
+      case "S":
+        suit = 'Spades';
+        break;
+      default:
+        suit = 'Questionable Suit';
+        break;
+    }
+
+    var num;
+    switch(str.slice(0,str.length - 1)) {
+      case "A":
+        num = 'Ace';
+        break;
+      case "J":
+        num = 'Jack';
+        break;
+      case "Q":
+        num = 'Queen';
+        break;
+      case "K":
+        num = 'King';
+        break;
+      default:
+        num = str.slice(0,str.length - 1);
+        break;
+    }
+
+    return num + ' of ' + suit;
+  }
+
+  /*
    * Render the HTML for this React element
    */
   render() {
@@ -806,7 +851,7 @@ class Game extends React.Component {
              className={this.shouldHide(this.state.callStatus == 0 && !(this.state.isTurn && this.state.hasDrawn))}>
           {this.state.hand.map((name, index) => 
               (<div className='card '>  
-                <span> {this.state.hand[index]} </span>
+                <span> {this.translate(this.state.hand[index])} </span>
               </div>)
           )}
         </div>
@@ -818,7 +863,7 @@ class Game extends React.Component {
           {this.state.hand.map((name, index) => 
               (<button onClick={this.select.bind(this,index)}
                        className={'card ' + this.shouldSelect(this.state.chosenCards.includes(index.toString), index)} > 
-                <span> {this.state.hand[index]} </span> 
+                <span> {this.translate(this.state.hand[index])} </span> 
               </button>)
           )}
         </div>
