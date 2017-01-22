@@ -20174,7 +20174,8 @@
 
 	{/*
 	   Props available to Game:
-	    - gameStarted (boolean)
+	  
+	   - gameStarted (boolean)
 	  */}
 
 	var Game = function (_React$Component) {
@@ -20259,8 +20260,13 @@
 	        });
 	      }
 	      if (response.message.playing && response.message.turn != null) {
+	        this.setState({
+	          turn: response.message.turn
+	        });
+	        console.log("changing turns to " + response.message.turn.toString());
 	        var indexInUsers = this.getUserIndex();
 	        if (indexInUsers == response.message.turn) {
+	          console.log("it is my turn");
 	          this.playHand();
 	        } else {
 	          console.log(this.props.usersPlaying[response.message.turn] + " turn to play!");
@@ -20408,9 +20414,12 @@
 	          newHand.splice(i, 1);
 	        }
 	      }
+
+	      console.log("current turn is", this.state.turn, "...finished playing and about to change turn to", (this.state.turn + 1) % this.props.usersPlaying.length);
 	      this.props.pubnubDemo.publish({
 	        message: {
-	          turn: (this.state.turn + 1) % this.state.usersPlaying.length,
+	          playing: true,
+	          turn: (this.state.turn + 1) % this.props.usersPlaying.length,
 	          discard: this.state.discard
 	        },
 	        channel: this.gameChannel
@@ -20468,7 +20477,7 @@
 	    key: 'drawFromDeck',
 	    value: function drawFromDeck() {
 	      var card = this.state.deck.shift();
-	      var indexInUsers = getUserIndex();
+	      var indexInUsers = this.getUserIndex();
 	      //update hand
 	      this.state.hand.push(card);
 
@@ -20478,9 +20487,6 @@
 	          deck: this.state.deck
 	        },
 	        channel: this.gameChannel
-	      });
-	      this.setState({
-	        isTurn: false
 	      });
 	    }
 	  }, {
@@ -20497,9 +20503,6 @@
 	          discard: this.state.discard
 	        },
 	        channel: this.gameChannel
-	      });
-	      this.setState({
-	        isTurn: false
 	      });
 	    }
 	  }, {
@@ -20712,6 +20715,7 @@
 
 	{/*
 	   Props available to TweetInput:
+	  
 	  */}
 
 	var TweetInput = function (_React$Component) {

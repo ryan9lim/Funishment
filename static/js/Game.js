@@ -78,8 +78,13 @@ class Game extends React.Component {
       });
     }
     if (response.message.playing && response.message.turn != null){
+      this.setState({
+        turn: response.message.turn
+      });
+      console.log("changing turns to " + response.message.turn.toString());
       var indexInUsers = this.getUserIndex()
       if (indexInUsers == response.message.turn) {
+        console.log("it is my turn");
         this.playHand();
       } else {
         console.log(this.props.usersPlaying[response.message.turn] + " turn to play!")
@@ -224,9 +229,12 @@ class Game extends React.Component {
         newHand.splice(i, 1);
       }
     }
+
+    console.log("current turn is", this.state.turn, "...finished playing and about to change turn to", (this.state.turn+1) % this.props.usersPlaying.length);
     this.props.pubnubDemo.publish({
       message: {
-        turn: (this.state.turn+1) % this.state.usersPlaying.length,
+        playing: true,
+        turn: (this.state.turn+1) % this.props.usersPlaying.length,
         discard: this.state.discard
       },
       channel: this.gameChannel
@@ -280,7 +288,7 @@ class Game extends React.Component {
   }
   drawFromDeck() {
     var card = this.state.deck.shift()
-    var indexInUsers = getUserIndex();
+    var indexInUsers = this.getUserIndex();
     //update hand
     this.state.hand.push(card)
 
@@ -290,9 +298,6 @@ class Game extends React.Component {
         deck: this.state.deck
       },
       channel: this.gameChannel
-    });
-    this.setState({
-      isTurn: false
     });
   }
   drawFromDiscard() {
@@ -307,9 +312,6 @@ class Game extends React.Component {
         discard: this.state.discard
       },
       channel: this.gameChannel
-    });
-    this.setState({
-      isTurn: false
     });
   }
   playHand(){
