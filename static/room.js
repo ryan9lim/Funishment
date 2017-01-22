@@ -21651,7 +21651,7 @@
 	          { className: 'container' },
 	          _react2.default.createElement(
 	            'p',
-	            null,
+	            { className: 'title' },
 	            'Funishment'
 	          ),
 	          _react2.default.createElement(ChannelForm, null),
