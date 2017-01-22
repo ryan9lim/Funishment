@@ -870,20 +870,20 @@ class Game extends React.Component {
         <div id='topCard' className={'Label ' + this.shouldHide(this.state.callStatus == 0)}>
           Top Card of Discard Pile : <br/> {(this.state.discard.length > 0) ? this.translate(this.state.discard[0]) : ''}
         </div>
-        <br />
         <div>
           {Array(this.props.usersPlaying ? this.props.usersPlaying.length : 0).fill(" ").map((name, index) => 
             (<div className='Label' style={{display: ((index != this.getUserIndex()) ? "block" : "none")}}>Player {index+1}: {this.state.allHands ? this.state.allHands[index] : 0} Cards left </div>)
           )}
+        </div>
+        <div id='whoseTurn' className="Label">
+          Current Turn : {'Player ' + (this.state.turn + 1).toString()}
         </div>
 
         <div id='points' className="scoreboard">
           Total Points : {this.state.points}
         </div>
 
-        <div id='whoseTurn' className="scoreboard">
-          Current Turn : {'Player ' + (this.state.turn + 1).toString()}
-        </div>
+
 
 
         {/* Draw Buttons */}
