@@ -20172,15 +20172,19 @@
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	{/*
-	   Props available to Game:
-	  
-	   - gameStarted (boolean)
-	   - isHost (boolean)
-	   - usersPlaying (array)
-	   - pubnubDemo (Pubnub Object)
-	   - channelName (string)
-	  */}
+	{} /*
+	    Props available to Game:
+	   
+	    - gameStarted (boolean)
+	    - isHost (boolean)
+	    - usersPlaying (array)
+	    - pubnubDemo (Pubnub Object)
+	    - channelName (string)
+	   */
+
+	/*
+	 * Class for the Game aspect of the app
+	 */
 
 	var Game = function (_React$Component) {
 	  _inherits(Game, _React$Component);
@@ -20188,6 +20192,7 @@
 	  function Game(props) {
 	    _classCallCheck(this, Game);
 
+	    // Bind this to all of the necessary methods
 	    var _this = _possibleConstructorReturn(this, (Game.__proto__ || Object.getPrototypeOf(Game)).call(this, props));
 
 	    _this.yusef = _this.yusef.bind(_this);
@@ -20200,25 +20205,30 @@
 	    _this.dealCards = _this.dealCards.bind(_this);
 	    _this.lose = _this.lose.bind(_this);
 	    _this.updateOnListener = _this.updateOnListener.bind(_this);
+
+	    // Initialize the state of Game
 	    _this.state = {
-	      deck: ['DECK NOT INIITIALIZED'],
-	      discard: [],
-	      hand: [],
+	      deck: ['DECK NOT INIITIALIZED'], // Deck to be drawn from
+	      handDealt: false, // The current player's hand is dealt
+	      discard: [], // Discard Pile
+	      hand: [], // Current Player's hand
 	      callStatus: 0, // 1 is you win, -1 is you lose, 2 is someone else won, -2 is someone else lost
-	      turn: 0,
-	      chosenCards: '',
-	      isTurn: false,
-	      canDeal: true,
-	      playing: false,
-	      cardToAdd: '',
-	      hasDrawn: false,
-	      allHands: [],
-	      lastPlay: [],
-	      points: 0
+	      turn: 0, // Whose turn it is
+	      chosenCards: '', // Cards that have been chosen to be discarded
+	      isTurn: false, // Whether it is the current player's turn
+	      canDeal: true, // If the 'deal' button can currently be used
+	      playing: false, // Whether we are currently playing (finished the setup of the game)
+	      cardToAdd: '', // Which card being drawn and added to hand
+	      hasDrawn: false, // Completed draw phase of turn
+	      lastPlay: [], // Set of last few cards being played
+	      points: 0 // Current player's point total
 	    };
+
+	    // Channel for the game data to be sent on
 	    _this.gameChannel = _this.props.channelName + 'gameChannel';
 	    return _this;
 	  }
+
 	  /*
 	   * Callback of element initialization
 	   */
@@ -20227,24 +20237,35 @@
 	  _createClass(Game, [{
 	    key: 'componentWillMount',
 	    value: function componentWillMount() {
-
+	      // Set the state of the pubnub demo of parent (host status and open channels)
 	      this.props.pubnubDemo.setState({
 	        state: {
 	          "host": this.props.isHost
 	        },
 	        channels: [this.channelName, this.gameChannel]
 	      });
+
+	      // Add a listener for messages sent using parent's pubnubdemo
 	      this.props.pubnubDemo.addListener({
 	        message: this.updateOnListener
 	      });
+
+	      // Subscribe to the game channel
 	      this.props.pubnubDemo.subscribe({
 	        channels: [this.gameChannel]
 	      });
 	    }
+
+	    /*
+	     * Get the index of the current user in the global array of users playing
+	     */
+
 	  }, {
 	    key: 'getUserIndex',
 	    value: function getUserIndex() {
 	      var i;
+
+	      // For each user, check if UUID matches id in the usersPlaying array
 	      for (i = 0; i < this.props.usersPlaying.length; i++) {
 	        if (this.props.usersPlaying[i] == this.props.pubnubDemo.getUUID()) {
 	          return i;
@@ -20253,17 +20274,23 @@
 	      }
 	      return -1;
 	    }
+
+	    /*
+	     * Callback of listener when packets sent regarding the game
+	     */
+
 	  }, {
 	    key: 'updateOnListener',
 	    value: function updateOnListener(response) {
-	      // updates deck
+	      // Updates deck
 	      if (response.message.deck != null) {
 	        console.log("size of deck is ", response.message.deck.length);
 	        this.setState({
 	          deck: response.message.deck
 	        });
 	      }
-	      // updates discard
+
+	      // Updates discard and lastPlay
 	      if (response.message.discard != null) {
 	        console.log("size of discard is ", response.message.discard.length);
 	        this.setState({
@@ -20278,6 +20305,7 @@
 	          console.log(this.state.allHands);
 	        }
 	      }
+
 	      if (response.message.playing && response.message.turn != null) {
 	        this.setState({
 	          turn: response.message.turn
