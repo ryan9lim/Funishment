@@ -49,7 +49,8 @@ class Game extends React.Component {
       lastPlay: [], // Set of last few cards being played
       points: 0, // Current player's point total
       allHands: [], // Set of number of cards in each player's hands
-      turnNumber: 1
+      turnNumber: 1, // Turn number of current player
+      playInvalid: false // Whether the current attempted play is invalid
     }
 
     // Channel for the game data to be sent on
@@ -376,12 +377,14 @@ class Game extends React.Component {
         isTurn: false,
         chosenCards: '',
         cardToAdd: '',
+        playInvalid: false,
         hasDrawn: false,
         turnNumber: this.state.turnNumber + 1
       });
     } else {
       // Play invalid, clear the chosen cards
       this.setState({
+        playInvalid: true,
         chosenCards: ''
       });
     }
@@ -878,6 +881,10 @@ class Game extends React.Component {
         </div>
 
         {/* Submit Button */}
+
+        <div id='invalidPlay' className={this.shouldHide(this.state.playInvalid)}>
+          Play invalid! Please only play matching cards, straights of the same suit, or single cards.
+        </div>
 
         <button className={'submit-button btn btn-default ' + this.shouldHide(this.state.callStatus == 0 && this.state.isTurn && this.state.hasDrawn)} 
                 onClick={this.playCards}>  
