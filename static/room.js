@@ -20247,7 +20247,6 @@
 
 	    var _this3 = _possibleConstructorReturn(this, (ChannelList.__proto__ || Object.getPrototypeOf(ChannelList)).call(this, props));
 
-<<<<<<< HEAD
 	    _this3.pubnubDemo = new PubNub({
 	      publishKey: 'pub-c-89d8d3f5-9d58-4c24-94e7-1c89f243296a',
 	      subscribeKey: 'sub-c-99748e0e-df8d-11e6-989b-02ee2ddab7fe',
@@ -20257,16 +20256,11 @@
 	    _this3.state = {
 	      channelList: [],
 	      occupancyList: []
-=======
-	    _this3.state = {
-	      channelList: ['Channel 1', 'Channel 2', 'Channel 3']
->>>>>>> f04840e47cbe3673cb9ed3647c10b409c41baf2a
 	    };
 	    return _this3;
 	  }
 
 	  _createClass(ChannelList, [{
-<<<<<<< HEAD
 	    key: 'componentWillMount',
 	    value: function componentWillMount() {
 	      this.pubnubDemo.hereNow({
@@ -20318,18 +20312,6 @@
 	            name,
 	            _react2.default.createElement('br', null),
 	            'Occupancy: ' + _this4.state.occupancyList[index]
-=======
-	    key: 'render',
-	    value: function render() {
-	      return _react2.default.createElement(
-	        'div',
-	        { className: 'ChannelList' },
-	        this.state.channelList.map(function (name, index) {
-	          return _react2.default.createElement(
-	            'button',
-	            { className: 'btn btn-lg btn-default', key: index },
-	            'Go to ' + name
->>>>>>> f04840e47cbe3673cb9ed3647c10b409c41baf2a
 	          );
 	        })
 	      );

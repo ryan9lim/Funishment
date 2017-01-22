@@ -19828,10 +19828,6 @@
 	    };
 
 	    _this.channelName = _store2.default.get('channelName');
-<<<<<<< HEAD
-=======
-	    _this.channelName = 'stupidChannel1111';
->>>>>>> f04840e47cbe3673cb9ed3647c10b409c41baf2a
 	    return _this;
 	  }
 
@@ -20199,7 +20195,7 @@
 	      hand: ['empty', 'empty', 'empty', 'empty', 'empty'],
 	      callStatus: 0 // 1 is you win, -1 is you lose, 2 is someone else won, -2 is someone else lost
 	    };
-	    _this.gameChannel = 'gameChannel0011';
+	    _this.gameChannel = _this.props.channelName + 'gameChannel';
 	    return _this;
 	  }
 	  /*
@@ -20262,15 +20258,6 @@
 	              },
 	              channel: this.gameChannel
 	            });
-	          } else {
-	            this.props.pubnubDemo.publish({
-	              message: {
-	                dealing: false,
-	                fixDeckAfterDeal: true,
-	                deck: deq
-	              },
-	              channel: this.props.gameChannel
-	            });
 	          }
 
 	          this.setState({
@@ -20283,8 +20270,6 @@
 	        this.setState({
 	          deck: response.message.deck
 	        });
-<<<<<<< HEAD
-=======
 	      } else if (response.message.checkingYusef) {
 	        if (response.message.nextToCheck >= this.props.usersPlaying.length && response.message.callerId == this.props.pubnubDemo.getUUID()) {
 	          var pf;
@@ -20358,7 +20343,6 @@
 	        this.setState({
 	          callStatus: stat
 	        });
->>>>>>> f04840e47cbe3673cb9ed3647c10b409c41baf2a
 	      }
 	    }
 	  }, {

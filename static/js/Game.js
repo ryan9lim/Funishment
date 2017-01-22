@@ -21,7 +21,7 @@ class Game extends React.Component {
       hand: ['empty', 'empty', 'empty','empty','empty'],
       callStatus: 0 // 1 is you win, -1 is you lose, 2 is someone else won, -2 is someone else lost
     }
-    this.gameChannel = 'gameChannel0011'
+    this.gameChannel = this.props.channelName + 'gameChannel';
   }
   /*
    * Callback of element initialization
