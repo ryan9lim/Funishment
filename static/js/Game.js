@@ -188,7 +188,8 @@ class Game extends React.Component {
           deck: deq,
           hand: han,
           canDeal: false,
-          callStatus: 0 // 1 is you win, -1 is you lose, 2 is someone else won, -2 is someone else lost
+          callStatus: 0, // 1 is you win, -1 is you lose, 2 is someone else won, -2 is someone else lost
+          allHands: []
         });
 
         // everyone starts off with 5 cards
