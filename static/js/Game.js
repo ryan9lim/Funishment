@@ -24,6 +24,8 @@ class Game extends React.Component {
     this.playHand = this.playHand.bind(this);
     this.dealCards = this.dealCards.bind(this);
     this.updateOnListener = this.updateOnListener.bind(this);
+    this.shouldHide = this.shouldHide.bind(this);
+    this.shouldSelect = this.shouldSelect.bind(this);
     this.state = {
       deck: ['DECK NOT INIITIALIZED'], 
       handDealt: false,
@@ -492,40 +494,72 @@ class Game extends React.Component {
     console.log(count);
     return count;
   }
+  shouldHide(show_condition) {
+    return ClassNames({
+      'should-hide': show_condition ? false : true
+    })
+  }
+  shouldSelect(select_condition, index) {
+    let played = false;
+    for (let i = 0; i < this.state.chosenCards.length; i++) {
+      if(this.state.chosenCards[i] == index.toString())
+        played = !played;
+    }
+
+    return ClassNames({
+      'is-selected': played ? true : false
+    })
+  }
   render() {
     return (
-      <div className='Game' style={{display: (this.props.gameStarted ? "block" : "none")}}>
-        <button type="button"
-          onClick={this.dealCards}
-          className='btn btn-lg btn-default'
-          style={{display: (this.state.canDeal ? "block" : "none")}}>
+      <div className={'Game ' + 
+                      this.shouldHide(this.props.gameStarted)}>
+        
+        {/* Deal Button */}
+
+        <button type="button" onClick={this.dealCards}
+          className={'btn btn-lg btn-default ' +
+                     this.shouldHide(this.state.canDeal)}>
           Deal
         </button>
 
-        <div id='deck' style={{display: ((this.state.callStatus == 0) ? "block" : "none")}}>
+        {/* Deck Info */}
+
+        <div id='deck' 
+             className={this.shouldHide(this.state.callStatus == 0)}>
           Deck Cards Left: {this.state.deck.length}
         </div>
 
-        <div id='deckCards' style={{display: ((this.state.callStatus == 0) ? "block" : "none")}}>
+        <div id='deckCards' 
+             className={this.shouldHide(this.state.callStatus == 0)}>
           Deck Cards: {this.state.deck}
         </div>
 
-        <div id='discard' style={{display: ((this.state.callStatus == 0) ? "block" : "none")}}>
+        <div id='discard' 
+             className={this.shouldHide(this.state.callStatus == 0)}>
           Discard Pile Size: {this.state.discard.length}
         </div>
 
-        <div id='discardCards' style={{display: ((this.state.callStatus == 0) ? "block" : "none")}}>
+        <div id='discardCards' 
+             className={this.shouldHide(this.state.callStatus == 0)}>
           Discard Cards: {this.state.discard}
         </div>
 
-        <div style={{display: ((!this.state.canDeal) ? "block" : "none")}}>
-          <button className='col-md-4' style={{display: ((this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn) ? "block" : "none")}} onClick={this.drawFromDeck}>  DRAW A CARD FROM DECK </button>
-          <button className='col-md-4' style={{display: ((this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn && this.state.discard.length > 0) ? "block" : "none")}} onClick={this.drawFromDiscard}>  DRAW A CARD FROM DISCARD </button>
-          <div className='col-md-4'></div>
-          <br />
-          <div id='hand' style={{display: ((this.state.callStatus == 0 && !(this.state.isTurn && this.state.hasDrawn)) ? "block" : "none")}}>
+        {/* Draw Buttons */}
+
+          <button className={'draw-button ' + this.shouldHide((this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn))} 
+                  onClick={this.drawFromDeck}>  
+            Draw from Deck 
+          </button>
+
+          <button className={'draw-button ' + this.shouldHide((this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn  && this.state.discard.length > 0))} 
+                  onClick={this.drawFromDiscard}>  
+            Draw from Discarded Pile 
+          </button>
+
+          {/*<div id='hand' style={{display: ((this.state.callStatus == 0 && !(this.state.isTurn && this.state.hasDrawn)) ? "block" : "none")}}>
             {this.state.hand.map((name, index) => 
-                (<div className='col-md-2'>  Card {index+1}: {this.state.hand[index]}  </div>)
+                (<div className='card'>  Card {index+1}: {this.state.hand[index]}  </div>)
             )}
           </div>
           <br />
@@ -534,30 +568,63 @@ class Game extends React.Component {
                 (<button className='col-md-2' onClick={this.select.bind(this,index)}>  Card {index+1}: {this.state.hand[index]}  </button>)
             )}
             <button className='col-md-2' onClick={this.playCards}>  SUBMIT CHOICES </button>
-          </div>
+          </div>*/}
 
-          <button type="button"
-            onClick={this.yusef}
-            className='btn btn-lg btn-default'
-            style={{display: ((this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn) ? "block" : "none")}}>
-            YUSEF!
-          </button>
+        {/* Cards */}
+
+        <div id='hand' 
+             className={this.shouldHide(this.state.callStatus == 0 && !(this.state.isTurn && this.state.hasDrawn))}>
+          {this.state.hand.map((name, index) => 
+              (<div className='card '>  
+                <span> {this.state.hand[index]} </span>
+              </div>)
+          )}
         </div>
 
-        <div id='passCall' style={{display: ((this.state.callStatus == 1) ? "block" : "none")}}>
+        <br />
+
+        <div id='hand' 
+             className={this.shouldHide(this.state.callStatus == 0 && this.state.isTurn && this.state.hasDrawn)}>
+          {this.state.hand.map((name, index) => 
+              (<button onClick={this.select.bind(this,index)}
+                       className={'card ' + this.shouldSelect(this.state.chosenCards.includes(index.toString), index)} > 
+                <span> {this.state.hand[index]} </span> 
+              </button>)
+          )}
+        </div>
+
+        {/* Submit Button */}
+
+        <button className={'submit-button btn btn-default ' + this.shouldHide(this.state.callStatus == 0 && this.state.isTurn && this.state.hasDrawn)} 
+                onClick={this.playCards}>  
+          Submit Choices 
+        </button>
+
+        {/* Yusef Button */}
+
+        <button type="button"
+          onClick={this.yusef}
+          className={'yusef-button btn btn-lg btn-default ' + 
+                     this.shouldHide(this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn)}>
+          Yusef!
+        </button>
+
+        {/* Call Status */}
+
+        <div id='passCall' className={this.shouldHide(this.state.callStatus == 1)}>
           Your Call Passed!
         </div>
 
-        <div id='failCall' style={{display: ((this.state.callStatus == -1) ? "block" : "none")}}>
+        <div id='failCall'  className={this.shouldHide(this.state.callStatus == -1)}>
           Your Call Failed!
         </div>
 
-        <div id='passCall' style={{display: ((this.state.callStatus == 2) ? "block" : "none")}}>
-          Another Players Call Passed!
+        <div id='passCall' className={this.shouldHide(this.state.callStatus == 2)}>
+          Another Player's Call Passed!
         </div>
 
-        <div id='failCall' style={{display: ((this.state.callStatus == -2) ? "block" : "none")}}>
-          Another Players Call Failed!
+        <div id='failCall' className={this.shouldHide(this.state.callStatus == -2)}>
+          Another Player's Call Failed!
         </div>
       </div>
     )

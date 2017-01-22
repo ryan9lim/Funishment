@@ -12,6 +12,7 @@ class Main extends React.Component{
     this.startCountdown = this.startCountdown.bind(this);
     this.gameStart = this.gameStart.bind(this);
     this.updateMessageOnListener = this.updateMessageOnListener.bind(this);
+
     this.pubnubDemo = new PubNub({
       publishKey: 'pub-c-89d8d3f5-9d58-4c24-94e7-1c89f243296a',
       subscribeKey: 'sub-c-99748e0e-df8d-11e6-989b-02ee2ddab7fe',
@@ -121,7 +122,7 @@ class Main extends React.Component{
   /*
    * Callback of element initialization
    */
-   componentWillMount(){
+  componentWillMount(){
     this.pubnubDemo.setState({
       state: {
         "host": false
@@ -140,7 +141,6 @@ class Main extends React.Component{
       withPresence: true
     })
   }
-
   updateMessageOnListener(response) {
     // GAME IS STARTING
     if(response.message.game == "start_countdown"){
@@ -239,7 +239,8 @@ class Main extends React.Component{
       'btn': true, 
       'btn-default': true,
       'Button': true,
-      'is-ready': this.state.isReady ? true : false
+      'is-ready': this.state.isReady ? true : false,
+      'should-hide': this.state.gameStarted ? true : false
     });
 
     const countdownCSS = ClassNames({
@@ -261,11 +262,14 @@ class Main extends React.Component{
         </button>
         <button type="button" onClick={this.gameStart}
                 className={buttonCSS + ' start-button'}>
-          Start game
+          Start Game
         </button>
 
         <Game isHost={this.state.isHost} usersPlaying={this.state.usersPlaying} gameStarted={this.state.gameStarted} pubnubDemo={this.pubnubDemo} channelName={this.channelName}/>
-        <TweetInput />
+        <TweetInput />        
+        {/*<div className='card'>  
+          King of Diamonds
+        </div>*/}
       </div>
       )
     }
