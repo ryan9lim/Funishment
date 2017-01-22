@@ -2,10 +2,17 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import ClassNames from 'classnames';
 import Store from 'store2';
+import Axios from 'axios';
 
 class MainRoom extends React.Component{
   constructor(props) {
     super(props);
+  }
+  componentWillMount() {
+    console.log('Mounting');
+    Axios.get('/redirect_to_auth')
+         .then((resp) => {console.log(resp);})
+         .catch((err) => {console.log(err );});
   }
   render() {
     return (
