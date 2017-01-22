@@ -20054,26 +20054,30 @@
 	        'div',
 	        { className: 'Index container' },
 	        _react2.default.createElement(
-	          'p',
-	          { className: countdownCSS + " countdown-label" },
-	          'Countdown'
-	        ),
-	        _react2.default.createElement(
-	          'p',
-	          { className: countdownCSS + " countdown-number" },
-	          this.state.countdown
-	        ),
-	        _react2.default.createElement(
-	          'button',
-	          { type: 'button', onClick: this.getReady,
-	            className: buttonCSS + ' ready-button' },
-	          this.state.isReady ? "Ready" : "Not Ready Yet"
-	        ),
-	        _react2.default.createElement(
-	          'button',
-	          { type: 'button', onClick: this.gameStart,
-	            className: buttonCSS + ' start-button' },
-	          'Start game'
+	          'div',
+	          { style: { display: !this.state.gameStarted ? "block" : "none" } },
+	          _react2.default.createElement(
+	            'p',
+	            { className: countdownCSS + " countdown-label" },
+	            'Countdown'
+	          ),
+	          _react2.default.createElement(
+	            'p',
+	            { className: countdownCSS + " countdown-number" },
+	            this.state.countdown
+	          ),
+	          _react2.default.createElement(
+	            'button',
+	            { type: 'button', onClick: this.getReady,
+	              className: buttonCSS + ' ready-button' },
+	            this.state.isReady ? "Ready" : "Not Ready Yet"
+	          ),
+	          _react2.default.createElement(
+	            'button',
+	            { type: 'button', onClick: this.gameStart,
+	              className: buttonCSS + ' start-button' },
+	            'Start game'
+	          )
 	        ),
 	        _react2.default.createElement(_Game2.default, { isHost: this.state.isHost, usersPlaying: this.state.usersPlaying, gameStarted: this.state.gameStarted, pubnubDemo: this.pubnubDemo, channelName: this.channelName }),
 	        _react2.default.createElement(_TweetInput2.default, null)
@@ -20609,7 +20613,10 @@
 	  }, {
 	    key: 'drawFromDeck',
 	    value: function drawFromDeck() {
-	      var card = this.state.deck.shift();
+	      var card = this.state.deck[0];
+	      this.setState({
+	        deck: this.state.deck.slice(1)
+	      });
 	      var indexInUsers = this.getUserIndex();
 
 	      this.setState({
@@ -20618,12 +20625,26 @@
 	      });
 
 	      // update deck
-	      this.props.pubnubDemo.publish({
-	        message: {
-	          deck: this.state.deck
-	        },
-	        channel: this.gameChannel
-	      });
+	      if (this.state.deck.length > 1) {
+	        // deck still valid
+	        this.props.pubnubDemo.publish({
+	          message: {
+	            deck: this.state.deck.slice(1)
+	          },
+	          channel: this.gameChannel
+	        });
+	      } else {
+	        // deck out and need to reshuffle discard into it
+	        var newDeck = this.shuffle(this.state.discard.slice(1));
+	        this.props.pubnubDemo.publish({
+	          message: {
+	            deck: newDeck,
+	            discard: this.state.discard.slice(0, 1),
+	            lastPlay: this.state.lastPlay
+	          },
+	          channel: this.gameChannel
+	        });
+	      }
 	    }
 	  }, {
 	    key: 'drawFromDiscard',
