@@ -381,9 +381,14 @@ class Game extends React.Component {
     }
   }
 
+  /*
+   * Check whether the subset of the hand denoted by bools is valid
+   */
   checkValidPlay(bools, hand) {
-    var nums = [];
-    var suits = [];
+    var nums = []; // Numerical values of cards
+    var suits = []; // Suit values of cards
+
+    // Determine the numbers and suits from the hand
     var i;
     for (i = 0; i < bools.length; i++) {
       if (bools[i]) {
@@ -399,17 +404,20 @@ class Game extends React.Component {
 
     console.log("nums is", nums);
     console.log("suits is", suits);
+
+    // If we are just playing one card, it is valid
     if (nums.length == 1) {
       return true;
     }
 
+    // If we are playing less than one card, it is invalid
     if (nums.length < 1) {
       return false;
     }
 
-    var allSame = true;
-    var firstNum = nums[0];
-    var firstSuit = suits[0];
+    var allSame = true; // Whether all numbers or suits are the same
+    var firstNum = nums[0]; // First card's numerical value
+    var firstSuit = suits[0]; // First card's suit valud
 
     // Check if all numbers are the same
     for (i = 0; i < nums.length; i++) {
@@ -419,10 +427,12 @@ class Game extends React.Component {
       }
     }
 
+    // All numbers are the same, so hand is valid
     if (allSame) {
       return true;
     }
 
+    // Reinitialize allsame for check of straights
     allSame = true;
 
     // Check for straights
@@ -433,6 +443,7 @@ class Game extends React.Component {
       }
     }
 
+    // Array of valid sorted straights
     var straights = [
       ["2", "3", "A"],
       ["2", "3", "4"],
@@ -466,6 +477,7 @@ class Game extends React.Component {
       ["10", "9", "J", "K", "Q"]
     ];
 
+    // Sort the numerical values of the cards lexicographically
     nums.sort();
 
     // All the same suit so check values
@@ -480,11 +492,13 @@ class Game extends React.Component {
     console.log("nums was not what we wanted. it was", nums);
     console.log("or suits was not what we wanted. it was", suits);
 
+    // If not a straight, not all numbers are the same, and there are multiple cards chosen, invalid
     return false;
   }
 
   /*
-   * sourced from http://stackoverflow.com/questions/4025893/how-to-check-identical-array-in-most-efficient-way
+   * Check if two arrays have equivalent entries
+   * Sourced from http://stackoverflow.com/questions/4025893/how-to-check-identical-array-in-most-efficient-way
    */
   arraysEqual(arr1, arr2) {
     if(arr1.length !== arr2.length)
@@ -497,13 +511,19 @@ class Game extends React.Component {
     return true;
   }
 
+  /*
+   * Callback handler for button that deals cards
+   */
   dealCards() {
+    // Initialize the deck as a shuffled version of all valid cards
     var deq = this.shuffle([
       'AC', '2C', '3C', '4C', '5C', '6C', '7C', '8C', '9C', '10C', 'JC', 'QC', 'KC',
       'AD', '2D', '3D', '4D', '5D', '6D', '7D', '8D', '9D', '10D', 'JD', 'QD', 'KD',
       'AH', '2H', '3H', '4H', '5H', '6H', '7H', '8H', '9H', '10H', 'JH', 'QH', 'KH',
       'AS', '2S', '3S', '4S', '5S', '6S', '7S', '8S', '9S', '10S', 'JS', 'QS', 'KS'
     ]);
+
+    // Publish packet with deck for the sake of dealing starting hands
     this.props.pubnubDemo.publish({
       message: {
         dealing: true,
@@ -513,8 +533,10 @@ class Game extends React.Component {
       channel: this.gameChannel
     });
   }
+
   /*
-   * Shuffle function sourced from http://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
+   * Shuffle an array
+   * Sourced from http://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
    */
   shuffle(array) {
     var currentIndex = array.length, temporaryValue, randomIndex;
@@ -534,6 +556,10 @@ class Game extends React.Component {
     }
     return array;
   }
+
+  /*
+   * Draw a card from the deck
+   */
   drawFromDeck() {
     var card = this.state.deck[0];
     this.setState({
