@@ -728,16 +728,8 @@ class Game extends React.Component {
           Deck Cards Left: {this.state.deck.length}
         </div>
 
-        <div id='deckCards' style={{display: ((this.state.callStatus == 0) ? "block" : "none")}}>
-          Deck Cards: {this.state.deck}
-        </div>
-
         <div id='discard' style={{display: ((this.state.callStatus == 0) ? "block" : "none")}}>
           Discard Pile Size: {this.state.discard.length}
-        </div>
-
-        <div id='discardCards' style={{display: ((this.state.callStatus == 0) ? "block" : "none")}}>
-          Discard Cards: {this.state.discard}
         </div>
 
         <div id='lastPlay' style={{display: ((this.state.callStatus == 0) ? "block" : "none")}}>
