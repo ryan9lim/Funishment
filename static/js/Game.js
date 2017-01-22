@@ -876,8 +876,13 @@ class Game extends React.Component {
             (<div className='Label' style={{display: ((index != this.getUserIndex()) ? "block" : "none")}}>Player {index+1}: {this.state.allHands ? this.state.allHands[index] : 0} Cards left </div>)
           )}
         </div>
+
         <div id='points' className="scoreboard">
           Total Points : {this.state.points}
+        </div>
+
+        <div id='whoseTurn' className="scoreboard">
+          Current Turn : {'Player ' + (this.state.turn + 1).toString()}
         </div>
 
 

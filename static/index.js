@@ -20605,7 +20605,7 @@
 	        });
 
 	        // Check if the current user has lost the game
-	        if (this.state.points >= 100) {
+	        if (this.state.points >= 40) {
 	          this.lose();
 	        }
 	      }
@@ -21192,6 +21192,12 @@
 	          { id: 'points', className: 'scoreboard' },
 	          'Total Points : ',
 	          this.state.points
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          { id: 'whoseTurn', className: 'scoreboard' },
+	          'Current Turn : ',
+	          'Player ' + (this.state.turn + 1).toString()
 	        ),
 	        _react2.default.createElement(
 	          'button',
