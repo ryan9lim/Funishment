@@ -12,6 +12,11 @@ class Game extends React.Component {
   constructor(props) {
     super(props);
     this.yusef = this.yusef.bind(this);
+    this.drawFromDeck = this.drawFromDeck.bind(this);
+    this.drawFromDiscard = this.drawFromDiscard.bind(this);
+    this.select = this.select.bind(this);
+    this.playCards = this.playCards.bind(this);
+    this.playHand = this.playHand.bind(this);
     this.dealCards = this.dealCards.bind(this);
     this.updateOnListener = this.updateOnListener.bind(this);
     this.state = {
@@ -21,8 +26,10 @@ class Game extends React.Component {
       hand: [],
       callStatus: 0, // 1 is you win, -1 is you lose, 2 is someone else won, -2 is someone else lost
       turn: 0,
+      chosenCards: '',
+      isTurn: false,
       canDeal: true,
-      chosenCards: ''
+      playing: false
     }
     this.gameChannel = this.props.channelName + 'gameChannel';
   }
@@ -70,8 +77,15 @@ class Game extends React.Component {
         discard: response.message.discard
       });
     }
-
-    if (response.message.dealing) {
+    if (response.message.playing && response.message.turn != null){
+      var indexInUsers = this.getUserIndex()
+      if (indexInUsers == response.message.turn) {
+        this.playHand();
+      } else {
+        console.log(this.props.usersPlaying[response.message.turn] + " turn to play!")
+      }
+    }
+    else if (response.message.dealing) {
       var indexInUsers = this.getUserIndex()
 
       console.log("current user has index in array of ", indexInUsers, "and nextToDraw is", response.message.nextToDraw);
@@ -92,9 +106,12 @@ class Game extends React.Component {
             channel: this.gameChannel
           });
         } else {
+          console.log("finished dealing!")
           this.props.pubnubDemo.publish({
             message: {
               dealing: false,
+              playing: true,
+              turn: 0,
               deck: deq
             },
             channel: this.gameChannel
@@ -187,6 +204,7 @@ class Game extends React.Component {
     }
   }
   select(index) {
+    console.log("selected", index, "for playing");
     this.setState({
       chosenCards: this.state.chosenCards + index.toString()
     });
@@ -206,10 +224,17 @@ class Game extends React.Component {
         newHand.splice(i, 1);
       }
     }
+    this.props.pubnubDemo.publish({
+      message: {
+        turn: (this.state.turn+1) % this.state.usersPlaying.length,
+        discard: this.state.discard
+      },
+      channel: this.gameChannel
+    });
     this.setState({
       hand: newHand,
       discard: newDiscard,
-      turn: (this.state.turn + 1) % this.usersPlaying,
+      isTurn: false,
       chosenCards: ''
     });
   }
@@ -262,10 +287,12 @@ class Game extends React.Component {
     // update deck, next person's turn
     this.props.pubnubDemo.publish({
       message: {
-        turn: (this.state.turn+1) % this.state.usersPlaying.length,
         deck: this.state.deck
       },
       channel: this.gameChannel
+    });
+    this.setState({
+      isTurn: false
     });
   }
   drawFromDiscard() {
@@ -277,14 +304,19 @@ class Game extends React.Component {
     // update deck, next person's turn
     this.props.pubnubDemo.publish({
       message: {
-        turn: (this.state.turn+1) % this.state.usersPlaying.length,
-        deck: this.state.deck
+        discard: this.state.discard
       },
       channel: this.gameChannel
     });
+    this.setState({
+      isTurn: false
+    });
   }
   playHand(){
-
+    console.log("My turn to play!")
+      this.setState({
+        isTurn: true
+      });
   }
   yusef() {
     var myCount = this.summ(this.state.hand);
@@ -344,14 +376,18 @@ class Game extends React.Component {
           Discard Cards: {this.state.discard}
         </div>
 
-        <div id='hand' style={{display: ((this.state.callStatus == 0) ? "block" : "none")}}>
+        <button className='col-md-4' onClick={this.drawFromDeck}>  DRAW A CARD FROM DECK </button>
+        <button className='col-md-4' onClick={this.drawFromDiscard}>  DRAW A CARD FROM DISCARD </button>
+        <div className='col-md-4'></div>
+
+        <div id='hand' style={{display: ((this.state.callStatus == 0 && !this.state.isTurn) ? "block" : "none")}}>
           {this.state.hand.map((name, index) => 
               (<div className='col-md-2'>  Card {index+1}: {this.state.hand[index]}  </div>)
           )}
           <div className='col-md-2'>  DRAWN CARD  </div>
         </div>
 
-        <div id='hand' style={{display: ((this.state.callStatus == 0) ? "block" : "none")}}>
+        <div id='hand' style={{display: ((this.state.callStatus == 0 && this.state.isTurn) ? "block" : "none")}}>
           {this.state.hand.map((name, index) => 
               (<button className='col-md-2' onClick={this.select.bind(this,index)}>  Card {index+1}: {this.state.hand[index]}  </button>)
           )}
