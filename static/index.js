@@ -20174,8 +20174,7 @@
 
 	{/*
 	   Props available to Game:
-	  
-	   - gameStarted (boolean)
+	    - gameStarted (boolean)
 	  */}
 
 	var Game = function (_React$Component) {
@@ -20194,7 +20193,8 @@
 	      handDealt: false,
 	      discard: [],
 	      hand: ['empty', 'empty', 'empty', 'empty', 'empty'],
-	      callStatus: 0 // 1 is you win, -1 is you lose, 2 is someone else won, -2 is someone else lost
+	      callStatus: 0, // 1 is you win, -1 is you lose, 2 is someone else won, -2 is someone else lost
+	      turn: 0
 	    };
 	    _this.gameChannel = _this.props.channelName + 'gameChannel';
 	    return _this;
@@ -20223,6 +20223,7 @@
 	  }, {
 	    key: 'updateOnListener',
 	    value: function updateOnListener(response) {
+	      console.log(this.props.usersPlaying);
 	      if (response.message.dealing) {
 	        var indexInUsers = -1;
 	        var i;
@@ -20346,6 +20347,10 @@
 	        });
 	      }
 	    }
+	    // playHand(){
+
+	    // }
+
 	  }, {
 	    key: 'dealCards',
 	    value: function dealCards() {
@@ -20577,7 +20582,6 @@
 
 	{/*
 	   Props available to TweetInput:
-	  
 	  */}
 
 	var TweetInput = function (_React$Component) {

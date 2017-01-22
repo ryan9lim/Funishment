@@ -19,7 +19,8 @@ class Game extends React.Component {
       handDealt: false,
       discard: [],
       hand: ['empty', 'empty', 'empty','empty','empty'],
-      callStatus: 0 // 1 is you win, -1 is you lose, 2 is someone else won, -2 is someone else lost
+      callStatus: 0, // 1 is you win, -1 is you lose, 2 is someone else won, -2 is someone else lost
+      turn: 0
     }
     this.gameChannel = this.props.channelName + 'gameChannel';
   }
@@ -41,6 +42,7 @@ class Game extends React.Component {
     });
   }
   updateOnListener(response) {
+    console.log(this.props.usersPlaying)
     if (response.message.dealing) {
       var indexInUsers = -1;
       var i;
@@ -164,6 +166,9 @@ class Game extends React.Component {
       });
     }
   }
+  // playHand(){
+
+  // }
   dealCards() {
     var deq = this.shuffle([
       'AC', '2C', '3C', '4C', '5C', '6C', '7C', '8C', '9C', '10C', 'JC', 'QC', 'KC',
@@ -258,6 +263,9 @@ class Game extends React.Component {
         <div id='discardCards' style={{display: ((this.state.callStatus == 0) ? "block" : "none")}}>
           Discard Cards: {this.state.discard}
         </div>
+
+        
+
 
         <div id='hand' style={{display: ((this.state.callStatus == 0) ? "block" : "none")}}>
           <div className='col-md-2'>  Card 1: {this.state.hand[0]}  </div>
