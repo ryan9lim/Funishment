@@ -111,6 +111,13 @@ class Game extends React.Component {
         discard: response.message.discard,
         lastPlay: response.message.lastPlay
       });
+
+      // player played card, update allHands
+      if(response.message.playing){
+        var index = (response.message.turn - 1+ this.props.usersPlaying.length)%this.props.usersPlaying.length;
+        this.state.allHands[index] += 1 - response.message.lastPlay.length;
+        console.log(this.state.allHands)
+      }
     }
 
     // In playing phase of turn
@@ -162,11 +169,12 @@ class Game extends React.Component {
             message: {
               dealing: false,
               playing: true,
-              turn: 0,
+              turn: this.state.turn,
               deck: deq
             },
             channel: this.gameChannel
           });
+
         }
 
         console.log("I AM UPDATING ON DEAL");
@@ -174,12 +182,15 @@ class Game extends React.Component {
         // Set own state to reflect the cards I just drew
         this.setState({
           discard: [],
-          handDealt: true,
           deck: deq,
           hand: han,
           canDeal: false,
           callStatus: 0 // 1 is you win, -1 is you lose, 2 is someone else won, -2 is someone else lost
         });
+
+        // everyone starts off with 5 cards
+        var arraySize = this.props.usersPlaying.length
+        while(arraySize--) this.state.allHands.push(5);
       }
     } else if (response.message.checkingYusef) {
       // In the stage of checking a Yusef call
@@ -646,6 +657,13 @@ class Game extends React.Component {
         <div id='topCard' style={{display: ((this.state.callStatus == 0) ? "block" : "none")}}>
           Top Card of Discard Pile: {(this.state.lastPlay.length > 0) ? this.state.lastPlay[0] : ''}
         </div>
+        <br />
+        <div>
+          {this.state.allHands.map((name, index) => 
+            (<div className='col-md-2' style={{display: ((index != this.getUserIndex()) ? "block" : "none")}}>Player {index+1} : Cards {this.state.allHands[index]}  </div>)
+          )}
+        </div>
+        <br />
 
         <div id='points'>
           Total Points: {this.state.points}
