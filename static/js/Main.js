@@ -30,7 +30,7 @@ class Main extends React.Component{
     }
 
     this.channelName = Store.get('channelName');
-    this.channelName = 'testChannel001'
+    this.channelName = 'stupidChannel'
   }
 
 
