@@ -7,3 +7,7 @@ The easiest way to run the app:
 
 The index page is hosted at 'localhost:8080/'
 The room page is hosted at 'localhost:8080/room'
+
+npm install -g webpack
+npm install
+pip install -r requirements.txt
