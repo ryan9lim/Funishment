@@ -20198,7 +20198,7 @@
 	      handDealt: false,
 	      discard: [],
 	      hand: [],
-	      callStatus: 0 }, _defineProperty(_this$state, 'hand', ['empty', 'empty', 'empty', 'empty', 'empty']), _defineProperty(_this$state, 'callStatus', 0), _defineProperty(_this$state, 'turn', 0), _defineProperty(_this$state, 'canDeal', true), _defineProperty(_this$state, 'playing', false), _this$state);
+	      callStatus: 0 }, _defineProperty(_this$state, 'hand', ['empty', 'empty', 'empty', 'empty', 'empty']), _defineProperty(_this$state, 'callStatus', 0), _defineProperty(_this$state, 'turn', 0), _defineProperty(_this$state, 'isTurn', false), _defineProperty(_this$state, 'canDeal', true), _defineProperty(_this$state, 'playing', false), _this$state);
 	    _this.gameChannel = _this.props.channelName + 'gameChannel';
 	    return _this;
 	  }
@@ -20252,10 +20252,12 @@
 	          discard: response.message.discard
 	        });
 	      }
-	      if (response.message.playing) {
+	      if (response.message.playing && response.message.turn != null) {
 	        var indexInUsers = this.getUserIndex();
 	        if (indexInUsers == response.message.turn) {
 	          this.playHand();
+	        } else {
+	          console.log(this.props.usersPlaying[response.message.turn] + " turn to play!");
 	        }
 	      } else if (response.message.dealing) {
 	        var indexInUsers = this.getUserIndex();
@@ -20278,10 +20280,12 @@
 	              channel: this.gameChannel
 	            });
 	          } else {
+	            console.log("finished dealing!");
 	            this.props.pubnubDemo.publish({
 	              message: {
 	                dealing: false,
 	                playing: true,
+	                turn: 0,
 	                deck: deq
 	              },
 	              channel: this.gameChannel
@@ -20431,6 +20435,9 @@
 	        },
 	        channel: this.gameChannel
 	      });
+	      this.setState({
+	        isTurn: false
+	      });
 	    }
 	  }, {
 	    key: 'drawFromDiscard',
@@ -20448,10 +20455,18 @@
 	        },
 	        channel: this.gameChannel
 	      });
+	      this.setState({
+	        isTurn: false
+	      });
 	    }
 	  }, {
 	    key: 'playHand',
-	    value: function playHand() {}
+	    value: function playHand() {
+	      console.log("My turn to play!");
+	      this.setState({
+	        isTurn: true
+	      });
+	    }
 	  }, {
 	    key: 'yusef',
 	    value: function yusef() {

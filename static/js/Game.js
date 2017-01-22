@@ -73,27 +73,12 @@ class Game extends React.Component {
         discard: response.message.discard
       });
     }
-    //updates turn
-    if(response.message.turn != null) {
-      this.setState({
-        turn: response.message.turn
-      });
-      if(this.getUserIndex() == this.state.turn){
-        this.setState({
-          isTurn: true
-        });
-      }
-      else{
-        this.setState({
-          isTurn: false
-        });
-      }
-      console.log("It's now " + this.props.usersPlaying[this.state.turn] + "'s turn.");
-    }
-    if (response.message.playing){
+    if (response.message.playing && response.message.turn != null){
       var indexInUsers = this.getUserIndex()
       if (indexInUsers == response.message.turn) {
         this.playHand();
+      } else {
+        console.log(this.props.usersPlaying[response.message.turn] + " turn to play!")
       }
     }
     else if (response.message.dealing) {
@@ -117,10 +102,12 @@ class Game extends React.Component {
             channel: this.gameChannel
           });
         } else {
+          console.log("finished dealing!")
           this.props.pubnubDemo.publish({
             message: {
               dealing: false,
               playing: true,
+              turn: 0,
               deck: deq
             },
             channel: this.gameChannel
@@ -266,6 +253,9 @@ class Game extends React.Component {
       },
       channel: this.gameChannel
     });
+    this.setState({
+      isTurn: false
+    });
   }
   drawFromDiscard() {
     var card = this.state.discard.shift()
@@ -281,9 +271,15 @@ class Game extends React.Component {
       },
       channel: this.gameChannel
     });
+    this.setState({
+      isTurn: false
+    });
   }
   playHand(){
-
+    console.log("My turn to play!")
+      this.setState({
+        isTurn: true
+      });
   }
   yusef() {
     var myCount = this.summ(this.state.hand);
