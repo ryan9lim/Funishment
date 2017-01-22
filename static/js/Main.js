@@ -271,21 +271,23 @@ class Main extends React.Component{
 
     return (
       <div className='Index container'>
-        <p className={countdownCSS + " countdown-label"}>
-          Countdown
-        </p>
-        <p className={countdownCSS + " countdown-number"}>
-          {this.state.countdown}
-        </p>
+        <div style={{display: (!this.state.gameStarted ? "block" : "none")}}>
+          <p className={countdownCSS + " countdown-label"}>
+            Countdown
+          </p>
+          <p className={countdownCSS + " countdown-number"}>
+            {this.state.countdown}
+          </p>
 
-        <button type="button" onClick={this.getReady}
-                className={buttonCSS + ' ready-button'}>
-          {this.state.isReady ? "Ready" : "Not Ready Yet"}
-        </button>
-        <button type="button" onClick={this.gameStart}
-                className={buttonCSS + ' start-button'}>
-          Start game
-        </button>
+          <button type="button" onClick={this.getReady}
+                  className={buttonCSS + ' ready-button'}>
+            {this.state.isReady ? "Ready" : "Not Ready Yet"}
+          </button>
+          <button type="button" onClick={this.gameStart}
+                  className={buttonCSS + ' start-button'}>
+            Start game
+          </button>
+        </div>
 
         <Game isHost={this.state.isHost} usersPlaying={this.state.usersPlaying} gameStarted={this.state.gameStarted} pubnubDemo={this.pubnubDemo} channelName={this.channelName}/>
         <TweetInput />
