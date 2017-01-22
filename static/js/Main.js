@@ -22,7 +22,7 @@ class Main extends React.Component{
     this.state = {
       host: false,
       gameStarted: false,
-      countdown: 3,
+      countdown: 5,
       isSelected: false,
       isReady: false,
       usersReady: [],
@@ -31,7 +31,6 @@ class Main extends React.Component{
 
 
     this.channelName = Store.get('channelName');
-    this.channelName = 'testChannel23'
   }
 
 
@@ -209,7 +208,7 @@ class Main extends React.Component{
     this.pubnubDemo.publish(
     {
       message: {
-        game: 'start_countdown'
+        game: 'start_countdown',
         usersPlaying:this.state.usersReady
       },
       channel: this.channelName
