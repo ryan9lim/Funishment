@@ -20198,7 +20198,6 @@
 	    _this.updateOnListener = _this.updateOnListener.bind(_this);
 	    _this.state = {
 	      deck: ['DECK NOT INIITIALIZED'],
-	      handDealt: false,
 	      discard: [],
 	      hand: [],
 	      callStatus: 0, // 1 is you win, -1 is you lose, 2 is someone else won, -2 is someone else lost
@@ -20209,7 +20208,8 @@
 	      playing: false,
 	      cardToAdd: '',
 	      hasDrawn: false,
-	      points: 0
+	      points: 0,
+	      allHands: []
 	    };
 	    _this.gameChannel = _this.props.channelName + 'gameChannel';
 	    return _this;
@@ -20222,7 +20222,10 @@
 	  _createClass(Game, [{
 	    key: 'componentWillMount',
 	    value: function componentWillMount() {
-	      this.props.pubnubDemo.setState({
+	      var arraysize = this.props.usersPlaying.length;
+	      while (arraySize--) {
+	        allHands.push(value);
+	      }this.props.pubnubDemo.setState({
 	        state: {
 	          "host": this.props.isHost
 	        },
@@ -20263,6 +20266,12 @@
 	        this.setState({
 	          discard: response.message.discard
 	        });
+
+	        // player played card, update allHands
+	        if (response.message.playing) {
+	          var index = (response.message.turn - 1) % this.props.usersPlaying.length;
+	          allHands[index] += 1 - this.state.lastPlay.length;
+	        }
 	      }
 	      if (response.message.playing && response.message.turn != null) {
 	        this.setState({
@@ -20302,7 +20311,7 @@
 	              message: {
 	                dealing: false,
 	                playing: true,
-	                turn: 0,
+	                turn: this.state.turn,
 	                deck: deq
 	              },
 	              channel: this.gameChannel
@@ -20313,7 +20322,6 @@
 
 	          this.setState({
 	            discard: [],
-	            handDealt: true,
 	            deck: deq,
 	            hand: han,
 	            canDeal: false,
@@ -20534,8 +20542,6 @@
 
 	      return false;
 	    }
-<<<<<<< HEAD
-=======
 
 	    /*
 	     * sourced from http://stackoverflow.com/questions/4025893/how-to-check-identical-array-in-most-efficient-way
@@ -20551,7 +20557,6 @@
 
 	      return true;
 	    }
->>>>>>> 5bb6ac2f384f928b66b37b0f8568d090d513c43e
 	  }, {
 	    key: 'dealCards',
 	    value: function dealCards() {
@@ -20712,43 +20717,12 @@
 	          this.state.discard
 	        ),
 	        _react2.default.createElement(
-<<<<<<< HEAD
 	          'div',
 	          { id: 'points' },
 	          'Total Points: ',
 	          this.state.points
 	        ),
 	        _react2.default.createElement(
-	          'button',
-	          { className: 'col-md-4', style: { display: this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn ? "block" : "none" }, onClick: this.drawFromDeck },
-	          '  DRAW A CARD FROM DECK '
-	        ),
-	        _react2.default.createElement(
-	          'button',
-	          { className: 'col-md-4', style: { display: this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn && this.state.discard.length > 0 ? "block" : "none" }, onClick: this.drawFromDiscard },
-	          '  DRAW A CARD FROM DISCARD '
-	        ),
-	        _react2.default.createElement('div', { className: 'col-md-4' }),
-	        _react2.default.createElement('br', null),
-	        _react2.default.createElement(
-	          'div',
-	          { id: 'hand', style: { display: this.state.callStatus == 0 && !(this.state.isTurn && this.state.hasDrawn) ? "block" : "none" } },
-	          this.state.hand.map(function (name, index) {
-	            return _react2.default.createElement(
-	              'div',
-	              { className: 'col-md-2' },
-	              '  Card ',
-	              index + 1,
-	              ': ',
-	              _this2.state.hand[index],
-	              '  '
-	            );
-	          })
-	        ),
-	        _react2.default.createElement('br', null),
-	        _react2.default.createElement(
-=======
->>>>>>> 5bb6ac2f384f928b66b37b0f8568d090d513c43e
 	          'div',
 	          { style: { display: !this.state.canDeal ? "block" : "none" } },
 	          _react2.default.createElement(

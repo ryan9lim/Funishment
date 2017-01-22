@@ -26,8 +26,7 @@ class Game extends React.Component {
     this.lose = this.lose.bind(this);
     this.updateOnListener = this.updateOnListener.bind(this);
     this.state = {
-      deck: ['DECK NOT INIITIALIZED'], 
-      handDealt: false,
+      deck: ['DECK NOT INIITIALIZED'],
       discard: [],
       hand: [],
       callStatus: 0, // 1 is you win, -1 is you lose, 2 is someone else won, -2 is someone else lost
@@ -38,7 +37,8 @@ class Game extends React.Component {
       playing: false,
       cardToAdd: '',
       hasDrawn: false,
-      points: 0
+      points: 0,
+      allHands: []
     }
     this.gameChannel = this.props.channelName + 'gameChannel';
   }
@@ -46,6 +46,9 @@ class Game extends React.Component {
    * Callback of element initialization
    */
   componentWillMount(){
+    var arraysize = this.props.usersPlaying.length
+    while(arraySize--) allHands.push(value);
+
     this.props.pubnubDemo.setState({
       state: {
         "host": this.props.isHost,
@@ -85,6 +88,12 @@ class Game extends React.Component {
       this.setState({
         discard: response.message.discard
       });
+
+      // player played card, update allHands
+      if(response.message.playing){
+        var index = (response.message.turn - 1)%this.props.usersPlaying.length;
+        allHands[index] += 1 - this.state.lastPlay.length;
+      }
     }
     if (response.message.playing && response.message.turn != null){
       this.setState({
@@ -125,7 +134,7 @@ class Game extends React.Component {
             message: {
               dealing: false,
               playing: true,
-              turn: 0,
+              turn: this.state.turn,
               deck: deq
             },
             channel: this.gameChannel
@@ -136,7 +145,6 @@ class Game extends React.Component {
 
         this.setState({
           discard: [],
-          handDealt: true,
           deck: deq,
           hand: han,
           canDeal: false,
