@@ -20192,6 +20192,7 @@
 	    _this.playCards = _this.playCards.bind(_this);
 	    _this.playHand = _this.playHand.bind(_this);
 	    _this.dealCards = _this.dealCards.bind(_this);
+	    _this.lose = _this.lose.bind(_this);
 	    _this.updateOnListener = _this.updateOnListener.bind(_this);
 	    _this.state = {
 	      deck: ['DECK NOT INIITIALIZED'],
@@ -20205,7 +20206,8 @@
 	      canDeal: true,
 	      playing: false,
 	      cardToAdd: '',
-	      hasDrawn: false
+	      hasDrawn: false,
+	      points: 0
 	    };
 	    _this.gameChannel = _this.props.channelName + 'gameChannel';
 	    return _this;
@@ -20370,25 +20372,40 @@
 	        }
 	      } else if (response.message.confirmingYusef) {
 	        var stat;
+	        var pointsToAdd;
 	        if (response.message.callStatus > 0) {
 	          if (response.message.callerId == this.props.pubnubDemo.getUUID()) {
+	            pointsToAdd = 0;
 	            stat = 1;
 	          } else {
+	            pointsToAdd = this.summ(this.state.hand);
 	            stat = 2;
 	          }
 	        } else {
 	          if (response.message.callerId == this.props.pubnubDemo.getUUID()) {
+	            pointsToAdd = 30;
 	            stat = -1;
 	          } else {
+	            pointsToAdd = 0;
 	            stat = -2;
 	          }
 	        }
 
 	        this.setState({
 	          callStatus: stat,
-	          canDeal: true
+	          canDeal: true,
+	          points: this.state.points + pointsToAdd
 	        });
+
+	        if (this.state.points >= 200) {
+	          this.lose();
+	        }
 	      }
+	    }
+	  }, {
+	    key: 'lose',
+	    value: function lose() {
+	      console.log("YOU LOST");
 	    }
 	  }, {
 	    key: 'select',
@@ -20436,10 +20453,6 @@
 	        hasDrawn: false
 	      });
 	    }
-	    // playHand(){
-
-	    // }
-
 	  }, {
 	    key: 'dealCards',
 	    value: function dealCards() {
@@ -20598,6 +20611,12 @@
 	          { id: 'discardCards', style: { display: this.state.callStatus == 0 ? "block" : "none" } },
 	          'Discard Cards: ',
 	          this.state.discard
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          { id: 'points' },
+	          'Total Points: ',
+	          this.state.points
 	        ),
 	        _react2.default.createElement(
 	          'button',
