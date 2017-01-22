@@ -6,6 +6,8 @@
 .Room p{
   font-size: 63px;
   text-align: center;
+  color: #3A6BFF;
+  font-family: 'Raleway', sans-serif;
 }
 
 .Room button {
@@ -22,10 +24,39 @@
   margin-top: 20px;
 }
 
+.Room h3 {
+  text-align: center;
+  color: #3A6BFF;
+}
+
+.Room .ChannelForm .btn {
+  text-align: center;
+  border: 1px solid #3A6BFF;
+  color: #FFFFFF;
+  background-color: #3A6BFF;
+  border-radius: 5px;
+}
+
+.Room .ChannelForm .btn:hover {
+  border: 1px solid #3A6BFF;
+  color: #3A6BFF;
+  background-color: #FFFFFF;
+}
+
 .Room .ChannelList .btn {
   margin: 5px;
   width: 300px;
   height: 100px;
   text-align: center;
-  font-size: 14px;
+  border: 1px solid #3A6BFF;
+  color: #FFFFFF;
+  background-color: #3A6BFF;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+.Room .ChannelList .btn:hover {
+  border: 1px solid #3A6BFF;
+  color: #3A6BFF;
+  background-color: #FFFFFF;
 }

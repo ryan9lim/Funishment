@@ -18,7 +18,7 @@ class MainRoom extends React.Component{
     return (
       <div className='Room'>
         <div className='container'>
-          <p>Funishment</p>
+          <p className='title'>Funishment</p>
           <ChannelForm />
           <ChannelList />
         </div>
