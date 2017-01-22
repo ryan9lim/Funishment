@@ -9,10 +9,10 @@ class MainRoom extends React.Component{
     super(props);
   }
   componentWillMount() {
-    console.log('Mounting');
-    Axios.get('/redirect_to_auth')
-         .then((resp) => {console.log(resp);})
-         .catch((err) => {console.log(err );});
+    // console.log('Mounting');
+    // Axios.get('/redirect_to_auth')
+    //      .then((resp) => {console.log(resp);})
+    //      .catch((err) => {console.log(err );});
   }
   render() {
     return (
