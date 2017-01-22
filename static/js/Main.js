@@ -4,39 +4,116 @@ import ClassNames from 'classnames';
 import Game from './Game';
 import TweetInput from './TweetInput';
 import Store from 'store2';
+import Axios from 'axios';
 
 class Main extends React.Component{
   constructor(props) {
     super(props);
+    // Binding this to all necessary methods
     this.getReady = this.getReady.bind(this);
     this.startCountdown = this.startCountdown.bind(this);
     this.gameStart = this.gameStart.bind(this);
     this.updateMessageOnListener = this.updateMessageOnListener.bind(this);
+
+    // Instantiating a PubNub object
     this.pubnubDemo = new PubNub({
       publishKey: 'pub-c-89d8d3f5-9d58-4c24-94e7-1c89f243296a',
       subscribeKey: 'sub-c-99748e0e-df8d-11e6-989b-02ee2ddab7fe',
       uuid: PubNub.generateUUID(),
-      presenceTimeout: 10,
+      presenceTimeout: 10,  // Check for users timing out faster
       heartbeatInterval: 5
     });
+
+    // Initialize the state of Main (for each user)
     this.state = {
-      host: false,
-      gameStarted: false,
-      countdown: 5,
-      isReady: false,
-      usersReady: [],
-      usersPlaying: null
+      host: false,  // Whether or not the user is the host of the channel/room
+      gameStarted: false, // Whether or not the game has started
+      countdown: 5, // Number of seconds to count down
+      isReady: false, // Determines if the user is ready to play the game
+      usersReady: [], // Array of all the users that are ready
+      usersPlaying: null  // Array of users going to be playing in the game
     }
 
+    // Channel or room that users will be subscribed to
     this.channelName = Store.get('channelName');
   }
+  /*
+   * Callback of element initialization
+   */
+  componentWillMount(){
+    // Initialize state of pubnubDemo
+    this.pubnubDemo.setState({
+      state: {
+        "host": false
+      },
+      uuid: this.pubnubDemo.getUUID(),
+      channels: [this.channelName]
+    });
+    // Add listener to receive published messages
+    this.pubnubDemo.addListener({
+      message: this.updateMessageOnListener,
+      presence: function(presenceEvent){
+        this.assignHost(presenceEvent);
+      }.bind(this)
+    });
 
+    // Subscribe to channel and turn on presence
+    this.pubnubDemo.subscribe({
+      channels: [this.channelName],
+      withPresence: true
+    });
+  }
 
+  // Callback function called when message is received by listener 
+  updateMessageOnListener(response) {
+
+    // Game start message
+    if(response.message.game == "start_countdown"){
+      if(this.state.isReady){
+        console.log("People playing: ", response.message.usersPlaying);
+        this.startCountdown();
+      }
+    }
+
+    // When a user is ready, host adds user to array of users that are ready
+    if(this.state.host && response.message.ready != null){
+      var tempArray = this.state.usersReady;
+      tempArray.push(response.message.ready); // Add new ready user
+      console.log(tempArray.toString() + " is ready");
+      // Update state
+      this.setState({
+        host: this.state.host,
+        usersReady: tempArray
+      });
+      // Update pubnubDemo state
+      this.pubnubDemo.setState({
+        state: {
+          host: this.state.host,
+          usersReady: tempArray
+        },
+        uuid: this.pubnubDemo.getUUID(),
+        channels: [this.channelName]
+      });
+    }
+
+    // Update array of users playing
+    if(response.message.usersPlaying != null){
+      console.log(response.message.usersPlaying.toString() + " are playing")
+      // Update state
+      this.setState({
+        usersPlaying: response.message.usersPlaying
+      });
+    }
+  }
+  // Assigns host to a user in the room / channel. Host holds certain room info
+  // and is the only one that can start the game
   assignHost(presenceEvent){
+
+    // Display when a user has joined
     if (presenceEvent.action == "join"){
       console.log(presenceEvent.uuid + " has joined " + presenceEvent.channel)
     }
-    // first one here is host
+    // First one here is host
     if (presenceEvent.action == "join" && presenceEvent.occupancy == 1){
 
       console.log("You, " + presenceEvent.uuid + ", are Host.")
@@ -118,65 +195,11 @@ class Main extends React.Component{
       }.bind(this))
     }
   }
-  /*
-   * Callback of element initialization
-   */
-   componentWillMount(){
-    this.pubnubDemo.setState({
-      state: {
-        "host": false
-      },
-      uuid: this.pubnubDemo.getUUID(),
-      channels: [this.channelName]
-    })
-    this.pubnubDemo.addListener({
-      message: this.updateMessageOnListener,
-      presence: function(presenceEvent){
-        this.assignHost(presenceEvent);
-      }.bind(this)
-    })
-    this.pubnubDemo.subscribe({
-      channels: [this.channelName],
-      withPresence: true
-    })
-  }
-
-  updateMessageOnListener(response) {
-    // GAME IS STARTING
-    if(response.message.game == "start_countdown"){
-      if(this.state.isReady){
-        console.log("People playing: ", response.message.usersPlaying);
-        this.startCountdown();
-      }
-    }
-
-    if(this.state.host && response.message.ready != null){
-      var tempArray = this.state.usersReady
-      tempArray.push(response.message.ready);
-      console.log(tempArray.toString() + " is ready")
-      this.setState({
-        host: this.state.host,
-        usersReady: tempArray
-      });
-      this.pubnubDemo.setState({
-        state: {
-          host: this.state.host,
-          usersReady: tempArray
-        },
-        uuid: this.pubnubDemo.getUUID(),
-        channels: [this.channelName]
-      })
-    }
-
-    if(response.message.usersPlaying != null){
-      console.log(response.message.usersPlaying.toString() + " are playing")
-      this.setState({
-        usersPlaying: response.message.usersPlaying
-      });
-    }
-  }
   getReady() {
     if(!this.state.isReady){
+      // Axios.get('/redirect_to_auth', {
+        
+      // });
       this.pubnubDemo.publish(
       {
         message: {

@@ -19790,6 +19790,10 @@
 
 	var _store2 = _interopRequireDefault(_store);
 
+	var _axios = __webpack_require__(163);
+
+	var _axios2 = _interopRequireDefault(_axios);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -19804,39 +19808,124 @@
 	  function Main(props) {
 	    _classCallCheck(this, Main);
 
+	    // Binding this to all necessary methods
 	    var _this = _possibleConstructorReturn(this, (Main.__proto__ || Object.getPrototypeOf(Main)).call(this, props));
 
 	    _this.getReady = _this.getReady.bind(_this);
 	    _this.startCountdown = _this.startCountdown.bind(_this);
 	    _this.gameStart = _this.gameStart.bind(_this);
 	    _this.updateMessageOnListener = _this.updateMessageOnListener.bind(_this);
+
+	    // Instantiating a PubNub object
 	    _this.pubnubDemo = new PubNub({
 	      publishKey: 'pub-c-89d8d3f5-9d58-4c24-94e7-1c89f243296a',
 	      subscribeKey: 'sub-c-99748e0e-df8d-11e6-989b-02ee2ddab7fe',
 	      uuid: PubNub.generateUUID(),
-	      presenceTimeout: 10,
+	      presenceTimeout: 10, // Check for users timing out faster
 	      heartbeatInterval: 5
 	    });
+
+	    // Initialize the state of Main (for each user)
 	    _this.state = {
-	      host: false,
-	      gameStarted: false,
-	      countdown: 5,
-	      isReady: false,
-	      usersReady: [],
-	      usersPlaying: null
+	      host: false, // Whether or not the user is the host of the channel/room
+	      gameStarted: false, // Whether or not the game has started
+	      countdown: 5, // Number of seconds to count down
+	      isReady: false, // Determines if the user is ready to play the game
+	      usersReady: [], // Array of all the users that are ready
+	      usersPlaying: null // Array of users going to be playing in the game
 	    };
 
+	    // Channel or room that users will be subscribed to
 	    _this.channelName = _store2.default.get('channelName');
 	    return _this;
 	  }
+	  /*
+	   * Callback of element initialization
+	   */
+
 
 	  _createClass(Main, [{
+	    key: 'componentWillMount',
+	    value: function componentWillMount() {
+	      // Initialize state of pubnubDemo
+	      this.pubnubDemo.setState({
+	        state: {
+	          "host": false
+	        },
+	        uuid: this.pubnubDemo.getUUID(),
+	        channels: [this.channelName]
+	      });
+	      // Add listener to receive published messages
+	      this.pubnubDemo.addListener({
+	        message: this.updateMessageOnListener,
+	        presence: function (presenceEvent) {
+	          this.assignHost(presenceEvent);
+	        }.bind(this)
+	      });
+
+	      // Subscribe to channel and turn on presence
+	      this.pubnubDemo.subscribe({
+	        channels: [this.channelName],
+	        withPresence: true
+	      });
+	    }
+
+	    // Callback function called when message is received by listener 
+
+	  }, {
+	    key: 'updateMessageOnListener',
+	    value: function updateMessageOnListener(response) {
+
+	      // Game start message
+	      if (response.message.game == "start_countdown") {
+	        if (this.state.isReady) {
+	          console.log("People playing: ", response.message.usersPlaying);
+	          this.startCountdown();
+	        }
+	      }
+
+	      // When a user is ready, host adds user to array of users that are ready
+	      if (this.state.host && response.message.ready != null) {
+	        var tempArray = this.state.usersReady;
+	        tempArray.push(response.message.ready); // Add new ready user
+	        console.log(tempArray.toString() + " is ready");
+	        // Update state
+	        this.setState({
+	          host: this.state.host,
+	          usersReady: tempArray
+	        });
+	        // Update pubnubDemo state
+	        this.pubnubDemo.setState({
+	          state: {
+	            host: this.state.host,
+	            usersReady: tempArray
+	          },
+	          uuid: this.pubnubDemo.getUUID(),
+	          channels: [this.channelName]
+	        });
+	      }
+
+	      // Update array of users playing
+	      if (response.message.usersPlaying != null) {
+	        console.log(response.message.usersPlaying.toString() + " are playing");
+	        // Update state
+	        this.setState({
+	          usersPlaying: response.message.usersPlaying
+	        });
+	      }
+	    }
+	    // Assigns host to a user in the room / channel. Host holds certain room info
+	    // and is the only one that can start the game
+
+	  }, {
 	    key: 'assignHost',
 	    value: function assignHost(presenceEvent) {
+
+	      // Display when a user has joined
 	      if (presenceEvent.action == "join") {
 	        console.log(presenceEvent.uuid + " has joined " + presenceEvent.channel);
 	      }
-	      // first one here is host
+	      // First one here is host
 	      if (presenceEvent.action == "join" && presenceEvent.occupancy == 1) {
 
 	        console.log("You, " + presenceEvent.uuid + ", are Host.");
@@ -19917,71 +20006,13 @@
 	        }.bind(this));
 	      }
 	    }
-	    /*
-	     * Callback of element initialization
-	     */
-
-	  }, {
-	    key: 'componentWillMount',
-	    value: function componentWillMount() {
-	      this.pubnubDemo.setState({
-	        state: {
-	          "host": false
-	        },
-	        uuid: this.pubnubDemo.getUUID(),
-	        channels: [this.channelName]
-	      });
-	      this.pubnubDemo.addListener({
-	        message: this.updateMessageOnListener,
-	        presence: function (presenceEvent) {
-	          this.assignHost(presenceEvent);
-	        }.bind(this)
-	      });
-	      this.pubnubDemo.subscribe({
-	        channels: [this.channelName],
-	        withPresence: true
-	      });
-	    }
-	  }, {
-	    key: 'updateMessageOnListener',
-	    value: function updateMessageOnListener(response) {
-	      // GAME IS STARTING
-	      if (response.message.game == "start_countdown") {
-	        if (this.state.isReady) {
-	          console.log("People playing: ", response.message.usersPlaying);
-	          this.startCountdown();
-	        }
-	      }
-
-	      if (this.state.host && response.message.ready != null) {
-	        var tempArray = this.state.usersReady;
-	        tempArray.push(response.message.ready);
-	        console.log(tempArray.toString() + " is ready");
-	        this.setState({
-	          host: this.state.host,
-	          usersReady: tempArray
-	        });
-	        this.pubnubDemo.setState({
-	          state: {
-	            host: this.state.host,
-	            usersReady: tempArray
-	          },
-	          uuid: this.pubnubDemo.getUUID(),
-	          channels: [this.channelName]
-	        });
-	      }
-
-	      if (response.message.usersPlaying != null) {
-	        console.log(response.message.usersPlaying.toString() + " are playing");
-	        this.setState({
-	          usersPlaying: response.message.usersPlaying
-	        });
-	      }
-	    }
 	  }, {
 	    key: 'getReady',
 	    value: function getReady() {
 	      if (!this.state.isReady) {
+	        // Axios.get('/redirect_to_auth', {
+
+	        // });
 	        this.pubnubDemo.publish({
 	          message: {
 	            ready: this.pubnubDemo.getUUID()
@@ -20212,6 +20243,17 @@
 	      discard: [], // Discard Pile
 	      hand: [], // Current Player's hand
 	      callStatus: 0, // 1 is you win, -1 is you lose, 2 is someone else won, -2 is someone else lost
+<<<<<<< HEAD
+	      turn: 0,
+	      chosenCards: '',
+	      isTurn: false,
+	      canDeal: true,
+	      playing: false,
+	      cardToAdd: '',
+	      hasDrawn: false,
+	      points: 0,
+	      turnNumber: 1
+=======
 	      turn: 0, // Whose turn it is
 	      chosenCards: '', // Cards that have been chosen to be discarded
 	      isTurn: false, // Whether it is the current player's turn
@@ -20221,6 +20263,7 @@
 	      hasDrawn: false, // Completed draw phase of turn
 	      lastPlay: [], // Set of last few cards being played
 	      points: 0 // Current player's point total
+>>>>>>> d06846d061dbacb4bdaff0288bb84f3489cef07d
 	    };
 
 	    // Channel for the game data to be sent on
@@ -20566,7 +20609,8 @@
 	          isTurn: false,
 	          chosenCards: '',
 	          cardToAdd: '',
-	          hasDrawn: false
+	          hasDrawn: false,
+	          turnNumber: this.state.turnNumber + 1
 	        });
 	      } else {
 	        // Play invalid, clear the chosen cards
@@ -20678,11 +20722,14 @@
 
 	      return true;
 	    }
+<<<<<<< HEAD
+=======
 
 	    /*
 	     * Callback handler for button that deals cards
 	     */
 
+>>>>>>> d06846d061dbacb4bdaff0288bb84f3489cef07d
 	  }, {
 	    key: 'dealCards',
 	    value: function dealCards() {
@@ -20797,6 +20844,10 @@
 	  }, {
 	    key: 'yusef',
 	    value: function yusef() {
+	      if (this.state.turnNumber < 3) {
+	        console.log("Can't call yusef yet!");
+	        return;
+	      }
 	      var myCount = this.summ(this.state.hand);
 	      console.log("called yusef with hand of value ", myCount);
 	      this.props.pubnubDemo.publish({
@@ -20877,6 +20928,8 @@
 	          this.state.lastPlay
 	        ),
 	        _react2.default.createElement(
+<<<<<<< HEAD
+=======
 	          'div',
 	          { id: 'topCard', style: { display: this.state.callStatus == 0 ? "block" : "none" } },
 	          'Top Card of Discard Pile: ',
@@ -20906,6 +20959,7 @@
 	          this.state.points
 	        ),
 	        _react2.default.createElement(
+>>>>>>> d06846d061dbacb4bdaff0288bb84f3489cef07d
 	          'div',
 	          { style: { display: !this.state.canDeal ? "block" : "none" } },
 	          _react2.default.createElement(

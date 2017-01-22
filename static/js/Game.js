@@ -46,7 +46,8 @@ class Game extends React.Component {
       cardToAdd: '', // Which card being drawn and added to hand
       hasDrawn: false, // Completed draw phase of turn
       lastPlay: [], // Set of last few cards being played
-      points: 0 // Current player's point total
+      points: 0, // Current player's point total
+      turnNumber: 1
     }
 
     // Channel for the game data to be sent on
@@ -371,7 +372,8 @@ class Game extends React.Component {
         isTurn: false,
         chosenCards: '',
         cardToAdd: '',
-        hasDrawn: false
+        hasDrawn: false,
+        turnNumber: this.state.turnNumber + 1
       });
     } else {
       // Play invalid, clear the chosen cards
@@ -649,8 +651,12 @@ class Game extends React.Component {
    * Callback handler for when Yusef is called
    */
   yusef() {
+    // Cannot call Yusef until 3rd turn
+    if(this.state.turnNumber < 3){
+      console.log("Can't call yusef yet!");
+      return;
+    }
     var myCount = this.summ(this.state.hand); // Determine the score of the current user's hand
-
     console.log("called yusef with hand of value ", myCount);
 
     // Publish a packet for other users to check the Yusef call of the current user
