@@ -20176,7 +20176,8 @@
 
 	{/*
 	   Props available to Game:
-	    - gameStarted (boolean)
+	  
+	   - gameStarted (boolean)
 	  */}
 
 	var Game = function (_React$Component) {
@@ -20196,15 +20197,8 @@
 	      deck: ['DECK NOT INIITIALIZED'],
 	      handDealt: false,
 	      discard: [],
-<<<<<<< HEAD
-	      hand: ['empty', 'empty', 'empty', 'empty', 'empty'],
-	      callStatus: 0, // 1 is you win, -1 is you lose, 2 is someone else won, -2 is someone else lost
-	      turn: 0
-	    };
-=======
 	      hand: [],
-	      callStatus: 0 }, _defineProperty(_this$state, 'hand', ['empty', 'empty', 'empty', 'empty', 'empty']), _defineProperty(_this$state, 'callStatus', 0), _defineProperty(_this$state, 'canDeal', true), _this$state);
->>>>>>> 87a7209d370f34a95e607dbbe3ba63ac96145428
+	      callStatus: 0 }, _defineProperty(_this$state, 'hand', ['empty', 'empty', 'empty', 'empty', 'empty']), _defineProperty(_this$state, 'callStatus', 0), _defineProperty(_this$state, 'turn', 0), _defineProperty(_this$state, 'canDeal', true), _defineProperty(_this$state, 'playing', false), _this$state);
 	    _this.gameChannel = _this.props.channelName + 'gameChannel';
 	    return _this;
 	  }
@@ -20244,9 +20238,6 @@
 	  }, {
 	    key: 'updateOnListener',
 	    value: function updateOnListener(response) {
-<<<<<<< HEAD
-	      console.log(this.props.usersPlaying);
-=======
 	      // updates deck
 	      if (response.message.deck != null) {
 	        console.log("size of deck is ", response.message.deck.length);
@@ -20261,9 +20252,12 @@
 	          discard: response.message.discard
 	        });
 	      }
-
->>>>>>> 87a7209d370f34a95e607dbbe3ba63ac96145428
-	      if (response.message.dealing) {
+	      if (response.message.playing) {
+	        var indexInUsers = this.getUserIndex();
+	        if (indexInUsers == response.message.turn) {
+	          this.playHand();
+	        }
+	      } else if (response.message.dealing) {
 	        var indexInUsers = this.getUserIndex();
 
 	        console.log("current user has index in array of ", indexInUsers, "and nextToDraw is", response.message.nextToDraw);
@@ -20287,6 +20281,7 @@
 	            this.props.pubnubDemo.publish({
 	              message: {
 	                dealing: false,
+	                playing: true,
 	                deck: deq
 	              },
 	              channel: this.gameChannel
@@ -20449,7 +20444,7 @@
 	      this.props.pubnubDemo.publish({
 	        message: {
 	          turn: (this.state.turn + 1) % this.state.usersPlaying.length,
-	          deck: this.state.deck
+	          discard: this.state.discard
 	        },
 	        channel: this.gameChannel
 	      });
@@ -20628,6 +20623,7 @@
 
 	{/*
 	   Props available to TweetInput:
+	  
 	  */}
 
 	var TweetInput = function (_React$Component) {
