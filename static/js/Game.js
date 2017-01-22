@@ -381,14 +381,14 @@ class Game extends React.Component {
         <button className='col-md-4' onClick={this.drawFromDeck}>  DRAW A CARD FROM DECK </button>
         <button className='col-md-4' onClick={this.drawFromDiscard}>  DRAW A CARD FROM DISCARD </button>
         <div className='col-md-4'></div>
-
+        <br />
         <div id='hand' style={{display: ((this.state.callStatus == 0 && !this.state.isTurn) ? "block" : "none")}}>
           {this.state.hand.map((name, index) => 
               (<div className='col-md-2'>  Card {index+1}: {this.state.hand[index]}  </div>)
           )}
           <div className='col-md-2'>  DRAWN CARD  </div>
         </div>
-
+        <br />
         <div id='hand' style={{display: ((this.state.callStatus == 0 && this.state.isTurn) ? "block" : "none")}}>
           {this.state.hand.map((name, index) => 
               (<button className='col-md-2' onClick={this.select.bind(this,index)}>  Card {index+1}: {this.state.hand[index]}  </button>)

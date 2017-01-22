@@ -20600,6 +20600,7 @@
 	          '  DRAW A CARD FROM DISCARD '
 	        ),
 	        _react2.default.createElement('div', { className: 'col-md-4' }),
+	        _react2.default.createElement('br', null),
 	        _react2.default.createElement(
 	          'div',
 	          { id: 'hand', style: { display: this.state.callStatus == 0 && !this.state.isTurn ? "block" : "none" } },
@@ -20620,6 +20621,7 @@
 	            '  DRAWN CARD  '
 	          )
 	        ),
+	        _react2.default.createElement('br', null),
 	        _react2.default.createElement(
 	          'div',
 	          { id: 'hand', style: { display: this.state.callStatus == 0 && this.state.isTurn ? "block" : "none" } },
