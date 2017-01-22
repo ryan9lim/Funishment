@@ -18,7 +18,7 @@ class Game extends React.Component {
       deck: ['DECK NOT INIITIALIZED'], 
       handDealt: false,
       discard: [],
-      hand: ['empty', 'empty', 'empty','empty','empty'],
+      hand: [],
       callStatus: 0 // 1 is you win, -1 is you lose, 2 is someone else won, -2 is someone else lost
     }
     this.gameChannel = this.props.channelName + 'gameChannel';
@@ -40,16 +40,36 @@ class Game extends React.Component {
       channels: [this.gameChannel]
     });
   }
-  updateOnListener(response) {
-    if (response.message.dealing) {
-      var indexInUsers = -1;
-      var i;
-      for (i = 0; i < this.props.usersPlaying.length; i++) {
-        if(this.props.usersPlaying[i] == this.props.pubnubDemo.getUUID()) {
-          indexInUsers = i;
-          break;
-        }
+
+  getUserIndex(){
+    var i;
+    for (i = 0; i < this.props.usersPlaying.length; i++) {
+      if(this.props.usersPlaying[i] == this.props.pubnubDemo.getUUID()) {
+        return i;
+        break;
       }
+    }
+    return -1;
+  }
+
+  updateOnListener(response) {
+    // updates deck
+    if (response.message.deck != null) {
+      console.log("size of deck is ", response.message.deck.length);
+      this.setState({
+        deck: response.message.deck
+      });
+    }
+    // updates discard
+    if (response.message.discard != null) {
+      console.log("size of discard is ", response.message.discard.length);
+      this.setState({
+        discard: response.message.discard
+      });
+    }
+
+    if (response.message.dealing) {
+      var indexInUsers = this.getUserIndex()
 
       console.log("current user has index in array of ", indexInUsers);
       console.log("array of users is ", this.props.usersPlaying);
@@ -72,7 +92,6 @@ class Game extends React.Component {
           this.props.pubnubDemo.publish({
             message: {
               dealing: false,
-              fixDeckAfterDeal: true,
               deck: deq
             },
             channel: this.gameChannel
@@ -85,10 +104,6 @@ class Game extends React.Component {
           hand: han
         });
       }
-    } else if (response.message.fixDeckAfterDeal){
-      this.setState({
-        deck: response.message.deck
-      });
     } else if (response.message.checkingYusef) {
       if(response.message.nextToCheck >= this.props.usersPlaying.length && response.message.callerId == this.props.pubnubDemo.getUUID()) {
         var pf;
@@ -103,7 +118,6 @@ class Game extends React.Component {
         this.props.pubnubDemo.publish({
           message: {
             dealing: false,
-            fixDeckAfterDeal: false,
             checkingYusef: false,
             confirmingYusef: true,
             callerId: this.props.pubnubDemo.getUUID(),
@@ -132,7 +146,6 @@ class Game extends React.Component {
           this.props.pubnubDemo.publish({
             message: {
               dealing: false,
-              fixDeckAfterDeal: false,
               checkingYusef: true,
               nextToCheck: response.message.nextToCheck + 1,
               callerId: response.message.callerId,
@@ -199,8 +212,40 @@ class Game extends React.Component {
       array[randomIndex] = temporaryValue;
     
     }
-
     return array;
+  }
+  drawFromDeck() {
+    var card = this.state.deck.shift()
+    var indexInUsers = getUserIndex();
+    //update hand
+    this.state.hand.push(card)
+
+    // update deck, next person's turn
+    this.props.pubnubDemo.publish({
+      message: {
+        turn: (this.state.turn+1) % this.state.usersPlaying.length,
+        deck: this.state.deck
+      },
+      channel: this.gameChannel
+    });
+  }
+  drawFromDiscard() {
+    var card = this.state.discard.shift()
+    var indexInUsers = getUserIndex();
+    //update hand
+    this.state.hand.push(card)
+    
+    // update deck, next person's turn
+    this.props.pubnubDemo.publish({
+      message: {
+        turn: (this.state.turn+1) % this.state.usersPlaying.length,
+        deck: this.state.deck
+      },
+      channel: this.gameChannel
+    });
+  }
+  playHand(){
+
   }
   yusef() {
     var myCount = this.summ(this.state.hand);
@@ -222,7 +267,7 @@ class Game extends React.Component {
     var count = 0;
     var i;
     console.log(this.state.hand);
-    for(i = 0; i < this.state.hand.length && this.state.hand[i] != "empty"; i++) {
+    for(i = 0; i < this.state.hand.length; i++) {
       if(this.state.hand[i].charCodeAt(0) <= "9".charCodeAt(0) && this.state.hand[i].charCodeAt(0) >= "2".charCodeAt(0)) {
         count += this.state.hand[i].charCodeAt(0) - "0".charCodeAt(0);
       } else if (this.state.hand[i].slice(0,1) == "A"){
@@ -260,11 +305,9 @@ class Game extends React.Component {
         </div>
 
         <div id='hand' style={{display: ((this.state.callStatus == 0) ? "block" : "none")}}>
-          <div className='col-md-2'>  Card 1: {this.state.hand[0]}  </div>
-          <div className='col-md-2'>  Card 2: {this.state.hand[1]}  </div>
-          <div className='col-md-2'>  Card 3: {this.state.hand[2]}  </div>
-          <div className='col-md-2'>  Card 4: {this.state.hand[3]}  </div>
-          <div className='col-md-2'>  Card 5: {this.state.hand[4]}  </div>
+          {this.state.hand.map((name, index) => 
+              (<div className='col-md-2'>  Card {index+1}: {this.state.hand[index]}  </div>)
+          )}
           <div className='col-md-2'>  DRAWN CARD  </div>
         </div>
 

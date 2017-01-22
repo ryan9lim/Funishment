@@ -20193,7 +20193,7 @@
 	      deck: ['DECK NOT INIITIALIZED'],
 	      handDealt: false,
 	      discard: [],
-	      hand: ['empty', 'empty', 'empty', 'empty', 'empty'],
+	      hand: [],
 	      callStatus: 0 // 1 is you win, -1 is you lose, 2 is someone else won, -2 is someone else lost
 	    };
 	    _this.gameChannel = _this.props.channelName + 'gameChannel';
@@ -20221,17 +20221,37 @@
 	      });
 	    }
 	  }, {
+	    key: 'getUserIndex',
+	    value: function getUserIndex() {
+	      var i;
+	      for (i = 0; i < this.props.usersPlaying.length; i++) {
+	        if (this.props.usersPlaying[i] == this.props.pubnubDemo.getUUID()) {
+	          return i;
+	          break;
+	        }
+	      }
+	      return -1;
+	    }
+	  }, {
 	    key: 'updateOnListener',
 	    value: function updateOnListener(response) {
+	      // updates deck
+	      if (response.message.deck != null) {
+	        console.log("size of deck is ", response.message.deck.length);
+	        this.setState({
+	          deck: response.message.deck
+	        });
+	      }
+	      // updates discard
+	      if (response.message.discard != null) {
+	        console.log("size of discard is ", response.message.discard.length);
+	        this.setState({
+	          discard: response.message.discard
+	        });
+	      }
+
 	      if (response.message.dealing) {
-	        var indexInUsers = -1;
-	        var i;
-	        for (i = 0; i < this.props.usersPlaying.length; i++) {
-	          if (this.props.usersPlaying[i] == this.props.pubnubDemo.getUUID()) {
-	            indexInUsers = i;
-	            break;
-	          }
-	        }
+	        var indexInUsers = this.getUserIndex();
 
 	        console.log("current user has index in array of ", indexInUsers);
 	        console.log("array of users is ", this.props.usersPlaying);
@@ -20254,7 +20274,6 @@
 	            this.props.pubnubDemo.publish({
 	              message: {
 	                dealing: false,
-	                fixDeckAfterDeal: true,
 	                deck: deq
 	              },
 	              channel: this.gameChannel
@@ -20267,10 +20286,6 @@
 	            hand: han
 	          });
 	        }
-	      } else if (response.message.fixDeckAfterDeal) {
-	        this.setState({
-	          deck: response.message.deck
-	        });
 	      } else if (response.message.checkingYusef) {
 	        if (response.message.nextToCheck >= this.props.usersPlaying.length && response.message.callerId == this.props.pubnubDemo.getUUID()) {
 	          var pf;
@@ -20285,7 +20300,6 @@
 	          this.props.pubnubDemo.publish({
 	            message: {
 	              dealing: false,
-	              fixDeckAfterDeal: false,
 	              checkingYusef: false,
 	              confirmingYusef: true,
 	              callerId: this.props.pubnubDemo.getUUID(),
@@ -20314,7 +20328,6 @@
 	            this.props.pubnubDemo.publish({
 	              message: {
 	                dealing: false,
-	                fixDeckAfterDeal: false,
 	                checkingYusef: true,
 	                nextToCheck: response.message.nextToCheck + 1,
 	                callerId: response.message.callerId,
@@ -20382,9 +20395,45 @@
 	        array[currentIndex] = array[randomIndex];
 	        array[randomIndex] = temporaryValue;
 	      }
-
 	      return array;
 	    }
+	  }, {
+	    key: 'drawFromDeck',
+	    value: function drawFromDeck() {
+	      var card = this.state.deck.shift();
+	      var indexInUsers = getUserIndex();
+	      //update hand
+	      this.state.hand.push(card);
+
+	      // update deck, next person's turn
+	      this.props.pubnubDemo.publish({
+	        message: {
+	          turn: (this.state.turn + 1) % this.state.usersPlaying.length,
+	          deck: this.state.deck
+	        },
+	        channel: this.gameChannel
+	      });
+	    }
+	  }, {
+	    key: 'drawFromDiscard',
+	    value: function drawFromDiscard() {
+	      var card = this.state.discard.shift();
+	      var indexInUsers = getUserIndex();
+	      //update hand
+	      this.state.hand.push(card);
+
+	      // update deck, next person's turn
+	      this.props.pubnubDemo.publish({
+	        message: {
+	          turn: (this.state.turn + 1) % this.state.usersPlaying.length,
+	          deck: this.state.deck
+	        },
+	        channel: this.gameChannel
+	      });
+	    }
+	  }, {
+	    key: 'playHand',
+	    value: function playHand() {}
 	  }, {
 	    key: 'yusef',
 	    value: function yusef() {
@@ -20409,7 +20458,7 @@
 	      var count = 0;
 	      var i;
 	      console.log(this.state.hand);
-	      for (i = 0; i < this.state.hand.length && this.state.hand[i] != "empty"; i++) {
+	      for (i = 0; i < this.state.hand.length; i++) {
 	        if (this.state.hand[i].charCodeAt(0) <= "9".charCodeAt(0) && this.state.hand[i].charCodeAt(0) >= "2".charCodeAt(0)) {
 	          count += this.state.hand[i].charCodeAt(0) - "0".charCodeAt(0);
 	        } else if (this.state.hand[i].slice(0, 1) == "A") {
@@ -20424,6 +20473,8 @@
 	  }, {
 	    key: 'render',
 	    value: function render() {
+	      var _this2 = this;
+
 	      return _react2.default.createElement(
 	        'div',
 	        { className: 'Game', style: { display: this.props.gameStarted ? "block" : "none" } },
@@ -20461,41 +20512,17 @@
 	        _react2.default.createElement(
 	          'div',
 	          { id: 'hand', style: { display: this.state.callStatus == 0 ? "block" : "none" } },
-	          _react2.default.createElement(
-	            'div',
-	            { className: 'col-md-2' },
-	            '  Card 1: ',
-	            this.state.hand[0],
-	            '  '
-	          ),
-	          _react2.default.createElement(
-	            'div',
-	            { className: 'col-md-2' },
-	            '  Card 2: ',
-	            this.state.hand[1],
-	            '  '
-	          ),
-	          _react2.default.createElement(
-	            'div',
-	            { className: 'col-md-2' },
-	            '  Card 3: ',
-	            this.state.hand[2],
-	            '  '
-	          ),
-	          _react2.default.createElement(
-	            'div',
-	            { className: 'col-md-2' },
-	            '  Card 4: ',
-	            this.state.hand[3],
-	            '  '
-	          ),
-	          _react2.default.createElement(
-	            'div',
-	            { className: 'col-md-2' },
-	            '  Card 5: ',
-	            this.state.hand[4],
-	            '  '
-	          ),
+	          this.state.hand.map(function (name, index) {
+	            return _react2.default.createElement(
+	              'div',
+	              { className: 'col-md-2' },
+	              '  Card ',
+	              index + 1,
+	              ': ',
+	              _this2.state.hand[index],
+	              '  '
+	            );
+	          }),
 	          _react2.default.createElement(
 	            'div',
 	            { className: 'col-md-2' },
