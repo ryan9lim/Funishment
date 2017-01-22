@@ -713,11 +713,19 @@ class Game extends React.Component {
     console.log(count);
     return count;
   }
+
+  /*
+   * Gives classnames when something should be hidden
+   */
   shouldHide(show_condition) {
     return ClassNames({
       'should-hide': show_condition ? false : true
     })
   }
+
+  /*
+   * Gives classnames when something should be selected
+   */
   shouldSelect(select_condition, index) {
     let played = false;
     for (let i = 0; i < this.state.chosenCards.length; i++) {
@@ -735,7 +743,7 @@ class Game extends React.Component {
    */
   translate(str) {
     var suit;
-    switch(str.slice(str.length - 1)) {
+    switch(str.substring(str.length - 1)) {
       case "C":
         suit = 'Clubs';
         break;
@@ -754,7 +762,7 @@ class Game extends React.Component {
     }
 
     var num;
-    switch(str.slice(0,str.length - 1)) {
+    switch(str.substring(0,str.length - 1)) {
       case "A":
         num = 'Ace';
         break;
@@ -803,11 +811,11 @@ class Game extends React.Component {
         </div>
 
         <div id='lastPlay' className={this.shouldHide(this.state.callStatus == 0)}>
-          Last Play: {this.state.lastPlay}
+          Last Play: {(this.state.lastPlay.length > 0) ? this.state.lastPlay.map(this.translate).join(", ") : ''}
         </div>
 
         <div id='topCard' className={this.shouldHide(this.state.callStatus == 0)}>
-          Top Card of Discard Pile: {this.state.discard[0]}
+          Top Card of Discard Pile: {(this.state.discard.length > 0) ? this.translate(this.state.discard[0]) : ''}
         </div>
         <br />
         <div>
