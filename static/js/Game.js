@@ -6,6 +6,10 @@ import ClassNames from 'classnames';
   Props available to Game:
 
   - gameStarted (boolean)
+  - isHost (boolean)
+  - usersPlaying (array)
+  - pubnubDemo (Pubnub Object)
+  - channelName (string)
 */}
 
 class Game extends React.Component {
@@ -14,6 +18,7 @@ class Game extends React.Component {
     this.yusef = this.yusef.bind(this);
     this.drawFromDeck = this.drawFromDeck.bind(this);
     this.drawFromDiscard = this.drawFromDiscard.bind(this);
+    this.checkValidPlay = this.checkValidPlay.bind(this);
     this.select = this.select.bind(this);
     this.playCards = this.playCards.bind(this);
     this.playHand = this.playHand.bind(this);
@@ -30,6 +35,7 @@ class Game extends React.Component {
       isTurn: false,
       canDeal: true,
       playing: false,
+      cardToAdd: '',
       hasDrawn: false
     }
     this.gameChannel = this.props.channelName + 'gameChannel';
@@ -209,48 +215,175 @@ class Game extends React.Component {
       });
     }
   }
+
   select(index) {
     console.log("selected", index, "for playing");
     this.setState({
       chosenCards: this.state.chosenCards + index.toString()
     });
   }
+
   playCards(){
+    console.log("in playcards, this is", this);
+    console.log("and chosenCards is", this.state.chosenCards);
     var played = [false, false, false, false, false];
     var i;
     for (i = 0; i < this.state.chosenCards.length; i++) {
       played[parseInt(this.state.chosenCards.slice(i,i+1))] = !played[parseInt(this.state.chosenCards.slice(i,i+1))];
     }
 
-    var newDiscard = this.state.discard;
-    var newHand = this.state.hand;
-    for (i = 4; i >= 0; i -= 1) {
-      if (played[i]) {
-        newDiscard.unshift(this.state.hand[i]);
-        newHand.splice(i, 1);
+    if(this.checkValidPlay(played, this.state.hand)) {
+      var newDiscard = this.state.discard;
+      var newHand = this.state.hand;
+      for (i = 4; i >= 0; i -= 1) {
+        if (played[i]) {
+          newDiscard.unshift(this.state.hand[i]);
+          newHand.splice(i, 1);
+        }
+      }
+      
+      newHand.push(this.state.cardToAdd);
+      console.log("current turn is", this.state.turn, "...finished playing and about to change turn to", (this.state.turn+1) % this.props.usersPlaying.length);
+      this.props.pubnubDemo.publish({
+        message: {
+          playing: true,
+          turn: (this.state.turn+1) % this.props.usersPlaying.length,
+          discard: this.state.discard
+        },
+        channel: this.gameChannel
+      });
+      this.setState({
+        hand: newHand,
+        discard: newDiscard,
+        isTurn: false,
+        chosenCards: '',
+        cardToAdd: '',
+        hasDrawn: false
+      });
+    } else {
+      this.setState({
+        chosenCards: ''
+      });
+    }
+
+  }
+
+  checkValidPlay(bools, hand) {
+    var nums = [];
+    var suits = [];
+    var i;
+    for (i = 0; i < bools.length; i++) {
+      if (bools[i]) {
+        if(hand[i].length == 2) {
+          nums.push(hand[i].slice(0,1));
+          suits.push(hand[i].slice(1));
+        } else {
+          nums.push(hand[i].slice(0,2));
+          suits.push(hand[i].slice(2));
+        }
       }
     }
 
-    console.log("current turn is", this.state.turn, "...finished playing and about to change turn to", (this.state.turn+1) % this.props.usersPlaying.length);
-    this.props.pubnubDemo.publish({
-      message: {
-        playing: true,
-        turn: (this.state.turn+1) % this.props.usersPlaying.length,
-        discard: this.state.discard
-      },
-      channel: this.gameChannel
-    });
-    this.setState({
-      hand: newHand,
-      discard: newDiscard,
-      isTurn: false,
-      chosenCards: '',
-      hasDrawn: false
-    });
-  }
-  // playHand(){
+    console.log("nums is", nums);
+    console.log("suits is", suits);
+    if (nums.length == 1) {
+      return true;
+    }
 
-  // }
+    if (nums.length < 1) {
+      return false;
+    }
+
+    var allSame = true;
+    var firstNum = nums[0];
+    var firstSuit = suits[0];
+
+    // Check if all numbers are the same
+    for (i = 0; i < nums.length; i++) {
+      if (nums[i] != firstNum) {
+        allSame = false;
+        break;
+      }
+    }
+
+    if (allSame) {
+      return true;
+    }
+
+    allSame = true;
+
+    // Check for straights
+    for (i = 0; i < suits.length; i++) {
+      if (suits[i] != firstSuit) {
+        allSame = false;
+        break;
+      }
+    }
+
+    var straights = [
+      ["2", "3", "A"],
+      ["2", "3", "4"],
+      ["3", "4", "5"],
+      ["4", "5", "6"],
+      ["5", "6", "7"],
+      ["6", "7", "8"],
+      ["7", "8", "9"],
+      ["10", "8", "9"],
+      ["10", "9", "J"],
+      ["10", "J", "Q"],
+      ["J", "K", "Q"],
+      ["2", "3", "4", "A"],
+      ["2", "3", "4", "5"],
+      ["3", "4", "5", "6"],
+      ["4", "5", "6", "7"],
+      ["5", "6", "7", "8"],
+      ["6", "7", "8", "9"],
+      ["10", "7", "8", "9"],
+      ["10", "8", "9", "J"],
+      ["10", "9", "J", "Q"],
+      ["10", "J", "K", "Q"],
+      ["2", "3", "4", "5", "A"],
+      ["2", "3", "4", "5", "6"],
+      ["3", "4", "5", "6", "7"],
+      ["4", "5", "6", "7", "8"],
+      ["5", "6", "7", "8", "9"],
+      ["10", "6", "7", "8", "9"],
+      ["10", "7", "8", "9", "J"],
+      ["10", "8", "9", "J", "Q"],
+      ["10", "9", "J", "K", "Q"]
+    ];
+
+    nums.sort();
+
+    // All the same suit so check values
+    if (allSame) {
+      for(i = 0; i < straights.length; i++) {
+        if(this.arraysEqual(straights[i],nums)) {
+          return true;
+        }
+      }
+    }
+
+    console.log("nums was not what we wanted. it was", nums);
+    console.log("or suits was not what we wanted. it was", suits);
+
+    return false;
+  }
+
+  /*
+   * sourced from http://stackoverflow.com/questions/4025893/how-to-check-identical-array-in-most-efficient-way
+   */
+  arraysEqual(arr1, arr2) {
+    if(arr1.length !== arr2.length)
+        return false;
+    for(var i = arr1.length; i--;) {
+        if(arr1[i] !== arr2[i])
+            return false;
+    }
+
+    return true;
+  }
+
   dealCards() {
     var deq = this.shuffle([
       'AC', '2C', '3C', '4C', '5C', '6C', '7C', '8C', '9C', '10C', 'JC', 'QC', 'KC',
@@ -291,11 +424,11 @@ class Game extends React.Component {
   drawFromDeck() {
     var card = this.state.deck.shift()
     var indexInUsers = this.getUserIndex();
-    //update hand
-    this.state.hand.push(card)
+    
     this.setState({
+      cardToAdd: card,
       hasDrawn: true
-    });
+    })
 
     // update deck
     this.props.pubnubDemo.publish({
@@ -308,11 +441,10 @@ class Game extends React.Component {
   drawFromDiscard() {
     var card = this.state.discard.shift()
     var indexInUsers = this.getUserIndex();
-    //update hand
-    this.state.hand.push(card)
     this.setState({
+      cardToAdd: card,
       hasDrawn: true
-    });
+    })
 
     // update discard
     this.props.pubnubDemo.publish({
@@ -386,30 +518,31 @@ class Game extends React.Component {
           Discard Cards: {this.state.discard}
         </div>
 
-        <button className='col-md-4' style={{display: ((this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn) ? "block" : "none")}} onClick={this.drawFromDeck}>  DRAW A CARD FROM DECK </button>
-        <button className='col-md-4' style={{display: ((this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn) ? "block" : "none")}} onClick={this.drawFromDiscard}>  DRAW A CARD FROM DISCARD </button>
-        <div className='col-md-4'></div>
-        <br />
-        <div id='hand' style={{display: ((this.state.callStatus == 0 && !(this.state.isTurn && this.state.hasDrawn)) ? "block" : "none")}}>
-          {this.state.hand.map((name, index) => 
-              (<div className='col-md-2'>  Card {index+1}: {this.state.hand[index]}  </div>)
-          )}
-          <div className='col-md-2'>  DRAWN CARD  </div>
-        </div>
-        <br />
-        <div id='hand' style={{display: ((this.state.callStatus == 0 && this.state.isTurn && this.state.hasDrawn) ? "block" : "none")}}>
-          {this.state.hand.map((name, index) => 
-              (<button className='col-md-2' onClick={this.select.bind(this,index)}>  Card {index+1}: {this.state.hand[index]}  </button>)
-          )}
-          <button className='col-md-2' onClick={this.playCards}>  SUBMIT CHOICES </button>
-        </div>
+        <div style={{display: ((!this.state.canDeal) ? "block" : "none")}}>
+          <button className='col-md-4' style={{display: ((this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn) ? "block" : "none")}} onClick={this.drawFromDeck}>  DRAW A CARD FROM DECK </button>
+          <button className='col-md-4' style={{display: ((this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn && this.state.discard.length > 0) ? "block" : "none")}} onClick={this.drawFromDiscard}>  DRAW A CARD FROM DISCARD </button>
+          <div className='col-md-4'></div>
+          <br />
+          <div id='hand' style={{display: ((this.state.callStatus == 0 && !(this.state.isTurn && this.state.hasDrawn)) ? "block" : "none")}}>
+            {this.state.hand.map((name, index) => 
+                (<div className='col-md-2'>  Card {index+1}: {this.state.hand[index]}  </div>)
+            )}
+          </div>
+          <br />
+          <div id='hand' style={{display: ((this.state.callStatus == 0 && this.state.isTurn && this.state.hasDrawn) ? "block" : "none")}}>
+            {this.state.hand.map((name, index) => 
+                (<button className='col-md-2' onClick={this.select.bind(this,index)}>  Card {index+1}: {this.state.hand[index]}  </button>)
+            )}
+            <button className='col-md-2' onClick={this.playCards}>  SUBMIT CHOICES </button>
+          </div>
 
-        <button type="button"
-          onClick={this.yusef}
-          className='btn btn-lg btn-default'
-          style={{display: ((this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn) ? "block" : "none")}}>
-          YUSEF!
-        </button>
+          <button type="button"
+            onClick={this.yusef}
+            className='btn btn-lg btn-default'
+            style={{display: ((this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn) ? "block" : "none")}}>
+            YUSEF!
+          </button>
+        </div>
 
         <div id='passCall' style={{display: ((this.state.callStatus == 1) ? "block" : "none")}}>
           Your Call Passed!
