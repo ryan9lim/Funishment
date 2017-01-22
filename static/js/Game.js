@@ -737,7 +737,7 @@ class Game extends React.Component {
         </div>
 
         <div id='topCard' style={{display: ((this.state.callStatus == 0) ? "block" : "none")}}>
-          Top Card of Discard Pile: {(this.state.lastPlay.length > 0) ? this.state.lastPlay[0] : ''}
+          Top Card of Discard Pile: {this.state.discard[0]}
         </div>
         <br />
         <div>
