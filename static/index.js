@@ -20946,21 +20946,9 @@
 	        ),
 	        _react2.default.createElement(
 	          'div',
-	          { id: 'deckCards', style: { display: this.state.callStatus == 0 ? "block" : "none" } },
-	          'Deck Cards: ',
-	          this.state.deck
-	        ),
-	        _react2.default.createElement(
-	          'div',
 	          { id: 'discard', style: { display: this.state.callStatus == 0 ? "block" : "none" } },
 	          'Discard Pile Size: ',
 	          this.state.discard.length
-	        ),
-	        _react2.default.createElement(
-	          'div',
-	          { id: 'discardCards', style: { display: this.state.callStatus == 0 ? "block" : "none" } },
-	          'Discard Cards: ',
-	          this.state.discard
 	        ),
 	        _react2.default.createElement(
 	          'div',
