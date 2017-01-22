@@ -229,7 +229,7 @@ class Game extends React.Component {
       }
     }
   }
-  
+
   lose(){
     console.log("YOU LOST");
   }
@@ -444,7 +444,10 @@ class Game extends React.Component {
     return array;
   }
   drawFromDeck() {
-    var card = this.state.deck.shift()
+    var card = this.state.deck[0];
+    this.setState({
+      deck: this.state.deck.slice(1)
+    });
     var indexInUsers = this.getUserIndex();
     
     this.setState({
@@ -453,13 +456,28 @@ class Game extends React.Component {
     })
 
     // update deck
-    this.props.pubnubDemo.publish({
-      message: {
-        deck: this.state.deck
-      },
-      channel: this.gameChannel
-    });
+    if (this.state.deck.length > 1) {
+      // deck still valid
+      this.props.pubnubDemo.publish({
+        message: {
+          deck: this.state.deck.slice(1)
+        },
+        channel: this.gameChannel
+      });
+    } else {
+      // deck out and need to reshuffle discard into it
+      var newDeck = this.shuffle(this.state.discard.slice(1));
+      this.props.pubnubDemo.publish({
+        message: {
+          deck: newDeck,
+          discard: this.state.discard.slice(0,1),
+          lastPlay: this.state.lastPlay
+        },
+        channel: this.gameChannel
+      }); 
+    }
   }
+
   drawFromDiscard() {
     var card = this.state.discard.shift()
     var indexInUsers = this.getUserIndex();
