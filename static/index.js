@@ -20273,8 +20273,8 @@
 
 	        // player played card, update allHands
 	        if (response.message.playing) {
-	          var index = (response.message.turn - 1) % this.props.usersPlaying.length;
-	          this.state.allHands[index] += 1 - this.state.lastPlay.length;
+	          var index = (response.message.turn - 1 + this.props.usersPlaying.length) % this.props.usersPlaying.length;
+	          this.state.allHands[index] += 1 - response.message.lastPlay.length;
 	          console.log(this.state.allHands);
 	        }
 	      }
@@ -20465,7 +20465,7 @@
 	          message: {
 	            playing: true,
 	            turn: (this.state.turn + 1) % this.props.usersPlaying.length,
-	            discard: this.state.discard,
+	            discard: newDiscard,
 	            lastPlay: lastPla
 	          },
 	          channel: this.gameChannel
@@ -20659,7 +20659,8 @@
 	      // update discard
 	      this.props.pubnubDemo.publish({
 	        message: {
-	          discard: this.state.discard
+	          discard: this.state.discard,
+	          lastPlay: this.state.lastPlay
 	        },
 	        channel: this.gameChannel
 	      });
@@ -20760,6 +20761,23 @@
 	          'Top Card of Discard Pile: ',
 	          this.state.lastPlay.length > 0 ? this.state.lastPlay[0] : ''
 	        ),
+	        _react2.default.createElement('br', null),
+	        _react2.default.createElement(
+	          'div',
+	          null,
+	          this.state.allHands.map(function (name, index) {
+	            return _react2.default.createElement(
+	              'div',
+	              { className: 'col-md-2', style: { display: index != _this2.getUserIndex() ? "block" : "none" } },
+	              'Player ',
+	              index + 1,
+	              ' : Cards ',
+	              _this2.state.allHands[index],
+	              '  '
+	            );
+	          })
+	        ),
+	        _react2.default.createElement('br', null),
 	        _react2.default.createElement(
 	          'div',
 	          { id: 'points' },
