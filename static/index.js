@@ -20624,12 +20624,7 @@
 	              _this2.state.hand[index],
 	              '  '
 	            );
-	          }),
-	          _react2.default.createElement(
-	            'div',
-	            { className: 'col-md-2' },
-	            '  DRAWN CARD  '
-	          )
+	          })
 	        ),
 	        _react2.default.createElement('br', null),
 	        _react2.default.createElement(
