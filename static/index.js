@@ -19814,19 +19814,16 @@
 	      heartbeatInterval: 5
 	    });
 	    _this.state = {
-	      isHost: false,
-	      score: 0,
+	      host: false,
 	      gameStarted: false,
 	      countdown: 3,
 	      isSelected: false,
 	      isReady: false,
-	      totalReady: 0,
-	      highTime: 0,
-	      clicked: false,
-	      cleared: false
+	      usersReady: [],
+	      usersPlaying: null
 	    };
 
-	    _this.channelName = 'testChannel21';
+	    _this.channelName = 'testChannel1';
 	    return _this;
 	  }
 
@@ -19841,12 +19838,14 @@
 
 	        console.log("You, " + presenceEvent.uuid + ", are Host.");
 	        this.setState({
-	          isHost: true
+	          host: true,
+	          usersReady: []
 	        });
 
 	        this.pubnubDemo.setState({
 	          state: {
-	            "host": true
+	            "host": true,
+	            usersReady: []
 	          },
 	          uuid: this.pubnubDemo.getUUID(),
 	          channels: [this.channelName]
@@ -19857,6 +19856,28 @@
 	      if (presenceEvent.action == "leave" || presenceEvent.action == "timeout") {
 	        console.log(presenceEvent.uuid + " has left.");
 	        console.log("Occupancy is now at ", presenceEvent.occupancy);
+	        console.log(presenceEvent);
+	        if (this.state.host) {
+	          var tempArray = this.state.usersReady;
+	          var index = tempArray.indexOf(presenceEvent.uuid);
+	          if (index > -1) {
+	            tempArray.splice(index, 1);
+	          }
+	          console.log(tempArray.toString() + " is ready");
+	          this.setState({
+	            host: this.state.host,
+	            usersReady: tempArray
+	          });
+
+	          this.pubnubDemo.setState({
+	            state: {
+	              host: this.state.host,
+	              usersReady: tempArray
+	            },
+	            uuid: this.pubnubDemo.getUUID(),
+	            channels: [this.channelName]
+	          });
+	        }
 	      }
 	      if ((presenceEvent.action == "leave" || presenceEvent.action == "timeout") && presenceEvent.state.host == true) {
 	        console.log(presenceEvent.uuid + " is no longer Host.");
@@ -19867,13 +19888,22 @@
 	        }, function (status, response) {
 	          if (response.channels[this.channelName].occupants[0].uuid == this.pubnubDemo.getUUID()) {
 	            console.log("You, " + presenceEvent.uuid + ", are Host.");
+	            console.log(presenceEvent.state);
+	            var tempArray = presenceEvent.state.usersReady;
+	            var index = tempArray.indexOf(presenceEvent.uuid);
+	            if (index > -1) {
+	              tempArray.splice(index, 1);
+	            }
+	            console.log(tempArray.toString() + " is ready");
 	            this.setState({
-	              isHost: true
+	              host: true,
+	              usersReady: tempArray
 	            });
 
 	            this.pubnubDemo.setState({
 	              state: {
-	                "host": true
+	                "host": true,
+	                usersReady: tempArray
 	              },
 	              uuid: this.pubnubDemo.getUUID(),
 	              channels: [this.channelName]
@@ -19913,35 +19943,45 @@
 	    key: 'updateMessageOnListener',
 	    value: function updateMessageOnListener(response) {
 	      // GAME IS STARTING
-	      if (response.message.game == "start") {
+	      if (response.message.game == "start_countdown") {
 	        if (this.state.isReady) {
-	          console.log("Total people playing: ", this.state.totalReady);
+	          console.log("People playing: ", response.message.usersPlaying);
 	          this.startCountdown();
 	        }
 	      }
 
-	      if (response.message.readyCount != null) {
+	      if (this.state.host && response.message.ready != null) {
+	        var tempArray = this.state.usersReady;
+	        tempArray.push(response.message.ready);
+	        console.log(tempArray.toString() + " is ready");
 	        this.setState({
-	          totalReady: response.message.readyCount
+	          host: this.state.host,
+	          usersReady: tempArray
 	        });
-	        console.log("total ready: ", response.message.readyCount);
+	        this.pubnubDemo.setState({
+	          state: {
+	            host: this.state.host,
+	            usersReady: tempArray
+	          },
+	          uuid: this.pubnubDemo.getUUID(),
+	          channels: [this.channelName]
+	        });
 	      }
-	      console.log(response.message);
+
+	      if (response.message.usersPlaying != null) {
+	        console.log(response.message.usersPlaying.toString() + " are playing");
+	        this.setState({
+	          usersPlaying: response.message.usersPlaying
+	        });
+	      }
 	    }
-
-	    /*
-	     * Send start message to the channel
-	     */
-
 	  }, {
 	    key: 'getReady',
 	    value: function getReady() {
-	      // TODO fix only host
 	      if (!this.state.isReady) {
 	        this.pubnubDemo.publish({
 	          message: {
-	            buttonPressed: 'true',
-	            readyCount: this.state.totalReady + 1
+	            ready: this.pubnubDemo.getUUID()
 	          },
 	          channel: this.channelName
 	        }, function (status, response) {
@@ -19962,10 +20002,10 @@
 	  }, {
 	    key: 'gameStart',
 	    value: function gameStart() {
-	      if (!this.state.isHost) return;
+	      if (!this.state.host) return;
 	      this.pubnubDemo.publish({
 	        message: {
-	          game: 'start'
+	          game: 'start_countdown'
 	        },
 	        channel: this.channelName
 	      }, function (status, response) {
@@ -19982,7 +20022,8 @@
 	      if (this.state.countdown <= 0) {
 	        console.log("GAME IS STARTING");
 	        this.setState({
-	          gameStarted: true
+	          gameStarted: true,
+	          usersPlaying: this.state.usersReady
 	        });
 	      } else {
 	        this.setState({
@@ -20028,7 +20069,7 @@
 	        ),
 	        _react2.default.createElement(
 	          'h1',
-	          null,
+	          { style: { display: this.state.gameStarted ? "none" : "block" } },
 	          ' COUNTDOWN: ',
 	          this.state.countdown,
 	          ' '
@@ -20137,13 +20178,28 @@
 	  function Game(props) {
 	    _classCallCheck(this, Game);
 
-	    return _possibleConstructorReturn(this, (Game.__proto__ || Object.getPrototypeOf(Game)).call(this, props));
+	    var _this = _possibleConstructorReturn(this, (Game.__proto__ || Object.getPrototypeOf(Game)).call(this, props));
+
+	    _this.state = {
+	      deck: ['AC', '2C', '3C', '4C', '5C', '6C', '7C', '8C', '9C', '10C', 'JC', 'QC', 'KC', 'AD', '2D', '3D', '4D', '5D', '6D', '7D', '8D', '9D', '10D', 'JD', 'QD', 'KD', 'AH', '2H', '3H', '4H', '5H', '6H', '7H', '8H', '9H', '10H', 'JH', 'QH', 'KH', 'AS', '2S', '3S', '4S', '5S', '6S', '7S', '8S', '9S', '10S', 'JS', 'QS', 'KS']
+	    };
+	    return _this;
 	  }
 
 	  _createClass(Game, [{
 	    key: 'render',
 	    value: function render() {
-	      return _react2.default.createElement('div', { className: 'Game' });
+	      return _react2.default.createElement(
+	        'div',
+	        { className: 'Game', style: { display: this.props.gameStarted ? "block" : "none" } },
+	        'TEST THIS SHOULD BE INVISIBLE UNTIL START',
+	        _react2.default.createElement(
+	          'div',
+	          { id: 'deck' },
+	          'Deck Cards Left: ',
+	          this.state.deck.length
+	        )
+	      );
 	    }
 	  }]);
 
