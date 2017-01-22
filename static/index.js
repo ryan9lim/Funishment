@@ -20208,6 +20208,7 @@
 	      playing: false,
 	      cardToAdd: '',
 	      hasDrawn: false,
+	      lastPlay: [],
 	      points: 0
 	    };
 	    _this.gameChannel = _this.props.channelName + 'gameChannel';
@@ -20260,7 +20261,8 @@
 	      if (response.message.discard != null) {
 	        console.log("size of discard is ", response.message.discard.length);
 	        this.setState({
-	          discard: response.message.discard
+	          discard: response.message.discard,
+	          lastPlay: response.message.lastPlay
 	        });
 	      }
 	      if (response.message.playing && response.message.turn != null) {
@@ -20426,12 +20428,14 @@
 	      for (i = 0; i < this.state.chosenCards.length; i++) {
 	        played[parseInt(this.state.chosenCards.slice(i, i + 1))] = !played[parseInt(this.state.chosenCards.slice(i, i + 1))];
 	      }
+	      var lastPla = [];
 
 	      if (this.checkValidPlay(played, this.state.hand)) {
 	        var newDiscard = this.state.discard;
 	        var newHand = this.state.hand;
 	        for (i = 4; i >= 0; i -= 1) {
 	          if (played[i]) {
+	            lastPla.unshift(this.state.hand[i]);
 	            newDiscard.unshift(this.state.hand[i]);
 	            newHand.splice(i, 1);
 	          }
@@ -20443,7 +20447,8 @@
 	          message: {
 	            playing: true,
 	            turn: (this.state.turn + 1) % this.props.usersPlaying.length,
-	            discard: this.state.discard
+	            discard: this.state.discard,
+	            lastPlay: lastPla
 	          },
 	          channel: this.gameChannel
 	        });
@@ -20453,6 +20458,7 @@
 	          isTurn: false,
 	          chosenCards: '',
 	          cardToAdd: '',
+	          lastPlay: lastPla,
 	          hasDrawn: false
 	        });
 	      } else {
@@ -20533,8 +20539,6 @@
 
 	      return false;
 	    }
-<<<<<<< HEAD
-=======
 
 	    /*
 	     * sourced from http://stackoverflow.com/questions/4025893/how-to-check-identical-array-in-most-efficient-way
@@ -20550,7 +20554,6 @@
 
 	      return true;
 	    }
->>>>>>> 5bb6ac2f384f928b66b37b0f8568d090d513c43e
 	  }, {
 	    key: 'dealCards',
 	    value: function dealCards() {
@@ -20711,43 +20714,24 @@
 	          this.state.discard
 	        ),
 	        _react2.default.createElement(
-<<<<<<< HEAD
+	          'div',
+	          { id: 'lastPlay', style: { display: this.state.callStatus == 0 ? "block" : "none" } },
+	          'Last Play: ',
+	          this.state.lastPlay
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          { id: 'topCard', style: { display: this.state.callStatus == 0 ? "block" : "none" } },
+	          'Top Card of Discard Pile: ',
+	          this.state.lastPlay.length > 0 ? this.state.lastPlay[0] : ''
+	        ),
+	        _react2.default.createElement(
 	          'div',
 	          { id: 'points' },
 	          'Total Points: ',
 	          this.state.points
 	        ),
 	        _react2.default.createElement(
-	          'button',
-	          { className: 'col-md-4', style: { display: this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn ? "block" : "none" }, onClick: this.drawFromDeck },
-	          '  DRAW A CARD FROM DECK '
-	        ),
-	        _react2.default.createElement(
-	          'button',
-	          { className: 'col-md-4', style: { display: this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn && this.state.discard.length > 0 ? "block" : "none" }, onClick: this.drawFromDiscard },
-	          '  DRAW A CARD FROM DISCARD '
-	        ),
-	        _react2.default.createElement('div', { className: 'col-md-4' }),
-	        _react2.default.createElement('br', null),
-	        _react2.default.createElement(
-	          'div',
-	          { id: 'hand', style: { display: this.state.callStatus == 0 && !(this.state.isTurn && this.state.hasDrawn) ? "block" : "none" } },
-	          this.state.hand.map(function (name, index) {
-	            return _react2.default.createElement(
-	              'div',
-	              { className: 'col-md-2' },
-	              '  Card ',
-	              index + 1,
-	              ': ',
-	              _this2.state.hand[index],
-	              '  '
-	            );
-	          })
-	        ),
-	        _react2.default.createElement('br', null),
-	        _react2.default.createElement(
-=======
->>>>>>> 5bb6ac2f384f928b66b37b0f8568d090d513c43e
 	          'div',
 	          { style: { display: !this.state.canDeal ? "block" : "none" } },
 	          _react2.default.createElement(
