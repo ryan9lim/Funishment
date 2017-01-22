@@ -19,7 +19,8 @@ class Game extends React.Component {
       handDealt: false,
       discard: [],
       hand: ['empty', 'empty', 'empty','empty','empty'],
-      callStatus: 0 // 1 is you win, -1 is you lose, 2 is someone else won, -2 is someone else lost
+      callStatus: 0, // 1 is you win, -1 is you lose, 2 is someone else won, -2 is someone else lost
+      canDeal: true
     }
     this.gameChannel = this.props.channelName + 'gameChannel';
   }
@@ -51,7 +52,7 @@ class Game extends React.Component {
         }
       }
 
-      console.log("current user has index in array of ", indexInUsers);
+      console.log("current user has index in array of ", indexInUsers, "and nextToDraw is", response.message.nextToDraw);
       console.log("array of users is ", this.props.usersPlaying);
       console.log("size of array of users is ", this.props.usersPlaying.length);
     
@@ -79,10 +80,15 @@ class Game extends React.Component {
           });
         }
 
+        console.log("I AM UPDATING ON DEAL");
+
         this.setState({
+          discard: [],
           handDealt: true,
           deck: deq,
-          hand: han
+          hand: han,
+          canDeal: false,
+          callStatus: 0 // 1 is you win, -1 is you lose, 2 is someone else won, -2 is someone else lost
         });
       }
     } else if (response.message.fixDeckAfterDeal){
@@ -160,7 +166,8 @@ class Game extends React.Component {
       }
 
       this.setState({
-        callStatus: stat
+        callStatus: stat,
+        canDeal: true
       });
     }
   }
@@ -239,7 +246,8 @@ class Game extends React.Component {
       <div className='Game' style={{display: (this.props.gameStarted ? "block" : "none")}}>
         <button type="button"
           onClick={this.dealCards}
-          className='btn btn-lg btn-default'>
+          className='btn btn-lg btn-default'
+          style={{display: (this.state.canDeal ? "block" : "none")}}>
           Deal
         </button>
 

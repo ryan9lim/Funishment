@@ -20174,8 +20174,7 @@
 
 	{/*
 	   Props available to Game:
-	  
-	   - gameStarted (boolean)
+	    - gameStarted (boolean)
 	  */}
 
 	var Game = function (_React$Component) {
@@ -20194,7 +20193,8 @@
 	      handDealt: false,
 	      discard: [],
 	      hand: ['empty', 'empty', 'empty', 'empty', 'empty'],
-	      callStatus: 0 // 1 is you win, -1 is you lose, 2 is someone else won, -2 is someone else lost
+	      callStatus: 0, // 1 is you win, -1 is you lose, 2 is someone else won, -2 is someone else lost
+	      canDeal: true
 	    };
 	    _this.gameChannel = _this.props.channelName + 'gameChannel';
 	    return _this;
@@ -20233,7 +20233,7 @@
 	          }
 	        }
 
-	        console.log("current user has index in array of ", indexInUsers);
+	        console.log("current user has index in array of ", indexInUsers, "and nextToDraw is", response.message.nextToDraw);
 	        console.log("array of users is ", this.props.usersPlaying);
 	        console.log("size of array of users is ", this.props.usersPlaying.length);
 
@@ -20261,10 +20261,15 @@
 	            });
 	          }
 
+	          console.log("I AM UPDATING ON DEAL");
+
 	          this.setState({
+	            discard: [],
 	            handDealt: true,
 	            deck: deq,
-	            hand: han
+	            hand: han,
+	            canDeal: false,
+	            callStatus: 0 // 1 is you win, -1 is you lose, 2 is someone else won, -2 is someone else lost
 	          });
 	        }
 	      } else if (response.message.fixDeckAfterDeal) {
@@ -20342,7 +20347,8 @@
 	        }
 
 	        this.setState({
-	          callStatus: stat
+	          callStatus: stat,
+	          canDeal: true
 	        });
 	      }
 	    }
@@ -20431,7 +20437,8 @@
 	          'button',
 	          { type: 'button',
 	            onClick: this.dealCards,
-	            className: 'btn btn-lg btn-default' },
+	            className: 'btn btn-lg btn-default',
+	            style: { display: this.state.canDeal ? "block" : "none" } },
 	          'Deal'
 	        ),
 	        _react2.default.createElement(
@@ -20577,7 +20584,6 @@
 
 	{/*
 	   Props available to TweetInput:
-	  
 	  */}
 
 	var TweetInput = function (_React$Component) {
