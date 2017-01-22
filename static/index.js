@@ -20208,8 +20208,9 @@
 	      playing: false,
 	      cardToAdd: '',
 	      hasDrawn: false,
-	      points: 0,
-	      allHands: []
+	      allHands: [],
+	      lastPlay: [],
+	      points: 0
 	    };
 	    _this.gameChannel = _this.props.channelName + 'gameChannel';
 	    return _this;
@@ -20222,10 +20223,8 @@
 	  _createClass(Game, [{
 	    key: 'componentWillMount',
 	    value: function componentWillMount() {
-	      var arraysize = this.props.usersPlaying.length;
-	      while (arraySize--) {
-	        allHands.push(value);
-	      }this.props.pubnubDemo.setState({
+
+	      this.props.pubnubDemo.setState({
 	        state: {
 	          "host": this.props.isHost
 	        },
@@ -20264,13 +20263,15 @@
 	      if (response.message.discard != null) {
 	        console.log("size of discard is ", response.message.discard.length);
 	        this.setState({
-	          discard: response.message.discard
+	          discard: response.message.discard,
+	          lastPlay: response.message.lastPlay
 	        });
 
 	        // player played card, update allHands
 	        if (response.message.playing) {
 	          var index = (response.message.turn - 1) % this.props.usersPlaying.length;
-	          allHands[index] += 1 - this.state.lastPlay.length;
+	          this.state.allHands[index] += 1 - this.state.lastPlay.length;
+	          console.log(this.state.allHands);
 	        }
 	      }
 	      if (response.message.playing && response.message.turn != null) {
@@ -20327,6 +20328,12 @@
 	            canDeal: false,
 	            callStatus: 0 // 1 is you win, -1 is you lose, 2 is someone else won, -2 is someone else lost
 	          });
+
+	          // everyone starts off with 5 cards
+	          var arraySize = this.props.usersPlaying.length;
+	          while (arraySize--) {
+	            this.state.allHands.push(5);
+	          }
 	        }
 	      } else if (response.message.checkingYusef) {
 	        if (response.message.nextToCheck >= this.props.usersPlaying.length && response.message.callerId == this.props.pubnubDemo.getUUID()) {
@@ -20435,12 +20442,14 @@
 	      for (i = 0; i < this.state.chosenCards.length; i++) {
 	        played[parseInt(this.state.chosenCards.slice(i, i + 1))] = !played[parseInt(this.state.chosenCards.slice(i, i + 1))];
 	      }
+	      var lastPla = [];
 
 	      if (this.checkValidPlay(played, this.state.hand)) {
 	        var newDiscard = this.state.discard;
 	        var newHand = this.state.hand;
 	        for (i = 4; i >= 0; i -= 1) {
 	          if (played[i]) {
+	            lastPla.unshift(this.state.hand[i]);
 	            newDiscard.unshift(this.state.hand[i]);
 	            newHand.splice(i, 1);
 	          }
@@ -20452,7 +20461,8 @@
 	          message: {
 	            playing: true,
 	            turn: (this.state.turn + 1) % this.props.usersPlaying.length,
-	            discard: this.state.discard
+	            discard: this.state.discard,
+	            lastPlay: lastPla
 	          },
 	          channel: this.gameChannel
 	        });
@@ -20462,6 +20472,7 @@
 	          isTurn: false,
 	          chosenCards: '',
 	          cardToAdd: '',
+	          lastPlay: lastPla,
 	          hasDrawn: false
 	        });
 	      } else {
@@ -20715,6 +20726,18 @@
 	          { id: 'discardCards', style: { display: this.state.callStatus == 0 ? "block" : "none" } },
 	          'Discard Cards: ',
 	          this.state.discard
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          { id: 'lastPlay', style: { display: this.state.callStatus == 0 ? "block" : "none" } },
+	          'Last Play: ',
+	          this.state.lastPlay
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          { id: 'topCard', style: { display: this.state.callStatus == 0 ? "block" : "none" } },
+	          'Top Card of Discard Pile: ',
+	          this.state.lastPlay.length > 0 ? this.state.lastPlay[0] : ''
 	        ),
 	        _react2.default.createElement(
 	          'div',

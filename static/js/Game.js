@@ -37,8 +37,9 @@ class Game extends React.Component {
       playing: false,
       cardToAdd: '',
       hasDrawn: false,
-      points: 0,
-      allHands: []
+      allHands: [],
+      lastPlay: [],
+      points: 0
     }
     this.gameChannel = this.props.channelName + 'gameChannel';
   }
@@ -46,8 +47,6 @@ class Game extends React.Component {
    * Callback of element initialization
    */
   componentWillMount(){
-    var arraysize = this.props.usersPlaying.length
-    while(arraySize--) allHands.push(value);
 
     this.props.pubnubDemo.setState({
       state: {
@@ -86,13 +85,15 @@ class Game extends React.Component {
     if (response.message.discard != null) {
       console.log("size of discard is ", response.message.discard.length);
       this.setState({
-        discard: response.message.discard
+        discard: response.message.discard,
+        lastPlay: response.message.lastPlay
       });
 
       // player played card, update allHands
       if(response.message.playing){
         var index = (response.message.turn - 1)%this.props.usersPlaying.length;
-        allHands[index] += 1 - this.state.lastPlay.length;
+        this.state.allHands[index] += 1 - this.state.lastPlay.length;
+        console.log(this.state.allHands)
       }
     }
     if (response.message.playing && response.message.turn != null){
@@ -139,6 +140,7 @@ class Game extends React.Component {
             },
             channel: this.gameChannel
           });
+
         }
 
         console.log("I AM UPDATING ON DEAL");
@@ -150,6 +152,10 @@ class Game extends React.Component {
           canDeal: false,
           callStatus: 0 // 1 is you win, -1 is you lose, 2 is someone else won, -2 is someone else lost
         });
+
+        // everyone starts off with 5 cards
+        var arraySize = this.props.usersPlaying.length
+        while(arraySize--) this.state.allHands.push(5);
       }
     } else if (response.message.checkingYusef) {
       if(response.message.nextToCheck >= this.props.usersPlaying.length && response.message.callerId == this.props.pubnubDemo.getUUID()) {
@@ -235,9 +241,11 @@ class Game extends React.Component {
       }
     }
   }
+  
   lose(){
     console.log("YOU LOST");
   }
+
   select(index) {
     console.log("selected", index, "for playing");
     this.setState({
@@ -253,12 +261,14 @@ class Game extends React.Component {
     for (i = 0; i < this.state.chosenCards.length; i++) {
       played[parseInt(this.state.chosenCards.slice(i,i+1))] = !played[parseInt(this.state.chosenCards.slice(i,i+1))];
     }
+    var lastPla = [];
 
     if(this.checkValidPlay(played, this.state.hand)) {
       var newDiscard = this.state.discard;
       var newHand = this.state.hand;
       for (i = 4; i >= 0; i -= 1) {
         if (played[i]) {
+          lastPla.unshift(this.state.hand[i]);
           newDiscard.unshift(this.state.hand[i]);
           newHand.splice(i, 1);
         }
@@ -270,7 +280,8 @@ class Game extends React.Component {
         message: {
           playing: true,
           turn: (this.state.turn+1) % this.props.usersPlaying.length,
-          discard: this.state.discard
+          discard: this.state.discard,
+          lastPlay: lastPla
         },
         channel: this.gameChannel
       });
@@ -280,6 +291,7 @@ class Game extends React.Component {
         isTurn: false,
         chosenCards: '',
         cardToAdd: '',
+        lastPlay: lastPla,
         hasDrawn: false
       });
     } else {
@@ -538,6 +550,14 @@ class Game extends React.Component {
 
         <div id='discardCards' style={{display: ((this.state.callStatus == 0) ? "block" : "none")}}>
           Discard Cards: {this.state.discard}
+        </div>
+
+        <div id='lastPlay' style={{display: ((this.state.callStatus == 0) ? "block" : "none")}}>
+          Last Play: {this.state.lastPlay}
+        </div>
+
+        <div id='topCard' style={{display: ((this.state.callStatus == 0) ? "block" : "none")}}>
+          Top Card of Discard Pile: {(this.state.lastPlay.length > 0) ? this.state.lastPlay[0] : ''}
         </div>
 
         <div id='points'>
