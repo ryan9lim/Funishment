@@ -32,7 +32,8 @@ class Game extends React.Component {
     this.lose = this.lose.bind(this);
     this.updateOnListener = this.updateOnListener.bind(this);
     this.postTwitter = this.postTwitter.bind(this);
-
+    this.shouldHide = this.shouldHide.bind(this);
+    this.shouldSelect = this.shouldSelect.bind(this);
     // Initialize the state of Game
     this.state = {
       deck: ['DECK NOT INIITIALIZED'], // Deck to be drawn from
@@ -129,6 +130,7 @@ class Game extends React.Component {
     // Updates discard and lastPlay
     if (response.message.discard != null) {
       console.log("size of discard is ", response.message.discard.length);
+      console.log("lastPlay is ", response.message.lastPlay);
       this.setState({
         discard: response.message.discard,
         lastPlay: response.message.lastPlay
@@ -203,11 +205,12 @@ class Game extends React.Component {
 
         // Set own state to reflect the cards I just drew
         this.setState({
-          discard: [],
+          turnNumber: 1,
           deck: deq,
           hand: han,
           canDeal: false,
-          callStatus: 0 // 1 is you win, -1 is you lose, 2 is someone else won, -2 is someone else lost
+          callStatus: 0, // 1 is you win, -1 is you lose, 2 is someone else won, -2 is someone else lost
+          allHands: []
         });
 
         // everyone starts off with 5 cards
@@ -552,12 +555,22 @@ class Game extends React.Component {
       'AS', '2S', '3S', '4S', '5S', '6S', '7S', '8S', '9S', '10S', 'JS', 'QS', 'KS'
     ]);
 
+    // Take the first card and make it the first discard card
+    var disc = [];
+    disc.unshift(deq[0]);
+    deq = deq.slice(1);
+
+    console.log("initial discard pile is", disc);
+    console.log("initial deck is", deq);
+
     // Publish packet with deck for the sake of dealing starting hands
     this.props.pubnubDemo.publish({
       message: {
         dealing: true,
         nextToDraw: 0,
-        deck: deq
+        deck: deq,
+        discard: disc,
+        lastPlay: []
       },
       channel: this.gameChannel
     });
@@ -656,7 +669,7 @@ class Game extends React.Component {
     // Publish packet telling users to update discard and lastPlay
     this.props.pubnubDemo.publish({
       message: {
-        discard: this.state.discard,
+        discard: this.state.discard.slice(1),
         lastPlay: this.state.lastPlay
       },
       channel: this.gameChannel
@@ -752,53 +765,134 @@ class Game extends React.Component {
     
 
   /*
+   * Gives classnames when something should be hidden
+   */
+  shouldHide(show_condition) {
+    return ClassNames({
+      'should-hide': show_condition ? false : true
+    })
+  }
+
+  /*
+   * Gives classnames when something should be selected
+   */
+  shouldSelect(select_condition, index) {
+    let played = false;
+    for (let i = 0; i < this.state.chosenCards.length; i++) {
+      if(this.state.chosenCards[i] == index.toString())
+        played = !played;
+    }
+
+    return ClassNames({
+      'is-selected': played ? true : false
+    })
+  }
+
+  /*
+   * Translate from code to card in words
+   */
+  translate(str) {
+    var suit;
+    switch(str.substring(str.length - 1)) {
+      case "C":
+        suit = 'Clubs';
+        break;
+      case "D":
+        suit = 'Diamonds';
+        break;
+      case "H":
+        suit = 'Hearts';
+        break;
+      case "S":
+        suit = 'Spades';
+        break;
+      default:
+        suit = 'Questionable Suit';
+        break;
+    }
+
+    var num;
+    switch(str.substring(0,str.length - 1)) {
+      case "A":
+        num = 'Ace';
+        break;
+      case "J":
+        num = 'Jack';
+        break;
+      case "Q":
+        num = 'Queen';
+        break;
+      case "K":
+        num = 'King';
+        break;
+      default:
+        num = str.slice(0,str.length - 1);
+        break;
+    }
+
+    return num + ' of ' + suit;
+  }
+
+  /*
    * Render the HTML for this React element
    */
   render() {
     return (
-      <div className='Game' style={{display: (this.props.gameStarted ? "block" : "none")}}>
-        <button type="button"
-          onClick={this.dealCards}
-          className='btn btn-lg btn-default'
-          style={{display: (this.state.canDeal ? "block" : "none")}}>
+      <div className={'Game ' + 
+                      this.shouldHide(this.props.gameStarted)}>
+        
+        {/* Deal Button */}
+
+        <button type="button" onClick={this.dealCards}
+          className={'btn btn-lg btn-default ' +
+                     this.shouldHide(this.state.canDeal)}>
           Deal
         </button>
 
-        <div id='deck' style={{display: ((this.state.callStatus == 0) ? "block" : "none")}}>
-          Deck Cards Left: {this.state.deck.length}
+        {/* Deck Info */}
+
+        <div id='lastPlay' className={'Label ' + this.shouldHide(this.state.callStatus == 0)}>
+          Last Play : {(this.state.lastPlay.length > 0) ? this.state.lastPlay.map(this.translate).join(", ") : ''}
+        </div>
+        
+        <div id='deck' 
+             className={'Label ' + this.shouldHide(this.state.callStatus == 0)}>
+          Deck Cards Left : {this.state.deck.length}  
         </div>
 
-        <div id='discard' style={{display: ((this.state.callStatus == 0) ? "block" : "none")}}>
-          Discard Pile Size: {this.state.discard.length}
+        <div id='discard' className={'Label ' + this.shouldHide(this.state.callStatus == 0)}>
+          Discard Pile Size : {this.state.discard.length}
         </div>
 
-        <div id='lastPlay' style={{display: ((this.state.callStatus == 0) ? "block" : "none")}}>
-          Last Play: {this.state.lastPlay}
-        </div>
-
-        <div id='topCard' style={{display: ((this.state.callStatus == 0) ? "block" : "none")}}>
-          Top Card of Discard Pile: {(this.state.lastPlay.length > 0) ? this.state.lastPlay[0] : ''}
+        <div id='topCard' className={'Label ' + this.shouldHide(this.state.callStatus == 0)}>
+          Top Card of Discard Pile : <br/> {(this.state.discard.length > 0) ? this.translate(this.state.discard[0]) : ''}
         </div>
         <br />
         <div>
           {Array(this.props.usersPlaying ? this.props.usersPlaying.length : 0).fill(" ").map((name, index) => 
-            (<div className='col-md-2' style={{display: ((index != this.getUserIndex()) ? "block" : "none")}}>Player {index+1} : Cards {this.state.allHands ? this.state.allHands[index] : 0}  </div>)
+            (<div className='Label' style={{display: ((index != this.getUserIndex()) ? "block" : "none")}}>Player {index+1}: <br/>Cards {this.state.allHands ? this.state.allHands[index] : 0}  </div>)
           )}
         </div>
-        <br />
-
-        <div id='points'>
-          Total Points: {this.state.points}
+        <div id='points' className="scoreboard">
+          Total Points : {this.state.points}
         </div>
 
-        <div style={{display: ((!this.state.canDeal) ? "block" : "none")}}>
-          <button className='col-md-4' style={{display: ((this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn) ? "block" : "none")}} onClick={this.drawFromDeck}>  DRAW A CARD FROM DECK </button>
-          <button className='col-md-4' style={{display: ((this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn && this.state.discard.length > 0) ? "block" : "none")}} onClick={this.drawFromDiscard}>  DRAW A CARD FROM DISCARD </button>
-          <div className='col-md-4'></div>
-          <br />
-          <div id='hand' style={{display: ((this.state.callStatus == 0 && !(this.state.isTurn && this.state.hasDrawn)) ? "block" : "none")}}>
+
+        {/* Draw Buttons */}
+
+        <button className={'draw-button ' + this.shouldHide((this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn))} 
+                onClick={this.drawFromDeck}>  
+          Draw from Deck 
+        </button>
+
+        <button className={'draw-button ' + this.shouldHide((this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn  && this.state.discard.length > 0))} 
+                onClick={this.drawFromDiscard}>  
+          Draw from Discarded Pile 
+        </button>
+
+          {/*<div id='hand' style={{display: ((this.state.callStatus == 0 && !(this.state.isTurn && this.state.hasDrawn)) ? "block" : "none")}}>
             {this.state.hand.map((name, index) => 
-                (<div className='col-md-2'>  Card {index+1}: {this.state.hand[index]}  </div>)
+                (<div className='card'>  Card {index+1}: {this.state.hand[index]}  </div>)
             )}
           </div>
           <br />
@@ -807,30 +901,65 @@ class Game extends React.Component {
                 (<button className='col-md-2' onClick={this.select.bind(this,index)}>  Card {index+1}: {this.state.hand[index]}  </button>)
             )}
             <button className='col-md-2' onClick={this.playCards}>  SUBMIT CHOICES </button>
-          </div>
+          </div>*/}
 
-          <button type="button"
-            onClick={this.yusef}
-            className='btn btn-lg btn-default'
-            style={{display: ((this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn) ? "block" : "none")}}>
-            YUSEF!
-          </button>
+        {/* Cards */}
+
+        <div id='hand' 
+             className={this.shouldHide(this.state.callStatus == 0 && !(this.state.isTurn && this.state.hasDrawn))}>
+          {this.state.hand.map((name, index) => 
+              (<div className='card '>  
+                <span> {this.translate(this.state.hand[index])} </span>
+              </div>)
+          )}
         </div>
 
-        <div id='passCall' style={{display: ((this.state.callStatus == 1) ? "block" : "none")}}>
+        <br />
+
+        <div id='hand' 
+             className={this.shouldHide(this.state.callStatus == 0 && this.state.isTurn && this.state.hasDrawn)}>
+          {this.state.hand.map((name, index) => 
+              (<button onClick={this.select.bind(this,index)}
+                       className={'card ' + this.shouldSelect(this.state.chosenCards.includes(index.toString), index)} > 
+                <span> {this.translate(this.state.hand[index])} </span> 
+              </button>)
+          )}
+
+        </div>
+
+
+        {/* Submit Button */}
+
+        <button className={'submit-button btn btn-default ' + this.shouldHide(this.state.callStatus == 0 && this.state.isTurn && this.state.hasDrawn)} 
+                onClick={this.playCards}>  
+          Submit Choices 
+        </button>
+
+        {/* Yusef Button */}
+
+        <button type="button"
+          onClick={this.yusef}
+          className={'yusef-button btn btn-lg btn-default ' + 
+                     this.shouldHide(this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn)}>
+          Yusef!
+        </button>
+
+        {/* Call Status */}
+
+        <div id='passCall' className={this.shouldHide(this.state.callStatus == 1)}>
           Your Call Passed!
         </div>
 
-        <div id='failCall' style={{display: ((this.state.callStatus == -1) ? "block" : "none")}}>
+        <div id='failCall'  className={this.shouldHide(this.state.callStatus == -1)}>
           Your Call Failed!
         </div>
 
-        <div id='passCall' style={{display: ((this.state.callStatus == 2) ? "block" : "none")}}>
-          Another Players Call Passed!
+        <div id='passCall' className={this.shouldHide(this.state.callStatus == 2)}>
+          Another Player's Call Passed!
         </div>
 
-        <div id='failCall' style={{display: ((this.state.callStatus == -2) ? "block" : "none")}}>
-          Another Players Call Failed!
+        <div id='failCall' className={this.shouldHide(this.state.callStatus == -2)}>
+          Another Player's Call Failed!
         </div>
 
         <div id='lost' style={{display: ((this.state.endStatus == -1) ? "block" : "none")}}>

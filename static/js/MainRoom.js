@@ -9,16 +9,16 @@ class MainRoom extends React.Component{
     super(props);
   }
   componentWillMount() {
-    // console.log('Mounting');
-    // Axios.get('/redirect_to_auth')
-    //      .then((resp) => {console.log(resp);})
-    //      .catch((err) => {console.log(err );});
+    {/*console.log('Mounting');
+    Axios.get('/redirect_to_auth')
+         .then((resp) => {console.log(resp);})
+         .catch((err) => {console.log(err );});*/}
   }
   render() {
     return (
       <div className='Room'>
         <div className='container'>
-          <p>Funishment</p>
+          <p className='title'>Funishment</p>
           <ChannelForm />
           <ChannelList />
         </div>

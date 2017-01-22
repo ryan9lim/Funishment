@@ -319,7 +319,8 @@ class Main extends React.Component{
       'btn': true, 
       'btn-default': true,
       'Button': true,
-      'is-ready': this.state.isReady ? true : false
+      'is-ready': this.state.isReady ? true : false,
+      'should-hide': this.state.gameStarted ? true : false
     });
 
     const countdownCSS = ClassNames({
@@ -342,12 +343,15 @@ class Main extends React.Component{
           </button>
           <button type="button" onClick={this.gameStart}
                   className={buttonCSS + ' start-button'}>
-            Start game
+            Start Game
           </button>
         </div>
 
         <Game isHost={this.state.isHost} usersPlaying={this.state.usersPlaying} gameStarted={this.state.gameStarted} pubnubDemo={this.pubnubDemo} channelName={this.channelName}/>
-        <TweetInput />
+        <TweetInput />        
+        {/*<div className='card'>  
+          King of Diamonds
+        </div>*/}
       </div>
       )
     }
