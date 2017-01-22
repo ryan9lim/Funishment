@@ -19782,7 +19782,7 @@
 
 	var _Game2 = _interopRequireDefault(_Game);
 
-	var _TweetInput = __webpack_require__(162);
+	var _TweetInput = __webpack_require__(187);
 
 	var _TweetInput2 = _interopRequireDefault(_TweetInput);
 
@@ -19790,7 +19790,7 @@
 
 	var _store2 = _interopRequireDefault(_store);
 
-	var _axios = __webpack_require__(163);
+	var _axios = __webpack_require__(162);
 
 	var _axios2 = _interopRequireDefault(_axios);
 
@@ -20139,7 +20139,8 @@
 	        'btn': true,
 	        'btn-default': true,
 	        'Button': true,
-	        'is-ready': this.state.isReady ? true : false
+	        'is-ready': this.state.isReady ? true : false,
+	        'should-hide': this.state.gameStarted ? true : false
 	      });
 
 	      var countdownCSS = (0, _classnames2.default)({
@@ -20172,7 +20173,7 @@
 	            'button',
 	            { type: 'button', onClick: this.gameStart,
 	              className: buttonCSS + ' start-button' },
-	            'Start game'
+	            'Start Game'
 	          )
 	        ),
 	        _react2.default.createElement(_Game2.default, { isHost: this.state.isHost, usersPlaying: this.state.usersPlaying, gameStarted: this.state.gameStarted, pubnubDemo: this.pubnubDemo, channelName: this.channelName }),
@@ -20260,7 +20261,7 @@
 
 	var _classnames2 = _interopRequireDefault(_classnames);
 
-	var _axios = __webpack_require__(163);
+	var _axios = __webpack_require__(162);
 
 	var _axios2 = _interopRequireDefault(_axios);
 
@@ -20305,7 +20306,8 @@
 	    _this.lose = _this.lose.bind(_this);
 	    _this.updateOnListener = _this.updateOnListener.bind(_this);
 	    _this.postTwitter = _this.postTwitter.bind(_this);
-
+	    _this.shouldHide = _this.shouldHide.bind(_this);
+	    _this.shouldSelect = _this.shouldSelect.bind(_this);
 	    // Initialize the state of Game
 	    _this.state = {
 	      deck: ['DECK NOT INIITIALIZED'], // Deck to be drawn from
@@ -20323,7 +20325,8 @@
 	      lastPlay: [], // Set of last few cards being played
 	      points: 0, // Current player's point total
 	      allHands: [], // Set of number of cards in each player's hands
-	      turnNumber: 1,
+	      turnNumber: 1, // Turn number of current player
+	      playInvalid: false, // Whether the current attempted play is invalid
 	      endStatus: 0,
 	      loserID: '',
 	      tweet: ''
@@ -20412,6 +20415,7 @@
 	      // Updates discard and lastPlay
 	      if (response.message.discard != null) {
 	        console.log("size of discard is ", response.message.discard.length);
+	        console.log("lastPlay is ", response.message.lastPlay);
 	        this.setState({
 	          discard: response.message.discard,
 	          lastPlay: response.message.lastPlay
@@ -20485,11 +20489,12 @@
 
 	          // Set own state to reflect the cards I just drew
 	          this.setState({
-	            discard: [],
+	            turnNumber: 1,
 	            deck: deq,
 	            hand: han,
 	            canDeal: false,
-	            callStatus: 0 // 1 is you win, -1 is you lose, 2 is someone else won, -2 is someone else lost
+	            callStatus: 0, // 1 is you win, -1 is you lose, 2 is someone else won, -2 is someone else lost
+	            allHands: []
 	          });
 
 	          // everyone starts off with 5 cards
@@ -20600,7 +20605,7 @@
 	        });
 
 	        // Check if the current user has lost the game
-	        if (this.state.points >= 30) {
+	        if (this.state.points >= 100) {
 	          this.lose();
 	        }
 	      }
@@ -20692,12 +20697,14 @@
 	          isTurn: false,
 	          chosenCards: '',
 	          cardToAdd: '',
+	          playInvalid: false,
 	          hasDrawn: false,
 	          turnNumber: this.state.turnNumber + 1
 	        });
 	      } else {
 	        // Play invalid, clear the chosen cards
 	        this.setState({
+	          playInvalid: true,
 	          chosenCards: ''
 	        });
 	      }
@@ -20816,12 +20823,22 @@
 	      // Initialize the deck as a shuffled version of all valid cards
 	      var deq = this.shuffle(['AC', '2C', '3C', '4C', '5C', '6C', '7C', '8C', '9C', '10C', 'JC', 'QC', 'KC', 'AD', '2D', '3D', '4D', '5D', '6D', '7D', '8D', '9D', '10D', 'JD', 'QD', 'KD', 'AH', '2H', '3H', '4H', '5H', '6H', '7H', '8H', '9H', '10H', 'JH', 'QH', 'KH', 'AS', '2S', '3S', '4S', '5S', '6S', '7S', '8S', '9S', '10S', 'JS', 'QS', 'KS']);
 
+	      // Take the first card and make it the first discard card
+	      var disc = [];
+	      disc.unshift(deq[0]);
+	      deq = deq.slice(1);
+
+	      console.log("initial discard pile is", disc);
+	      console.log("initial deck is", deq);
+
 	      // Publish packet with deck for the sake of dealing starting hands
 	      this.props.pubnubDemo.publish({
 	        message: {
 	          dealing: true,
 	          nextToDraw: 0,
-	          deck: deq
+	          deck: deq,
+	          discard: disc,
+	          lastPlay: []
 	        },
 	        channel: this.gameChannel
 	      });
@@ -20930,7 +20947,7 @@
 	      // Publish packet telling users to update discard and lastPlay
 	      this.props.pubnubDemo.publish({
 	        message: {
-	          discard: this.state.discard,
+	          discard: this.state.discard.slice(1),
 	          lastPlay: this.state.lastPlay
 	        },
 	        channel: this.gameChannel
@@ -21031,6 +21048,83 @@
 	    }
 
 	    /*
+	     * Gives classnames when something should be hidden
+	     */
+
+	  }, {
+	    key: 'shouldHide',
+	    value: function shouldHide(show_condition) {
+	      return (0, _classnames2.default)({
+	        'should-hide': show_condition ? false : true
+	      });
+	    }
+
+	    /*
+	     * Gives classnames when something should be selected
+	     */
+
+	  }, {
+	    key: 'shouldSelect',
+	    value: function shouldSelect(select_condition, index) {
+	      var played = false;
+	      for (var i = 0; i < this.state.chosenCards.length; i++) {
+	        if (this.state.chosenCards[i] == index.toString()) played = !played;
+	      }
+
+	      return (0, _classnames2.default)({
+	        'is-selected': played ? true : false
+	      });
+	    }
+
+	    /*
+	     * Translate from code to card in words
+	     */
+
+	  }, {
+	    key: 'translate',
+	    value: function translate(str) {
+	      var suit;
+	      switch (str.substring(str.length - 1)) {
+	        case "C":
+	          suit = 'Clubs';
+	          break;
+	        case "D":
+	          suit = 'Diamonds';
+	          break;
+	        case "H":
+	          suit = 'Hearts';
+	          break;
+	        case "S":
+	          suit = 'Spades';
+	          break;
+	        default:
+	          suit = 'Questionable Suit';
+	          break;
+	      }
+
+	      var num;
+	      switch (str.substring(0, str.length - 1)) {
+	        case "A":
+	          num = 'Ace';
+	          break;
+	        case "J":
+	          num = 'Jack';
+	          break;
+	        case "Q":
+	          num = 'Queen';
+	          break;
+	        case "K":
+	          num = 'King';
+	          break;
+	        default:
+	          num = str.slice(0, str.length - 1);
+	          break;
+	      }
+
+	      return num + ' of ' + suit;
+	    }
+
+	    /*
 	     * Render the HTML for this React element
 	     */
 
@@ -21041,38 +21135,39 @@
 
 	      return _react2.default.createElement(
 	        'div',
-	        { className: 'Game', style: { display: this.props.gameStarted ? "block" : "none" } },
+	        { className: 'Game ' + this.shouldHide(this.props.gameStarted) },
 	        _react2.default.createElement(
 	          'button',
-	          { type: 'button',
-	            onClick: this.dealCards,
-	            className: 'btn btn-lg btn-default',
-	            style: { display: this.state.canDeal ? "block" : "none" } },
+	          { type: 'button', onClick: this.dealCards,
+	            className: 'btn btn-lg btn-default ' + this.shouldHide(this.state.canDeal) },
 	          'Deal'
 	        ),
 	        _react2.default.createElement(
 	          'div',
-	          { id: 'deck', style: { display: this.state.callStatus == 0 ? "block" : "none" } },
-	          'Deck Cards Left: ',
+	          { id: 'lastPlay', className: 'Label ' + this.shouldHide(this.state.callStatus == 0) },
+	          'Last Play : ',
+	          this.state.lastPlay.length > 0 ? this.state.lastPlay.map(this.translate).join(", ") : ''
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          { id: 'deck',
+	            className: 'Label ' + this.shouldHide(this.state.callStatus == 0) },
+	          'Deck Cards Left : ',
 	          this.state.deck.length
 	        ),
 	        _react2.default.createElement(
 	          'div',
-	          { id: 'discard', style: { display: this.state.callStatus == 0 ? "block" : "none" } },
-	          'Discard Pile Size: ',
+	          { id: 'discard', className: 'Label ' + this.shouldHide(this.state.callStatus == 0) },
+	          'Discard Pile Size : ',
 	          this.state.discard.length
 	        ),
 	        _react2.default.createElement(
 	          'div',
-	          { id: 'lastPlay', style: { display: this.state.callStatus == 0 ? "block" : "none" } },
-	          'Last Play: ',
-	          this.state.lastPlay
-	        ),
-	        _react2.default.createElement(
-	          'div',
-	          { id: 'topCard', style: { display: this.state.callStatus == 0 ? "block" : "none" } },
-	          'Top Card of Discard Pile: ',
-	          this.state.lastPlay.length > 0 ? this.state.lastPlay[0] : ''
+	          { id: 'topCard', className: 'Label ' + this.shouldHide(this.state.callStatus == 0) },
+	          'Top Card of Discard Pile : ',
+	          _react2.default.createElement('br', null),
+	          ' ',
+	          this.state.discard.length > 0 ? this.translate(this.state.discard[0]) : ''
 	        ),
 	        _react2.default.createElement('br', null),
 	        _react2.default.createElement(
@@ -21081,101 +21176,110 @@
 	          Array(this.props.usersPlaying ? this.props.usersPlaying.length : 0).fill(" ").map(function (name, index) {
 	            return _react2.default.createElement(
 	              'div',
-	              { className: 'col-md-2', style: { display: index != _this2.getUserIndex() ? "block" : "none" } },
+	              { className: 'Label', style: { display: index != _this2.getUserIndex() ? "block" : "none" } },
 	              'Player ',
 	              index + 1,
-	              ' : Cards ',
+	              ': ',
+	              _react2.default.createElement('br', null),
+	              'Cards ',
 	              _this2.state.allHands ? _this2.state.allHands[index] : 0,
 	              '  '
+	            );
+	          })
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          { id: 'points', className: 'scoreboard' },
+	          'Total Points : ',
+	          this.state.points
+	        ),
+	        _react2.default.createElement(
+	          'button',
+	          { className: 'draw-button ' + this.shouldHide(this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn),
+	            onClick: this.drawFromDeck },
+	          'Draw from Deck'
+	        ),
+	        _react2.default.createElement(
+	          'button',
+	          { className: 'draw-button ' + this.shouldHide(this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn && this.state.discard.length > 0),
+	            onClick: this.drawFromDiscard },
+	          'Draw from Discarded Pile'
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          { id: 'hand',
+	            className: this.shouldHide(this.state.callStatus == 0 && !(this.state.isTurn && this.state.hasDrawn)) },
+	          this.state.hand.map(function (name, index) {
+	            return _react2.default.createElement(
+	              'div',
+	              { className: 'card ' },
+	              _react2.default.createElement(
+	                'span',
+	                null,
+	                ' ',
+	                _this2.translate(_this2.state.hand[index]),
+	                ' '
+	              )
 	            );
 	          })
 	        ),
 	        _react2.default.createElement('br', null),
 	        _react2.default.createElement(
 	          'div',
-	          { id: 'points' },
-	          'Total Points: ',
-	          this.state.points
-	        ),
-	        _react2.default.createElement(
-	          'div',
-	          { style: { display: !this.state.canDeal ? "block" : "none" } },
-	          _react2.default.createElement(
-	            'button',
-	            { className: 'col-md-4', style: { display: this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn ? "block" : "none" }, onClick: this.drawFromDeck },
-	            '  DRAW A CARD FROM DECK '
-	          ),
-	          _react2.default.createElement(
-	            'button',
-	            { className: 'col-md-4', style: { display: this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn && this.state.discard.length > 0 ? "block" : "none" }, onClick: this.drawFromDiscard },
-	            '  DRAW A CARD FROM DISCARD '
-	          ),
-	          _react2.default.createElement('div', { className: 'col-md-4' }),
-	          _react2.default.createElement('br', null),
-	          _react2.default.createElement(
-	            'div',
-	            { id: 'hand', style: { display: this.state.callStatus == 0 && !(this.state.isTurn && this.state.hasDrawn) ? "block" : "none" } },
-	            this.state.hand.map(function (name, index) {
-	              return _react2.default.createElement(
-	                'div',
-	                { className: 'col-md-2' },
-	                '  Card ',
-	                index + 1,
-	                ': ',
-	                _this2.state.hand[index],
-	                '  '
-	              );
-	            })
-	          ),
-	          _react2.default.createElement('br', null),
-	          _react2.default.createElement(
-	            'div',
-	            { id: 'hand', style: { display: this.state.callStatus == 0 && this.state.isTurn && this.state.hasDrawn ? "block" : "none" } },
-	            this.state.hand.map(function (name, index) {
-	              return _react2.default.createElement(
-	                'button',
-	                { className: 'col-md-2', onClick: _this2.select.bind(_this2, index) },
-	                '  Card ',
-	                index + 1,
-	                ': ',
-	                _this2.state.hand[index],
-	                '  '
-	              );
-	            }),
-	            _react2.default.createElement(
+	          { id: 'hand',
+	            className: this.shouldHide(this.state.callStatus == 0 && this.state.isTurn && this.state.hasDrawn) },
+	          this.state.hand.map(function (name, index) {
+	            return _react2.default.createElement(
 	              'button',
-	              { className: 'col-md-2', onClick: this.playCards },
-	              '  SUBMIT CHOICES '
-	            )
-	          ),
-	          _react2.default.createElement(
-	            'button',
-	            { type: 'button',
-	              onClick: this.yusef,
-	              className: 'btn btn-lg btn-default',
-	              style: { display: this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn ? "block" : "none" } },
-	            'YUSEF!'
-	          )
+	              { onClick: _this2.select.bind(_this2, index),
+	                className: 'card ' + _this2.shouldSelect(_this2.state.chosenCards.includes(index.toString), index) },
+	              _react2.default.createElement(
+	                'span',
+	                null,
+	                ' ',
+	                _this2.translate(_this2.state.hand[index]),
+	                ' '
+	              )
+	            );
+	          })
 	        ),
 	        _react2.default.createElement(
 	          'div',
-	          { id: 'passCall', style: { display: this.state.callStatus == 1 ? "block" : "none" } },
+	          { id: 'invalidPlay', className: this.shouldHide(this.state.playInvalid) },
+	          'Play invalid! Please only play matching cards, straights of the same suit, or single cards.'
+	        ),
+	        _react2.default.createElement(
+	          'button',
+	          { className: 'submit-button btn btn-default ' + this.shouldHide(this.state.callStatus == 0 && this.state.isTurn && this.state.hasDrawn),
+	            onClick: this.playCards },
+	          'Submit Choices'
+	        ),
+	        _react2.default.createElement(
+	          'button',
+	          { type: 'button',
+	            onClick: this.yusef,
+	            className: 'yusef-button btn btn-lg btn-default ' + this.shouldHide(this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn) },
+	          'Yusef!'
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          { id: 'passCall', className: this.shouldHide(this.state.callStatus == 1) },
 	          'Your Call Passed!'
 	        ),
 	        _react2.default.createElement(
 	          'div',
-	          { id: 'failCall', style: { display: this.state.callStatus == -1 ? "block" : "none" } },
+	          { id: 'failCall', className: this.shouldHide(this.state.callStatus == -1) },
 	          'Your Call Failed!'
 	        ),
 	        _react2.default.createElement(
 	          'div',
-	          { id: 'passCall', style: { display: this.state.callStatus == 2 ? "block" : "none" } },
-	          'Another Players Call Passed!'
+	          { id: 'passCall', className: this.shouldHide(this.state.callStatus == 2) },
+	          'Another Player\'s Call Passed!'
 	        ),
 	        _react2.default.createElement(
 	          'div',
-	          { id: 'failCall', style: { display: this.state.callStatus == -2 ? "block" : "none" } },
-	          'Another Players Call Failed!'
+	          { id: 'failCall', className: this.shouldHide(this.state.callStatus == -2) },
+	          'Another Player\'s Call Failed!'
 	        ),
 	        _react2.default.createElement(
 	          'div',
@@ -21212,144 +21316,18 @@
 /* 162 */
 /***/ function(module, exports, __webpack_require__) {
 
-	'use strict';
-
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-	var _react = __webpack_require__(1);
-
-	var _react2 = _interopRequireDefault(_react);
-
-	var _reactDom = __webpack_require__(158);
-
-	var _reactDom2 = _interopRequireDefault(_reactDom);
-
-	var _classnames = __webpack_require__(160);
-
-	var _classnames2 = _interopRequireDefault(_classnames);
-
-	var _axios = __webpack_require__(163);
-
-	var _axios2 = _interopRequireDefault(_axios);
-
-	var _oauthSignature = __webpack_require__(188);
-
-	var _oauthSignature2 = _interopRequireDefault(_oauthSignature);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-	{/*
-	   Props available to TweetInput:
-	  */}
-
-	var TweetInput = function (_React$Component) {
-	  _inherits(TweetInput, _React$Component);
-
-	  function TweetInput(props) {
-	    _classCallCheck(this, TweetInput);
-
-	    var _this = _possibleConstructorReturn(this, (TweetInput.__proto__ || Object.getPrototypeOf(TweetInput)).call(this, props));
-
-	    _this.authorizeApp = _this.authorizeApp.bind(_this);
-	    _this.getNonce = _this.getNonce.bind(_this);
-
-	    _this.state = {
-	      signature: ''
-	    };
-	    return _this;
-	  }
-
-	  _createClass(TweetInput, [{
-	    key: 'componentWillMount',
-	    value: function componentWillMount() {
-	      this.authorizeApp();
-	    }
-	  }, {
-	    key: 'getNonce',
-	    value: function getNonce(length) {
-	      var text = "";
-	      var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-	      for (var i = 0; i < length; i++) {
-	        text += possible.charAt(Math.floor(Math.random() * possible.length));
-	      }
-	      return text;
-	    }
-	  }, {
-	    key: 'authorizeApp',
-	    value: function authorizeApp() {
-	      var httpMethod = 'POST';
-	      var params = {
-	        oauth_consumer_key: "76SV33OlqPJuhkTrnDMLyWX1w",
-	        oauth_signature_method: "HMAC-SHA1",
-	        oauth_timestamp: Math.floor(Date.now() / 1000),
-	        oauth_nonce: this.getNonce(30)
-	      };
-	      var url = 'https://api.twitter.com/oauth/request_token';
-	      var consumerSecret = 'jJvL67e6IgCKjinU3weCvr1AiiYBQXsBwTRJ2hiv3jB8ZlSN76';
-	      var signature = _oauthSignature2.default.generate(httpMethod, url, params, consumerSecret);
-	      params['signature'] = signature;
-
-	      this.setState({
-	        signature: signature
-	      });
-
-	      // Axios.request({
-	      //   url: url,
-	      //   method: httpMethod.toLowerCase(),
-	      //   auth: params,
-	      //   headers: {'Access-Control-Allow-Origin': '*'}
-	      // })
-	      // .then((response) => {console.log(response);})
-	      // .catch((err) => {console.log(err);});
-
-	      // Axios.post('https://api.twitter.com/oauth/request_token', {
-	      // })
-	      // .then((response) => {
-	      //   {/*console.log(response);*/}
-	      //   this.setState({
-	      //     chartList: response.data.chartList,
-	      //     labelList: this.state.selectedComparison === 'region' ? 
-	      //                response.data.labelList : [],
-	      //     selectedLabelList: this.state.selectedComparison === 'region' ? 
-	      //                        response.data.labelList.slice(0,1) : []
-	      //   });
-	      // })
-	      // .catch((err) => {console.log(err);});  
-	    }
-	  }, {
-	    key: 'render',
-	    value: function render() {
-	      return _react2.default.createElement('div', { className: 'TweetInput' });
-	    }
-	  }]);
-
-	  return TweetInput;
-	}(_react2.default.Component);
-
-	module.exports = TweetInput;
+	module.exports = __webpack_require__(163);
 
 /***/ },
 /* 163 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(164);
-
-/***/ },
-/* 164 */
-/***/ function(module, exports, __webpack_require__) {
-
 	'use strict';
 
-	var utils = __webpack_require__(165);
-	var bind = __webpack_require__(166);
-	var Axios = __webpack_require__(167);
-	var defaults = __webpack_require__(168);
+	var utils = __webpack_require__(164);
+	var bind = __webpack_require__(165);
+	var Axios = __webpack_require__(166);
+	var defaults = __webpack_require__(167);
 
 	/**
 	 * Create an instance of Axios
@@ -21382,15 +21360,15 @@
 	};
 
 	// Expose Cancel & CancelToken
-	axios.Cancel = __webpack_require__(185);
-	axios.CancelToken = __webpack_require__(186);
-	axios.isCancel = __webpack_require__(182);
+	axios.Cancel = __webpack_require__(184);
+	axios.CancelToken = __webpack_require__(185);
+	axios.isCancel = __webpack_require__(181);
 
 	// Expose all/spread
 	axios.all = function all(promises) {
 	  return Promise.all(promises);
 	};
-	axios.spread = __webpack_require__(187);
+	axios.spread = __webpack_require__(186);
 
 	module.exports = axios;
 
@@ -21399,12 +21377,12 @@
 
 
 /***/ },
-/* 165 */
+/* 164 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var bind = __webpack_require__(166);
+	var bind = __webpack_require__(165);
 
 	/*global toString:true*/
 
@@ -21704,7 +21682,7 @@
 
 
 /***/ },
-/* 166 */
+/* 165 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -21721,17 +21699,17 @@
 
 
 /***/ },
-/* 167 */
+/* 166 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var defaults = __webpack_require__(168);
-	var utils = __webpack_require__(165);
-	var InterceptorManager = __webpack_require__(179);
-	var dispatchRequest = __webpack_require__(180);
-	var isAbsoluteURL = __webpack_require__(183);
-	var combineURLs = __webpack_require__(184);
+	var defaults = __webpack_require__(167);
+	var utils = __webpack_require__(164);
+	var InterceptorManager = __webpack_require__(178);
+	var dispatchRequest = __webpack_require__(179);
+	var isAbsoluteURL = __webpack_require__(182);
+	var combineURLs = __webpack_require__(183);
 
 	/**
 	 * Create a new instance of Axios
@@ -21812,13 +21790,13 @@
 
 
 /***/ },
-/* 168 */
+/* 167 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {'use strict';
 
-	var utils = __webpack_require__(165);
-	var normalizeHeaderName = __webpack_require__(169);
+	var utils = __webpack_require__(164);
+	var normalizeHeaderName = __webpack_require__(168);
 
 	var PROTECTION_PREFIX = /^\)\]\}',?\n/;
 	var DEFAULT_CONTENT_TYPE = {
@@ -21835,10 +21813,10 @@
 	  var adapter;
 	  if (typeof XMLHttpRequest !== 'undefined') {
 	    // For browsers use XHR adapter
-	    adapter = __webpack_require__(170);
+	    adapter = __webpack_require__(169);
 	  } else if (typeof process !== 'undefined') {
 	    // For node use HTTP adapter
-	    adapter = __webpack_require__(170);
+	    adapter = __webpack_require__(169);
 	  }
 	  return adapter;
 	}
@@ -21912,12 +21890,12 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(4)))
 
 /***/ },
-/* 169 */
+/* 168 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var utils = __webpack_require__(165);
+	var utils = __webpack_require__(164);
 
 	module.exports = function normalizeHeaderName(headers, normalizedName) {
 	  utils.forEach(headers, function processHeader(value, name) {
@@ -21930,18 +21908,18 @@
 
 
 /***/ },
-/* 170 */
+/* 169 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {'use strict';
 
-	var utils = __webpack_require__(165);
-	var settle = __webpack_require__(171);
-	var buildURL = __webpack_require__(174);
-	var parseHeaders = __webpack_require__(175);
-	var isURLSameOrigin = __webpack_require__(176);
-	var createError = __webpack_require__(172);
-	var btoa = (typeof window !== 'undefined' && window.btoa && window.btoa.bind(window)) || __webpack_require__(177);
+	var utils = __webpack_require__(164);
+	var settle = __webpack_require__(170);
+	var buildURL = __webpack_require__(173);
+	var parseHeaders = __webpack_require__(174);
+	var isURLSameOrigin = __webpack_require__(175);
+	var createError = __webpack_require__(171);
+	var btoa = (typeof window !== 'undefined' && window.btoa && window.btoa.bind(window)) || __webpack_require__(176);
 
 	module.exports = function xhrAdapter(config) {
 	  return new Promise(function dispatchXhrRequest(resolve, reject) {
@@ -22037,7 +22015,7 @@
 	    // This is only done if running in a standard browser environment.
 	    // Specifically not if we're in a web worker, or react-native.
 	    if (utils.isStandardBrowserEnv()) {
-	      var cookies = __webpack_require__(178);
+	      var cookies = __webpack_require__(177);
 
 	      // Add xsrf header
 	      var xsrfValue = (config.withCredentials || isURLSameOrigin(config.url)) && config.xsrfCookieName ?
@@ -22114,12 +22092,12 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(4)))
 
 /***/ },
-/* 171 */
+/* 170 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var createError = __webpack_require__(172);
+	var createError = __webpack_require__(171);
 
 	/**
 	 * Resolve or reject a Promise based on response status.
@@ -22145,12 +22123,12 @@
 
 
 /***/ },
-/* 172 */
+/* 171 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var enhanceError = __webpack_require__(173);
+	var enhanceError = __webpack_require__(172);
 
 	/**
 	 * Create an Error with the specified message, config, error code, and response.
@@ -22168,7 +22146,7 @@
 
 
 /***/ },
-/* 173 */
+/* 172 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -22193,12 +22171,12 @@
 
 
 /***/ },
-/* 174 */
+/* 173 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var utils = __webpack_require__(165);
+	var utils = __webpack_require__(164);
 
 	function encode(val) {
 	  return encodeURIComponent(val).
@@ -22267,12 +22245,12 @@
 
 
 /***/ },
-/* 175 */
+/* 174 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var utils = __webpack_require__(165);
+	var utils = __webpack_require__(164);
 
 	/**
 	 * Parse headers into an object
@@ -22310,12 +22288,12 @@
 
 
 /***/ },
-/* 176 */
+/* 175 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var utils = __webpack_require__(165);
+	var utils = __webpack_require__(164);
 
 	module.exports = (
 	  utils.isStandardBrowserEnv() ?
@@ -22384,7 +22362,7 @@
 
 
 /***/ },
-/* 177 */
+/* 176 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -22426,12 +22404,12 @@
 
 
 /***/ },
-/* 178 */
+/* 177 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var utils = __webpack_require__(165);
+	var utils = __webpack_require__(164);
 
 	module.exports = (
 	  utils.isStandardBrowserEnv() ?
@@ -22485,12 +22463,12 @@
 
 
 /***/ },
-/* 179 */
+/* 178 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var utils = __webpack_require__(165);
+	var utils = __webpack_require__(164);
 
 	function InterceptorManager() {
 	  this.handlers = [];
@@ -22543,15 +22521,15 @@
 
 
 /***/ },
-/* 180 */
+/* 179 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var utils = __webpack_require__(165);
-	var transformData = __webpack_require__(181);
-	var isCancel = __webpack_require__(182);
-	var defaults = __webpack_require__(168);
+	var utils = __webpack_require__(164);
+	var transformData = __webpack_require__(180);
+	var isCancel = __webpack_require__(181);
+	var defaults = __webpack_require__(167);
 
 	/**
 	 * Throws a `Cancel` if cancellation has been requested.
@@ -22628,12 +22606,12 @@
 
 
 /***/ },
-/* 181 */
+/* 180 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var utils = __webpack_require__(165);
+	var utils = __webpack_require__(164);
 
 	/**
 	 * Transform the data for a request or a response
@@ -22654,7 +22632,7 @@
 
 
 /***/ },
-/* 182 */
+/* 181 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -22665,7 +22643,7 @@
 
 
 /***/ },
-/* 183 */
+/* 182 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -22685,7 +22663,7 @@
 
 
 /***/ },
-/* 184 */
+/* 183 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -22703,7 +22681,7 @@
 
 
 /***/ },
-/* 185 */
+/* 184 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -22728,12 +22706,12 @@
 
 
 /***/ },
-/* 186 */
+/* 185 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var Cancel = __webpack_require__(185);
+	var Cancel = __webpack_require__(184);
 
 	/**
 	 * A `CancelToken` is an object that can be used to request cancellation of an operation.
@@ -22791,7 +22769,7 @@
 
 
 /***/ },
-/* 187 */
+/* 186 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -22822,6 +22800,132 @@
 	  };
 	};
 
+
+/***/ },
+/* 187 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _reactDom = __webpack_require__(158);
+
+	var _reactDom2 = _interopRequireDefault(_reactDom);
+
+	var _classnames = __webpack_require__(160);
+
+	var _classnames2 = _interopRequireDefault(_classnames);
+
+	var _axios = __webpack_require__(162);
+
+	var _axios2 = _interopRequireDefault(_axios);
+
+	var _oauthSignature = __webpack_require__(188);
+
+	var _oauthSignature2 = _interopRequireDefault(_oauthSignature);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	{/*
+	   Props available to TweetInput:
+	  */}
+
+	var TweetInput = function (_React$Component) {
+	  _inherits(TweetInput, _React$Component);
+
+	  function TweetInput(props) {
+	    _classCallCheck(this, TweetInput);
+
+	    var _this = _possibleConstructorReturn(this, (TweetInput.__proto__ || Object.getPrototypeOf(TweetInput)).call(this, props));
+
+	    _this.authorizeApp = _this.authorizeApp.bind(_this);
+	    _this.getNonce = _this.getNonce.bind(_this);
+
+	    _this.state = {
+	      signature: ''
+	    };
+	    return _this;
+	  }
+
+	  _createClass(TweetInput, [{
+	    key: 'componentWillMount',
+	    value: function componentWillMount() {
+	      this.authorizeApp();
+	    }
+	  }, {
+	    key: 'getNonce',
+	    value: function getNonce(length) {
+	      var text = "";
+	      var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+	      for (var i = 0; i < length; i++) {
+	        text += possible.charAt(Math.floor(Math.random() * possible.length));
+	      }
+	      return text;
+	    }
+	  }, {
+	    key: 'authorizeApp',
+	    value: function authorizeApp() {
+	      var httpMethod = 'POST';
+	      var params = {
+	        oauth_consumer_key: "76SV33OlqPJuhkTrnDMLyWX1w",
+	        oauth_signature_method: "HMAC-SHA1",
+	        oauth_timestamp: Math.floor(Date.now() / 1000),
+	        oauth_nonce: this.getNonce(30)
+	      };
+	      var url = 'https://api.twitter.com/oauth/request_token';
+	      var consumerSecret = 'jJvL67e6IgCKjinU3weCvr1AiiYBQXsBwTRJ2hiv3jB8ZlSN76';
+	      var signature = _oauthSignature2.default.generate(httpMethod, url, params, consumerSecret);
+	      params['signature'] = signature;
+
+	      this.setState({
+	        signature: signature
+	      });
+
+	      // Axios.request({
+	      //   url: url,
+	      //   method: httpMethod.toLowerCase(),
+	      //   auth: params,
+	      //   headers: {'Access-Control-Allow-Origin': '*'}
+	      // })
+	      // .then((response) => {console.log(response);})
+	      // .catch((err) => {console.log(err);});
+
+	      // Axios.post('https://api.twitter.com/oauth/request_token', {
+	      // })
+	      // .then((response) => {
+	      //   {/*console.log(response);*/}
+	      //   this.setState({
+	      //     chartList: response.data.chartList,
+	      //     labelList: this.state.selectedComparison === 'region' ? 
+	      //                response.data.labelList : [],
+	      //     selectedLabelList: this.state.selectedComparison === 'region' ? 
+	      //                        response.data.labelList.slice(0,1) : []
+	      //   });
+	      // })
+	      // .catch((err) => {console.log(err);});  
+	    }
+	  }, {
+	    key: 'render',
+	    value: function render() {
+	      return _react2.default.createElement('div', { className: 'TweetInput' });
+	    }
+	  }]);
+
+	  return TweetInput;
+	}(_react2.default.Component);
+
+	module.exports = TweetInput;
 
 /***/ },
 /* 188 */

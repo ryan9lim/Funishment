@@ -52,7 +52,7 @@ class Game extends React.Component {
       points: 0, // Current player's point total
       allHands: [], // Set of number of cards in each player's hands
       turnNumber: 1, // Turn number of current player
-      playInvalid: false // Whether the current attempted play is invalid
+      playInvalid: false, // Whether the current attempted play is invalid
       endStatus: 0,
       loserID: '',
       tweet:''
