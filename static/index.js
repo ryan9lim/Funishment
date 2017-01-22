@@ -20194,6 +20194,7 @@
 	    _this.playCards = _this.playCards.bind(_this);
 	    _this.playHand = _this.playHand.bind(_this);
 	    _this.dealCards = _this.dealCards.bind(_this);
+	    _this.lose = _this.lose.bind(_this);
 	    _this.updateOnListener = _this.updateOnListener.bind(_this);
 	    _this.state = {
 	      deck: ['DECK NOT INIITIALIZED'],
@@ -20207,7 +20208,8 @@
 	      canDeal: true,
 	      playing: false,
 	      cardToAdd: '',
-	      hasDrawn: false
+	      hasDrawn: false,
+	      points: 0
 	    };
 	    _this.gameChannel = _this.props.channelName + 'gameChannel';
 	    return _this;
@@ -20372,25 +20374,40 @@
 	        }
 	      } else if (response.message.confirmingYusef) {
 	        var stat;
+	        var pointsToAdd;
 	        if (response.message.callStatus > 0) {
 	          if (response.message.callerId == this.props.pubnubDemo.getUUID()) {
+	            pointsToAdd = 0;
 	            stat = 1;
 	          } else {
+	            pointsToAdd = this.summ(this.state.hand);
 	            stat = 2;
 	          }
 	        } else {
 	          if (response.message.callerId == this.props.pubnubDemo.getUUID()) {
+	            pointsToAdd = 30;
 	            stat = -1;
 	          } else {
+	            pointsToAdd = 0;
 	            stat = -2;
 	          }
 	        }
 
 	        this.setState({
 	          callStatus: stat,
-	          canDeal: true
+	          canDeal: true,
+	          points: this.state.points + pointsToAdd
 	        });
+
+	        if (this.state.points >= 200) {
+	          this.lose();
+	        }
 	      }
+	    }
+	  }, {
+	    key: 'lose',
+	    value: function lose() {
+	      console.log("YOU LOST");
 	    }
 	  }, {
 	    key: 'select',
@@ -20517,6 +20534,8 @@
 
 	      return false;
 	    }
+<<<<<<< HEAD
+=======
 
 	    /*
 	     * sourced from http://stackoverflow.com/questions/4025893/how-to-check-identical-array-in-most-efficient-way
@@ -20532,6 +20551,7 @@
 
 	      return true;
 	    }
+>>>>>>> 5bb6ac2f384f928b66b37b0f8568d090d513c43e
 	  }, {
 	    key: 'dealCards',
 	    value: function dealCards() {
@@ -20692,6 +20712,43 @@
 	          this.state.discard
 	        ),
 	        _react2.default.createElement(
+<<<<<<< HEAD
+	          'div',
+	          { id: 'points' },
+	          'Total Points: ',
+	          this.state.points
+	        ),
+	        _react2.default.createElement(
+	          'button',
+	          { className: 'col-md-4', style: { display: this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn ? "block" : "none" }, onClick: this.drawFromDeck },
+	          '  DRAW A CARD FROM DECK '
+	        ),
+	        _react2.default.createElement(
+	          'button',
+	          { className: 'col-md-4', style: { display: this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn && this.state.discard.length > 0 ? "block" : "none" }, onClick: this.drawFromDiscard },
+	          '  DRAW A CARD FROM DISCARD '
+	        ),
+	        _react2.default.createElement('div', { className: 'col-md-4' }),
+	        _react2.default.createElement('br', null),
+	        _react2.default.createElement(
+	          'div',
+	          { id: 'hand', style: { display: this.state.callStatus == 0 && !(this.state.isTurn && this.state.hasDrawn) ? "block" : "none" } },
+	          this.state.hand.map(function (name, index) {
+	            return _react2.default.createElement(
+	              'div',
+	              { className: 'col-md-2' },
+	              '  Card ',
+	              index + 1,
+	              ': ',
+	              _this2.state.hand[index],
+	              '  '
+	            );
+	          })
+	        ),
+	        _react2.default.createElement('br', null),
+	        _react2.default.createElement(
+=======
+>>>>>>> 5bb6ac2f384f928b66b37b0f8568d090d513c43e
 	          'div',
 	          { style: { display: !this.state.canDeal ? "block" : "none" } },
 	          _react2.default.createElement(

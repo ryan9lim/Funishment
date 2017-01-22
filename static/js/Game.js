@@ -23,6 +23,7 @@ class Game extends React.Component {
     this.playCards = this.playCards.bind(this);
     this.playHand = this.playHand.bind(this);
     this.dealCards = this.dealCards.bind(this);
+    this.lose = this.lose.bind(this);
     this.updateOnListener = this.updateOnListener.bind(this);
     this.state = {
       deck: ['DECK NOT INIITIALIZED'], 
@@ -36,7 +37,8 @@ class Game extends React.Component {
       canDeal: true,
       playing: false,
       cardToAdd: '',
-      hasDrawn: false
+      hasDrawn: false,
+      points: 0
     }
     this.gameChannel = this.props.channelName + 'gameChannel';
   }
@@ -195,27 +197,39 @@ class Game extends React.Component {
       }
     } else if (response.message.confirmingYusef) {
       var stat;
+      var pointsToAdd;
       if(response.message.callStatus > 0) {
         if (response.message.callerId == this.props.pubnubDemo.getUUID()) {
+          pointsToAdd = 0;
           stat = 1;
         } else {
+          pointsToAdd = this.summ(this.state.hand);
           stat = 2;
         }
       } else {
         if (response.message.callerId == this.props.pubnubDemo.getUUID()) {
+          pointsToAdd = 30;
           stat = -1;
         } else {
+          pointsToAdd = 0;
           stat = -2;
         }
       }
 
       this.setState({
         callStatus: stat,
-        canDeal: true
+        canDeal: true,
+        points: this.state.points + pointsToAdd
       });
+
+      if(this.state.points >= 200){
+        this.lose();
+      }
     }
   }
-
+  lose(){
+    console.log("YOU LOST");
+  }
   select(index) {
     console.log("selected", index, "for playing");
     this.setState({
@@ -516,6 +530,10 @@ class Game extends React.Component {
 
         <div id='discardCards' style={{display: ((this.state.callStatus == 0) ? "block" : "none")}}>
           Discard Cards: {this.state.discard}
+        </div>
+
+        <div id='points'>
+          Total Points: {this.state.points}
         </div>
 
         <div style={{display: ((!this.state.canDeal) ? "block" : "none")}}>
