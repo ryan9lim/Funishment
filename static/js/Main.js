@@ -23,7 +23,6 @@ class Main extends React.Component{
       host: false,
       gameStarted: false,
       countdown: 5,
-      isSelected: false,
       isReady: false,
       usersReady: [],
       usersPlaying: null
@@ -189,7 +188,7 @@ class Main extends React.Component{
         if (status.error) {
           console.log(status);
         } else {
-          console.log("message Published w/ timetoken", response.timetoken);
+          // console.log("message Published w/ timetoken", response.timetoken);
         }
       }
       );
@@ -235,33 +234,40 @@ class Main extends React.Component{
         setTimeout(this.startCountdown, 1000); // check again in a second
       }
     }
-    render() {
-      const cssClasses = ClassNames({
-        'btn': true, 
-        'btn-lg': true, 
-        'btn-default': true,
-        'Button': true,
-        'is-selected': this.state.isSelected
-      });
+  render() {
+    const buttonCSS = ClassNames({
+      'btn': true, 
+      'btn-default': true,
+      'Button': true,
+      'is-ready': this.state.isReady ? true : false
+    });
 
-      return (
-        <div className='Index'>
-          <button type="button"
-          onClick={this.getReady}
-          className='btn btn-lg btn-default'>
-            Ready
-          </button>
-          <button type="button"
-          onClick={this.gameStart}
-          className='btn btn-lg btn-default'>
-            Start game
-          </button>
-          <h1> {this.state.isReady ? "READY" : "NOT READY YET"} </h1>
-          <h1 style={{display: (this.state.gameStarted ? "none" : "block")}}> COUNTDOWN: {this.state.countdown} </h1>
-          <Game isHost={this.state.isHost} usersPlaying={this.state.usersPlaying} gameStarted={this.state.gameStarted} pubnubDemo={this.pubnubDemo} channelName={this.channelName}/>
-          <TweetInput />
-        </div>
-        )
+    const countdownCSS = ClassNames({
+      'should-hide': this.state.gameStarted ? true : false
+    })
+
+    return (
+      <div className='Index container'>
+        <p className={countdownCSS + " countdown-label"}>
+          Countdown
+        </p>
+        <p className={countdownCSS + " countdown-number"}>
+          {this.state.countdown}
+        </p>
+
+        <button type="button" onClick={this.getReady}
+                className={buttonCSS + ' ready-button'}>
+          {this.state.isReady ? "Ready" : "Not Ready Yet"}
+        </button>
+        <button type="button" onClick={this.gameStart}
+                className={buttonCSS + ' start-button'}>
+          Start game
+        </button>
+
+        <Game isHost={this.state.isHost} usersPlaying={this.state.usersPlaying} gameStarted={this.state.gameStarted} pubnubDemo={this.pubnubDemo} channelName={this.channelName}/>
+        <TweetInput />
+      </div>
+      )
     }
   }
 

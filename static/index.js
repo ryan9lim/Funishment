@@ -19821,7 +19821,6 @@
 	      host: false,
 	      gameStarted: false,
 	      countdown: 5,
-	      isSelected: false,
 	      isReady: false,
 	      usersReady: [],
 	      usersPlaying: null
@@ -19992,7 +19991,7 @@
 	          if (status.error) {
 	            console.log(status);
 	          } else {
-	            console.log("message Published w/ timetoken", response.timetoken);
+	            // console.log("message Published w/ timetoken", response.timetoken);
 	          }
 	        });
 	        this.setState({
@@ -20040,44 +20039,41 @@
 	  }, {
 	    key: 'render',
 	    value: function render() {
-	      var cssClasses = (0, _classnames2.default)({
+	      var buttonCSS = (0, _classnames2.default)({
 	        'btn': true,
-	        'btn-lg': true,
 	        'btn-default': true,
 	        'Button': true,
-	        'is-selected': this.state.isSelected
+	        'is-ready': this.state.isReady ? true : false
+	      });
+
+	      var countdownCSS = (0, _classnames2.default)({
+	        'should-hide': this.state.gameStarted ? true : false
 	      });
 
 	      return _react2.default.createElement(
 	        'div',
-	        { className: 'Index' },
+	        { className: 'Index container' },
 	        _react2.default.createElement(
-	          'button',
-	          { type: 'button',
-	            onClick: this.getReady,
-	            className: 'btn btn-lg btn-default' },
-	          'Ready'
+	          'p',
+	          { className: countdownCSS + " countdown-label" },
+	          'Countdown'
+	        ),
+	        _react2.default.createElement(
+	          'p',
+	          { className: countdownCSS + " countdown-number" },
+	          this.state.countdown
 	        ),
 	        _react2.default.createElement(
 	          'button',
-	          { type: 'button',
-	            onClick: this.gameStart,
-	            className: 'btn btn-lg btn-default' },
+	          { type: 'button', onClick: this.getReady,
+	            className: buttonCSS + ' ready-button' },
+	          this.state.isReady ? "Ready" : "Not Ready Yet"
+	        ),
+	        _react2.default.createElement(
+	          'button',
+	          { type: 'button', onClick: this.gameStart,
+	            className: buttonCSS + ' start-button' },
 	          'Start game'
-	        ),
-	        _react2.default.createElement(
-	          'h1',
-	          null,
-	          ' ',
-	          this.state.isReady ? "READY" : "NOT READY YET",
-	          ' '
-	        ),
-	        _react2.default.createElement(
-	          'h1',
-	          { style: { display: this.state.gameStarted ? "none" : "block" } },
-	          ' COUNTDOWN: ',
-	          this.state.countdown,
-	          ' '
 	        ),
 	        _react2.default.createElement(_Game2.default, { isHost: this.state.isHost, usersPlaying: this.state.usersPlaying, gameStarted: this.state.gameStarted, pubnubDemo: this.pubnubDemo, channelName: this.channelName }),
 	        _react2.default.createElement(_TweetInput2.default, null)
@@ -20175,6 +20171,10 @@
 	{/*
 	   Props available to Game:
 	    - gameStarted (boolean)
+	   - isHost (boolean)
+	   - usersPlaying (array)
+	   - pubnubDemo (Pubnub Object)
+	   - channelName (string)
 	  */}
 
 	var Game = function (_React$Component) {
@@ -20188,6 +20188,7 @@
 	    _this.yusef = _this.yusef.bind(_this);
 	    _this.drawFromDeck = _this.drawFromDeck.bind(_this);
 	    _this.drawFromDiscard = _this.drawFromDiscard.bind(_this);
+	    _this.checkValidPlay = _this.checkValidPlay.bind(_this);
 	    _this.select = _this.select.bind(_this);
 	    _this.playCards = _this.playCards.bind(_this);
 	    _this.playHand = _this.playHand.bind(_this);
@@ -20418,41 +20419,138 @@
 	  }, {
 	    key: 'playCards',
 	    value: function playCards() {
+	      console.log("in playcards, this is", this);
+	      console.log("and chosenCards is", this.state.chosenCards);
 	      var played = [false, false, false, false, false];
 	      var i;
 	      for (i = 0; i < this.state.chosenCards.length; i++) {
 	        played[parseInt(this.state.chosenCards.slice(i, i + 1))] = !played[parseInt(this.state.chosenCards.slice(i, i + 1))];
 	      }
 
-	      var newDiscard = this.state.discard;
-	      var newHand = this.state.hand;
-	      for (i = 4; i >= 0; i -= 1) {
-	        if (played[i]) {
-	          newDiscard.unshift(this.state.hand[i]);
-	          newHand.splice(i, 1);
+	      if (this.checkValidPlay(played, this.state.hand)) {
+	        var newDiscard = this.state.discard;
+	        var newHand = this.state.hand;
+	        for (i = 4; i >= 0; i -= 1) {
+	          if (played[i]) {
+	            newDiscard.unshift(this.state.hand[i]);
+	            newHand.splice(i, 1);
+	          }
+	        }
+
+	        newHand.push(this.state.cardToAdd);
+	        console.log("current turn is", this.state.turn, "...finished playing and about to change turn to", (this.state.turn + 1) % this.props.usersPlaying.length);
+	        this.props.pubnubDemo.publish({
+	          message: {
+	            playing: true,
+	            turn: (this.state.turn + 1) % this.props.usersPlaying.length,
+	            discard: this.state.discard
+	          },
+	          channel: this.gameChannel
+	        });
+	        this.setState({
+	          hand: newHand,
+	          discard: newDiscard,
+	          isTurn: false,
+	          chosenCards: '',
+	          cardToAdd: '',
+	          hasDrawn: false
+	        });
+	      } else {
+	        this.setState({
+	          chosenCards: ''
+	        });
+	      }
+	    }
+	  }, {
+	    key: 'checkValidPlay',
+	    value: function checkValidPlay(bools, hand) {
+	      var nums = [];
+	      var suits = [];
+	      var i;
+	      for (i = 0; i < bools.length; i++) {
+	        if (bools[i]) {
+	          if (hand[i].length == 2) {
+	            nums.push(hand[i].slice(0, 1));
+	            suits.push(hand[i].slice(1));
+	          } else {
+	            nums.push(hand[i].slice(0, 2));
+	            suits.push(hand[i].slice(2));
+	          }
 	        }
 	      }
 
-	      newHand.push(this.state.cardToAdd);
+	      console.log("nums is", nums);
+	      console.log("suits is", suits);
+	      if (nums.length == 1) {
+	        return true;
+	      }
 
-	      console.log("current turn is", this.state.turn, "...finished playing and about to change turn to", (this.state.turn + 1) % this.props.usersPlaying.length);
-	      this.props.pubnubDemo.publish({
-	        message: {
-	          playing: true,
-	          turn: (this.state.turn + 1) % this.props.usersPlaying.length,
-	          discard: this.state.discard
-	        },
-	        channel: this.gameChannel
-	      });
-	      this.setState({
-	        hand: newHand,
-	        discard: newDiscard,
-	        isTurn: false,
-	        chosenCards: '',
-	        cardToAdd: '',
-	        hasDrawn: false
-	      });
+	      if (nums.length < 1) {
+	        return false;
+	      }
+
+	      var allSame = true;
+	      var firstNum = nums[0];
+	      var firstSuit = suits[0];
+
+	      // Check if all numbers are the same
+	      for (i = 0; i < nums.length; i++) {
+	        if (nums[i] != firstNum) {
+	          allSame = false;
+	          break;
+	        }
+	      }
+
+	      if (allSame) {
+	        return true;
+	      }
+
+	      allSame = true;
+
+	      // Check for straights
+	      for (i = 0; i < suits.length; i++) {
+	        if (suits[i] != firstSuit) {
+	          allSame = false;
+	          break;
+	        }
+	      }
+
+	      var straights = [["2", "3", "A"], ["2", "3", "4"], ["3", "4", "5"], ["4", "5", "6"], ["5", "6", "7"], ["6", "7", "8"], ["7", "8", "9"], ["10", "8", "9"], ["10", "9", "J"], ["10", "J", "Q"], ["J", "K", "Q"], ["2", "3", "4", "A"], ["2", "3", "4", "5"], ["3", "4", "5", "6"], ["4", "5", "6", "7"], ["5", "6", "7", "8"], ["6", "7", "8", "9"], ["10", "7", "8", "9"], ["10", "8", "9", "J"], ["10", "9", "J", "Q"], ["10", "J", "K", "Q"], ["2", "3", "4", "5", "A"], ["2", "3", "4", "5", "6"], ["3", "4", "5", "6", "7"], ["4", "5", "6", "7", "8"], ["5", "6", "7", "8", "9"], ["10", "6", "7", "8", "9"], ["10", "7", "8", "9", "J"], ["10", "8", "9", "J", "Q"], ["10", "9", "J", "K", "Q"]];
+
+	      nums.sort();
+
+	      // All the same suit so check values
+	      if (allSame) {
+	        for (i = 0; i < straights.length; i++) {
+	          if (this.arraysEqual(straights[i], nums)) {
+	            return true;
+	          }
+	        }
+	      }
+
+	      console.log("nums was not what we wanted. it was", nums);
+	      console.log("or suits was not what we wanted. it was", suits);
+
+	      return false;
 	    }
+<<<<<<< HEAD
+=======
+
+	    /*
+	     * sourced from http://stackoverflow.com/questions/4025893/how-to-check-identical-array-in-most-efficient-way
+	     */
+
+	  }, {
+	    key: 'arraysEqual',
+	    value: function arraysEqual(arr1, arr2) {
+	      if (arr1.length !== arr2.length) return false;
+	      for (var i = arr1.length; i--;) {
+	        if (arr1[i] !== arr2[i]) return false;
+	      }
+
+	      return true;
+	    }
+>>>>>>> 5bb6ac2f384f928b66b37b0f8568d090d513c43e
 	  }, {
 	    key: 'dealCards',
 	    value: function dealCards() {
@@ -20613,6 +20711,7 @@
 	          this.state.discard
 	        ),
 	        _react2.default.createElement(
+<<<<<<< HEAD
 	          'div',
 	          { id: 'points' },
 	          'Total Points: ',
@@ -20647,32 +20746,66 @@
 	        ),
 	        _react2.default.createElement('br', null),
 	        _react2.default.createElement(
+=======
+>>>>>>> 5bb6ac2f384f928b66b37b0f8568d090d513c43e
 	          'div',
-	          { id: 'hand', style: { display: this.state.callStatus == 0 && this.state.isTurn && this.state.hasDrawn ? "block" : "none" } },
-	          this.state.hand.map(function (name, index) {
-	            return _react2.default.createElement(
-	              'button',
-	              { className: 'col-md-2', onClick: _this2.select.bind(_this2, index) },
-	              '  Card ',
-	              index + 1,
-	              ': ',
-	              _this2.state.hand[index],
-	              '  '
-	            );
-	          }),
+	          { style: { display: !this.state.canDeal ? "block" : "none" } },
 	          _react2.default.createElement(
 	            'button',
-	            { className: 'col-md-2', onClick: this.playCards },
-	            '  SUBMIT CHOICES '
+	            { className: 'col-md-4', style: { display: this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn ? "block" : "none" }, onClick: this.drawFromDeck },
+	            '  DRAW A CARD FROM DECK '
+	          ),
+	          _react2.default.createElement(
+	            'button',
+	            { className: 'col-md-4', style: { display: this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn && this.state.discard.length > 0 ? "block" : "none" }, onClick: this.drawFromDiscard },
+	            '  DRAW A CARD FROM DISCARD '
+	          ),
+	          _react2.default.createElement('div', { className: 'col-md-4' }),
+	          _react2.default.createElement('br', null),
+	          _react2.default.createElement(
+	            'div',
+	            { id: 'hand', style: { display: this.state.callStatus == 0 && !(this.state.isTurn && this.state.hasDrawn) ? "block" : "none" } },
+	            this.state.hand.map(function (name, index) {
+	              return _react2.default.createElement(
+	                'div',
+	                { className: 'col-md-2' },
+	                '  Card ',
+	                index + 1,
+	                ': ',
+	                _this2.state.hand[index],
+	                '  '
+	              );
+	            })
+	          ),
+	          _react2.default.createElement('br', null),
+	          _react2.default.createElement(
+	            'div',
+	            { id: 'hand', style: { display: this.state.callStatus == 0 && this.state.isTurn && this.state.hasDrawn ? "block" : "none" } },
+	            this.state.hand.map(function (name, index) {
+	              return _react2.default.createElement(
+	                'button',
+	                { className: 'col-md-2', onClick: _this2.select.bind(_this2, index) },
+	                '  Card ',
+	                index + 1,
+	                ': ',
+	                _this2.state.hand[index],
+	                '  '
+	              );
+	            }),
+	            _react2.default.createElement(
+	              'button',
+	              { className: 'col-md-2', onClick: this.playCards },
+	              '  SUBMIT CHOICES '
+	            )
+	          ),
+	          _react2.default.createElement(
+	            'button',
+	            { type: 'button',
+	              onClick: this.yusef,
+	              className: 'btn btn-lg btn-default',
+	              style: { display: this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn ? "block" : "none" } },
+	            'YUSEF!'
 	          )
-	        ),
-	        _react2.default.createElement(
-	          'button',
-	          { type: 'button',
-	            onClick: this.yusef,
-	            className: 'btn btn-lg btn-default',
-	            style: { display: this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn ? "block" : "none" } },
-	          'YUSEF!'
 	        ),
 	        _react2.default.createElement(
 	          'div',
