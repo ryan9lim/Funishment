@@ -20054,26 +20054,30 @@
 	        'div',
 	        { className: 'Index container' },
 	        _react2.default.createElement(
-	          'p',
-	          { className: countdownCSS + " countdown-label" },
-	          'Countdown'
-	        ),
-	        _react2.default.createElement(
-	          'p',
-	          { className: countdownCSS + " countdown-number" },
-	          this.state.countdown
-	        ),
-	        _react2.default.createElement(
-	          'button',
-	          { type: 'button', onClick: this.getReady,
-	            className: buttonCSS + ' ready-button' },
-	          this.state.isReady ? "Ready" : "Not Ready Yet"
-	        ),
-	        _react2.default.createElement(
-	          'button',
-	          { type: 'button', onClick: this.gameStart,
-	            className: buttonCSS + ' start-button' },
-	          'Start game'
+	          'div',
+	          { style: { display: !this.state.gameStarted ? "block" : "none" } },
+	          _react2.default.createElement(
+	            'p',
+	            { className: countdownCSS + " countdown-label" },
+	            'Countdown'
+	          ),
+	          _react2.default.createElement(
+	            'p',
+	            { className: countdownCSS + " countdown-number" },
+	            this.state.countdown
+	          ),
+	          _react2.default.createElement(
+	            'button',
+	            { type: 'button', onClick: this.getReady,
+	              className: buttonCSS + ' ready-button' },
+	            this.state.isReady ? "Ready" : "Not Ready Yet"
+	          ),
+	          _react2.default.createElement(
+	            'button',
+	            { type: 'button', onClick: this.gameStart,
+	              className: buttonCSS + ' start-button' },
+	            'Start game'
+	          )
 	        ),
 	        _react2.default.createElement(_Game2.default, { isHost: this.state.isHost, usersPlaying: this.state.usersPlaying, gameStarted: this.state.gameStarted, pubnubDemo: this.pubnubDemo, channelName: this.channelName }),
 	        _react2.default.createElement(_TweetInput2.default, null)
