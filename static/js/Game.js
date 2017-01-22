@@ -47,7 +47,8 @@ class Game extends React.Component {
       hasDrawn: false, // Completed draw phase of turn
       lastPlay: [], // Set of last few cards being played
       points: 0, // Current player's point total
-      allHands: [] // Set of number of cards in each player's hands
+      allHands: [], // Set of number of cards in each player's hands
+      turnNumber: 1
     }
 
     // Channel for the game data to be sent on
@@ -120,12 +121,17 @@ class Game extends React.Component {
         console.log(this.state.allHands)
       }
     }
-    
-    if (response.message.playing && response.message.turn != null){
+
+    // In playing phase of turn
+    if (response.message.playing && response.message.turn != null) {
+      // Update own tracking of whose turn it is
       this.setState({
         turn: response.message.turn
       });
+
       console.log("changing turns to " + response.message.turn.toString());
+
+      // If it is my turn, play hand
       var indexInUsers = this.getUserIndex()
       if (indexInUsers == response.message.turn) {
         console.log("it is my turn");
@@ -133,19 +139,23 @@ class Game extends React.Component {
       } else {
         console.log(this.props.usersPlaying[response.message.turn] + " turn to play!")
       }
-    }
-    else if (response.message.dealing) {
+    } else if (response.message.dealing) {
+      // In dealing phase of turn
       var indexInUsers = this.getUserIndex()
 
       console.log("current user has index in array of ", indexInUsers, "and nextToDraw is", response.message.nextToDraw);
       console.log("array of users is ", this.props.usersPlaying);
       console.log("size of array of users is ", this.props.usersPlaying.length);
     
+      // It is the current player's turn to draw
       if (indexInUsers == response.message.nextToDraw) {
-        var han = response.message.deck.slice(0,5);
-        var deq = response.message.deck.slice(5);
+        var han = response.message.deck.slice(0,5); // Drawn Hand
+        var deq = response.message.deck.slice(5); // Remaining deck after draw
 
+        // If more people need to draw after, propagate the draw packet
+        // Otherwise, tell the originator to begin playing
         if (response.message.nextToDraw + 1 < this.props.usersPlaying.length) {
+          // More people need to draw
           this.props.pubnubDemo.publish({
             message: {
               dealing: true,
@@ -155,6 +165,7 @@ class Game extends React.Component {
             channel: this.gameChannel
           });
         } else {
+          // Drawing is finished and now playing begins
           console.log("finished dealing!")
           this.props.pubnubDemo.publish({
             message: {
@@ -170,6 +181,7 @@ class Game extends React.Component {
 
         console.log("I AM UPDATING ON DEAL");
 
+        // Set own state to reflect the cards I just drew
         this.setState({
           discard: [],
           deck: deq,
@@ -183,16 +195,24 @@ class Game extends React.Component {
         while(arraySize--) this.state.allHands.push(5);
       }
     } else if (response.message.checkingYusef) {
+      // In the stage of checking a Yusef call
+      
       if(response.message.nextToCheck >= this.props.usersPlaying.length && response.message.callerId == this.props.pubnubDemo.getUUID()) {
+        // All others have checked Yusef call
         var pf;
         if (response.message.failed) {
+          // Failed
+          // Call status will change to -1 for this user and -2 for others
           pf = -1;
         } else {
+          // Passed
+          // Call status will change to 1 for this user and 2 for others
           pf = 1;
         }
 
         console.log("check came back around and the result was ", pf);
 
+        // Publish packet to finalize each user's view based on the result of the yusef call
         this.props.pubnubDemo.publish({
           message: {
             dealing: false,
@@ -204,6 +224,9 @@ class Game extends React.Component {
           channel: this.gameChannel
         });
       } else {
+        // Current user still needs to check if the Yusef call was a success
+        
+        // Determine current user's index in the array of usersPlaying
         var indexInUsers = -1;
         var i;
         for (i = 0; i < this.props.usersPlaying.length; i++) {
@@ -213,14 +236,21 @@ class Game extends React.Component {
           }
         }
 
+        // If current user is the next to check, check the Yusef call
         if(indexInUsers == response.message.nextToCheck) {
+
           console.log("checked yusef. their call was ", response.message.count, " and mine was ", this.summ(this.state.hand));
+          
           var fail = response.message.failed;
+
+          // If the caller hadn't previously failed, but the current user is a separate user with a lower score, fail
           if (!response.message.failed && response.message.callerId != this.props.pubnubDemo.getUUID() && response.message.count >= this.summ(this.state.hand)) {
             fail = true;
           }
 
           console.log("fail is", fail);
+
+          // Publish packet propagating the success or failure to the next person to check
           this.props.pubnubDemo.publish({
             message: {
               dealing: false,
@@ -235,8 +265,11 @@ class Game extends React.Component {
         }
       }
     } else if (response.message.confirmingYusef) {
-      var stat;
-      var pointsToAdd;
+      // We are in the phase of updating the user views after a Yusef call has been checked
+      var stat; // The call status to update
+      var pointsToAdd; // Number of points to add to score
+
+      // Check the message callStatus and assign the correct number of points and status code
       if(response.message.callStatus > 0) {
         if (response.message.callerId == this.props.pubnubDemo.getUUID()) {
           pointsToAdd = 0;
@@ -255,22 +288,30 @@ class Game extends React.Component {
         }
       }
 
+      // Change current user's state with regard to callstatus, visibility of deal and points
       this.setState({
         callStatus: stat,
         canDeal: true,
         points: this.state.points + pointsToAdd
       });
 
+      // Check if the current user has lost the game
       if(this.state.points >= 200){
         this.lose();
       }
     }
   }
 
+  /*
+   * Function to deal with loss / end of game
+   */
   lose(){
     console.log("YOU LOST");
   }
 
+  /*
+   * Callback handler for selecting a card to be played
+   */
   select(index) {
     console.log("selected", index, "for playing");
     this.setState({
@@ -278,19 +319,30 @@ class Game extends React.Component {
     });
   }
 
+  /*
+   * Callback handler for playing the set of selected cards
+   */
   playCards(){
     console.log("in playcards, this is", this);
     console.log("and chosenCards is", this.state.chosenCards);
+
+    // Determine which of the cards in the hand to play
     var played = [false, false, false, false, false];
     var i;
     for (i = 0; i < this.state.chosenCards.length; i++) {
       played[parseInt(this.state.chosenCards.slice(i,i+1))] = !played[parseInt(this.state.chosenCards.slice(i,i+1))];
     }
-    var lastPla = [];
+    var lastPla = []; // The new "last-played hand"
 
+    // If the play is valid, update the user's information and propagate the change to public info
+    // Otherwise, kill the play and wait for a valid play
     if(this.checkValidPlay(played, this.state.hand)) {
-      var newDiscard = this.state.discard;
-      var newHand = this.state.hand;
+      // Play valid
+      
+      var newDiscard = this.state.discard; // New discard pile after play
+      var newHand = this.state.hand; // New hand after play
+
+      // Determine the new "last play", discard, and hand based on the boolean array and hand
       for (i = 4; i >= 0; i -= 1) {
         if (played[i]) {
           lastPla.unshift(this.state.hand[i]);
@@ -299,8 +351,12 @@ class Game extends React.Component {
         }
       }
       
+      // Add the drawn card to the hand (after we discard the other cards)
       newHand.push(this.state.cardToAdd);
+
       console.log("current turn is", this.state.turn, "...finished playing and about to change turn to", (this.state.turn+1) % this.props.usersPlaying.length);
+      
+      // Publish a packet to the other users with the new turn, discard pile, and last play
       this.props.pubnubDemo.publish({
         message: {
           playing: true,
@@ -310,26 +366,32 @@ class Game extends React.Component {
         },
         channel: this.gameChannel
       });
+
+      // Change own state as needed
       this.setState({
         hand: newHand,
-        discard: newDiscard,
         isTurn: false,
         chosenCards: '',
         cardToAdd: '',
-        lastPlay: lastPla,
-        hasDrawn: false
+        hasDrawn: false,
+        turnNumber: this.state.turnNumber + 1
       });
     } else {
+      // Play invalid, clear the chosen cards
       this.setState({
         chosenCards: ''
       });
     }
-
   }
 
+  /*
+   * Check whether the subset of the hand denoted by bools is valid
+   */
   checkValidPlay(bools, hand) {
-    var nums = [];
-    var suits = [];
+    var nums = []; // Numerical values of cards
+    var suits = []; // Suit values of cards
+
+    // Determine the numbers and suits from the hand
     var i;
     for (i = 0; i < bools.length; i++) {
       if (bools[i]) {
@@ -345,17 +407,20 @@ class Game extends React.Component {
 
     console.log("nums is", nums);
     console.log("suits is", suits);
+
+    // If we are just playing one card, it is valid
     if (nums.length == 1) {
       return true;
     }
 
+    // If we are playing less than one card, it is invalid
     if (nums.length < 1) {
       return false;
     }
 
-    var allSame = true;
-    var firstNum = nums[0];
-    var firstSuit = suits[0];
+    var allSame = true; // Whether all numbers or suits are the same
+    var firstNum = nums[0]; // First card's numerical value
+    var firstSuit = suits[0]; // First card's suit valud
 
     // Check if all numbers are the same
     for (i = 0; i < nums.length; i++) {
@@ -365,10 +430,12 @@ class Game extends React.Component {
       }
     }
 
+    // All numbers are the same, so hand is valid
     if (allSame) {
       return true;
     }
 
+    // Reinitialize allsame for check of straights
     allSame = true;
 
     // Check for straights
@@ -379,6 +446,7 @@ class Game extends React.Component {
       }
     }
 
+    // Array of valid sorted straights
     var straights = [
       ["2", "3", "A"],
       ["2", "3", "4"],
@@ -412,6 +480,7 @@ class Game extends React.Component {
       ["10", "9", "J", "K", "Q"]
     ];
 
+    // Sort the numerical values of the cards lexicographically
     nums.sort();
 
     // All the same suit so check values
@@ -426,11 +495,13 @@ class Game extends React.Component {
     console.log("nums was not what we wanted. it was", nums);
     console.log("or suits was not what we wanted. it was", suits);
 
+    // If not a straight, not all numbers are the same, and there are multiple cards chosen, invalid
     return false;
   }
 
   /*
-   * sourced from http://stackoverflow.com/questions/4025893/how-to-check-identical-array-in-most-efficient-way
+   * Check if two arrays have equivalent entries
+   * Sourced from http://stackoverflow.com/questions/4025893/how-to-check-identical-array-in-most-efficient-way
    */
   arraysEqual(arr1, arr2) {
     if(arr1.length !== arr2.length)
@@ -443,13 +514,19 @@ class Game extends React.Component {
     return true;
   }
 
+  /*
+   * Callback handler for button that deals cards
+   */
   dealCards() {
+    // Initialize the deck as a shuffled version of all valid cards
     var deq = this.shuffle([
       'AC', '2C', '3C', '4C', '5C', '6C', '7C', '8C', '9C', '10C', 'JC', 'QC', 'KC',
       'AD', '2D', '3D', '4D', '5D', '6D', '7D', '8D', '9D', '10D', 'JD', 'QD', 'KD',
       'AH', '2H', '3H', '4H', '5H', '6H', '7H', '8H', '9H', '10H', 'JH', 'QH', 'KH',
       'AS', '2S', '3S', '4S', '5S', '6S', '7S', '8S', '9S', '10S', 'JS', 'QS', 'KS'
     ]);
+
+    // Publish packet with deck for the sake of dealing starting hands
     this.props.pubnubDemo.publish({
       message: {
         dealing: true,
@@ -459,8 +536,10 @@ class Game extends React.Component {
       channel: this.gameChannel
     });
   }
+
   /*
-   * Shuffle function sourced from http://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
+   * Shuffle an array
+   * Sourced from http://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
    */
   shuffle(array) {
     var currentIndex = array.length, temporaryValue, randomIndex;
@@ -480,21 +559,33 @@ class Game extends React.Component {
     }
     return array;
   }
+
+  /*
+   * Draw a card from the deck
+   */
   drawFromDeck() {
-    var card = this.state.deck[0];
+    var card = this.state.deck[0]; // Top card of deck
+
+    // Update the deck in this user's state
     this.setState({
       deck: this.state.deck.slice(1)
     });
+
+    // Current user's index in the array of usersPlaying
     var indexInUsers = this.getUserIndex();
     
+    // Update the card to be added and whether the user has drawn in the user's state
     this.setState({
       cardToAdd: card,
       hasDrawn: true
     })
 
-    // update deck
+    // Update the deck
+    // If there are cards left, just remove the card
+    // If there are no cards left, reshuffle the discard (except top card) back into deck
     if (this.state.deck.length > 1) {
-      // deck still valid
+      // Deck still valid
+      // Publish a packet with the new deck
       this.props.pubnubDemo.publish({
         message: {
           deck: this.state.deck.slice(1)
@@ -502,8 +593,9 @@ class Game extends React.Component {
         channel: this.gameChannel
       });
     } else {
-      // deck out and need to reshuffle discard into it
+      // Deck out and need to reshuffle discard into it
       var newDeck = this.shuffle(this.state.discard.slice(1));
+      // Publish a packet with the new deck
       this.props.pubnubDemo.publish({
         message: {
           deck: newDeck,
@@ -515,15 +607,27 @@ class Game extends React.Component {
     }
   }
 
+  /*
+   * Draw a card from the discard pile
+   */
   drawFromDiscard() {
-    var card = this.state.discard.shift()
+    var card = this.state.discard[0]; // Top card of discard
+
+    // Update the discard in this user's state
+    this.setState({
+      discard: this.state.discard.slice(1)
+    });
+
+    // Current user's index in the array of usersPlaying
     var indexInUsers = this.getUserIndex();
+    
+    // Update the card to be added and whether the user has drawn in the user's state
     this.setState({
       cardToAdd: card,
       hasDrawn: true
     })
 
-    // update discard
+    // Publish packet telling users to update discard and lastPlay
     this.props.pubnubDemo.publish({
       message: {
         discard: this.state.discard,
@@ -532,15 +636,31 @@ class Game extends React.Component {
       channel: this.gameChannel
     });
   }
+
+  /*
+   * Callback handler for playing a hand
+   */
   playHand(){
     console.log("My turn to play!")
-      this.setState({
-        isTurn: true
-      });
+    // It is the current user's turn
+    this.setState({
+      isTurn: true
+    });
   }
+
+  /*
+   * Callback handler for when Yusef is called
+   */
   yusef() {
-    var myCount = this.summ(this.state.hand);
+    // Cannot call Yusef until 3rd turn
+    if(this.state.turnNumber < 3){
+      console.log("Can't call yusef yet!");
+      return;
+    }
+    var myCount = this.summ(this.state.hand); // Determine the score of the current user's hand
     console.log("called yusef with hand of value ", myCount);
+
+    // Publish a packet for other users to check the Yusef call of the current user
     this.props.pubnubDemo.publish({
       message: {
         dealing: false,
@@ -554,22 +674,36 @@ class Game extends React.Component {
       channel: this.gameChannel
     });
   }
+
+  /*
+   * Determine the score of a hand
+   */
   summ(arr) {
-    var count = 0;
+    var count = 0; // Initialize the count
     var i;
     console.log(this.state.hand);
+
+    // For each card, add its value to the total count
     for(i = 0; i < this.state.hand.length; i++) {
       if(this.state.hand[i].charCodeAt(0) <= "9".charCodeAt(0) && this.state.hand[i].charCodeAt(0) >= "2".charCodeAt(0)) {
+        // Card between 2 and 9
         count += this.state.hand[i].charCodeAt(0) - "0".charCodeAt(0);
       } else if (this.state.hand[i].slice(0,1) == "A"){
+        // Card is an Ace
         count += 1;
       } else {
+        // Card is a royal (10 J Q K)
         count += 10;
       }
     }
+
     console.log(count);
     return count;
   }
+
+  /*
+   * Render the HTML for this React element
+   */
   render() {
     return (
       <div className='Game' style={{display: (this.props.gameStarted ? "block" : "none")}}>
