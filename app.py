@@ -9,6 +9,8 @@ import webbrowser
 app = Flask(__name__)
 APP_KEY = '76SV33OlqPJuhkTrnDMLyWX1w'
 APP_SECRET = 'jJvL67e6IgCKjinU3weCvr1AiiYBQXsBwTRJ2hiv3jB8ZlSN76'
+tDict = dict()
+userID = ''
 AUTH_OAUTH_TOKEN = ''
 AUTH_OAUTH_TOKEN_SECRET = ''
 AUTH_OAUTH_VERIFIER = ''
@@ -25,12 +27,14 @@ def serve_room():
 
 @app.route('/redirect_to_auth', methods=['GET'])
 def redirect_to_auth():
-    global APP_KEY, APP_SECRET, AUTH_OAUTH_TOKEN, AUTH_OAUTH_TOKEN_SECRET
+    global APP_KEY, APP_SECRET, AUTH_OAUTH_TOKEN, AUTH_OAUTH_TOKEN_SECRET, userID
 
     twitter = Twython(APP_KEY, APP_SECRET)
     print('created twitter object')
     auth = twitter.get_authentication_tokens(callback_url='http://0.0.0.0:5000/twitter_auth')
     print('got authentication tokens')
+
+    userID = request.args['ID']
 
     AUTH_OAUTH_TOKEN = auth['oauth_token']
     AUTH_OAUTH_TOKEN_SECRET = auth['oauth_token_secret']
@@ -43,7 +47,7 @@ def redirect_to_auth():
 
 @app.route('/twitter_auth', methods=['GET'])
 def serve_twitter_auth():
-    global APP_KEY, APP_SECRET, AUTH_OAUTH_TOKEN, AUTH_OAUTH_TOKEN_SECRET, AUTH_OAUTH_VERIFIER, USER_OAUTH_TOKEN, USER_OAUTH_TOKEN_SECRET
+    global APP_KEY, APP_SECRET, AUTH_OAUTH_TOKEN, AUTH_OAUTH_TOKEN_SECRET, AUTH_OAUTH_VERIFIER, USER_OAUTH_TOKEN, USER_OAUTH_TOKEN_SECRET, tDict
 
     oauth_token = request.args['oauth_token']
     AUTH_OAUTH_VERIFIER = request.args['oauth_verifier']
@@ -64,6 +68,8 @@ def serve_twitter_auth():
     USER_OAUTH_TOKEN = final_step['oauth_token']
     USER_OAUTH_TOKEN_SECRET = final_step['oauth_token_secret']
 
+    tDict[userID] = [USER_OAUTH_TOKEN, USER_OAUTH_TOKEN_SECRET]
+
     print(USER_OAUTH_TOKEN)
     print(USER_OAUTH_TOKEN_SECRET)
 
@@ -79,7 +85,24 @@ def serve_twitter_auth():
 
     return Response(response={'status_code': 200},
                     status=200,
-                    mimetype='application/json')  
+                    mimetype='application/json') 
+
+@app.route('/post_status', methods=['GET'])
+def post_Twitter_Status():
+    global APP_KEY, APP_SECRET, AUTH_OAUTH_TOKEN, AUTH_OAUTH_TOKEN_SECRET, AUTH_OAUTH_VERIFIER, tDict
+
+    user = request.args['ID']
+    message = request.args['message']
+
+    twitter = Twython(APP_KEY, APP_SECRET,
+                      tDict[user][0],
+                      tDict[user][1])
+
+    try:
+        twitter.update_status(status=message)
+    except TwythonError as e:
+        print(e)
+
 
 if __name__ == '__main__':
     app.run(debug=True)

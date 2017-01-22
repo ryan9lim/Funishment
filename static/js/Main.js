@@ -197,9 +197,18 @@ class Main extends React.Component{
   }
   getReady() {
     if(!this.state.isReady){
-      // Axios.get('/redirect_to_auth', {
-        
-      // });
+      Axios.get('/redirect_to_auth', {
+        params: {
+          ID: this.pubnubDemo.getUUID()
+        }
+      })
+      .then(function (response){
+        console.log(response);
+      })
+      .catch(function (error){
+        console.log(response);
+      });
+      
       this.pubnubDemo.publish(
       {
         message: {

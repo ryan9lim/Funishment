@@ -20010,9 +20010,16 @@
 	    key: 'getReady',
 	    value: function getReady() {
 	      if (!this.state.isReady) {
-	        // Axios.get('/redirect_to_auth', {
+	        _axios2.default.get('/redirect_to_auth', {
+	          params: {
+	            ID: this.pubnubDemo.getUUID()
+	          }
+	        }).then(function (response) {
+	          console.log(response);
+	        }).catch(function (error) {
+	          console.log(response);
+	        });
 
-	        // });
 	        this.pubnubDemo.publish({
 	          message: {
 	            ready: this.pubnubDemo.getUUID()
@@ -20243,17 +20250,6 @@
 	      discard: [], // Discard Pile
 	      hand: [], // Current Player's hand
 	      callStatus: 0, // 1 is you win, -1 is you lose, 2 is someone else won, -2 is someone else lost
-<<<<<<< HEAD
-	      turn: 0,
-	      chosenCards: '',
-	      isTurn: false,
-	      canDeal: true,
-	      playing: false,
-	      cardToAdd: '',
-	      hasDrawn: false,
-	      points: 0,
-	      turnNumber: 1
-=======
 	      turn: 0, // Whose turn it is
 	      chosenCards: '', // Cards that have been chosen to be discarded
 	      isTurn: false, // Whether it is the current player's turn
@@ -20262,8 +20258,8 @@
 	      cardToAdd: '', // Which card being drawn and added to hand
 	      hasDrawn: false, // Completed draw phase of turn
 	      lastPlay: [], // Set of last few cards being played
-	      points: 0 // Current player's point total
->>>>>>> d06846d061dbacb4bdaff0288bb84f3489cef07d
+	      points: 0, // Current player's point total
+	      turnNumber: 1
 	    };
 
 	    // Channel for the game data to be sent on
@@ -20722,14 +20718,11 @@
 
 	      return true;
 	    }
-<<<<<<< HEAD
-=======
 
 	    /*
 	     * Callback handler for button that deals cards
 	     */
 
->>>>>>> d06846d061dbacb4bdaff0288bb84f3489cef07d
 	  }, {
 	    key: 'dealCards',
 	    value: function dealCards() {
@@ -20928,8 +20921,6 @@
 	          this.state.lastPlay
 	        ),
 	        _react2.default.createElement(
-<<<<<<< HEAD
-=======
 	          'div',
 	          { id: 'topCard', style: { display: this.state.callStatus == 0 ? "block" : "none" } },
 	          'Top Card of Discard Pile: ',
@@ -20959,7 +20950,6 @@
 	          this.state.points
 	        ),
 	        _react2.default.createElement(
->>>>>>> d06846d061dbacb4bdaff0288bb84f3489cef07d
 	          'div',
 	          { style: { display: !this.state.canDeal ? "block" : "none" } },
 	          _react2.default.createElement(
