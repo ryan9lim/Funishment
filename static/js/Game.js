@@ -23,13 +23,9 @@ class Game extends React.Component {
       hand: ['empty', 'empty', 'empty','empty','empty'],
       callStatus: 0, // 1 is you win, -1 is you lose, 2 is someone else won, -2 is someone else lost
       turn: 0,
-<<<<<<< HEAD
       isTurn: false,
-      canDeal: true
-=======
       canDeal: true,
       playing: false
->>>>>>> 32b60736bc64c73cdf576b83a6fba4c92a9602c5
     }
     this.gameChannel = this.props.channelName + 'gameChannel';
   }
