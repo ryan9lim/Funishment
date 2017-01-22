@@ -63,18 +63,55 @@ class ChannelForm extends React.Component {
 class ChannelList extends React.Component {
   constructor(props) {
     super(props);
+    this.pubnubDemo = new PubNub({
+      publishKey: 'pub-c-89d8d3f5-9d58-4c24-94e7-1c89f243296a',
+      subscribeKey: 'sub-c-99748e0e-df8d-11e6-989b-02ee2ddab7fe',
+      presenceTimeout: 10,
+      heartbeatInterval: 5
+    });
     this.state = {
-      channelList: ['Channel 1', 'Channel 2', 'Channel 3']
+      channelList: [],
+      occupancyList: []
     }
+  }
+  componentWillMount(){
+    this.pubnubDemo.hereNow({
+      includeState: true,
+      includeUUIDs: true
+    },
+    function(status, response){
+      var tempArray = [];
+      var tempArray2 = []
+      var channel;
+      console.log(response);
+      for (channel in response.channels){
+        tempArray.push(channel)
+        tempArray2.push(response.channels[channel].occupancy)
+      }
+      this.setState({
+        channelList: tempArray,
+        occupancyList: tempArray2
+      })
+    }.bind(this));
+  }
+  goToChannel(name, event) {
+    event.preventDefault();
+    this.setState({
+      channelName: name
+    });
+    Store('channelName', name);
+    window.location = '/';
   }
   render() {
       return (
         <div className='ChannelList'>
+          <h3> Current Active Channels </h3>
           {this.state.channelList.map((name, index) => 
-              (<button className='btn btn-lg btn-default' key={index}>
-                {'Go to ' + name}
+              (<button onClick= {this.goToChannel.bind(this, name)}
+                className='btn btn-lg btn-default' key={index}>
+                {name}<br />{'Occupancy: '+this.state.occupancyList[index]}
               </button>)
-          )}                          
+          )}
         </div>
       )
   }

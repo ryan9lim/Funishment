@@ -54,7 +54,7 @@
 
 	var _reactDom2 = _interopRequireDefault(_reactDom);
 
-	var _MainRoom = __webpack_require__(229);
+	var _MainRoom = __webpack_require__(230);
 
 	var _MainRoom2 = _interopRequireDefault(_MainRoom);
 
@@ -21347,172 +21347,6 @@
 /* 227 */,
 /* 228 */,
 /* 229 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-	var _react = __webpack_require__(1);
-
-	var _react2 = _interopRequireDefault(_react);
-
-	var _reactDom = __webpack_require__(158);
-
-	var _reactDom2 = _interopRequireDefault(_reactDom);
-
-	var _classnames = __webpack_require__(160);
-
-	var _classnames2 = _interopRequireDefault(_classnames);
-
-	var _store = __webpack_require__(230);
-
-	var _store2 = _interopRequireDefault(_store);
-
-	var _axios = __webpack_require__(163);
-
-	var _axios2 = _interopRequireDefault(_axios);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-	var MainRoom = function (_React$Component) {
-	  _inherits(MainRoom, _React$Component);
-
-	  function MainRoom(props) {
-	    _classCallCheck(this, MainRoom);
-
-	    return _possibleConstructorReturn(this, (MainRoom.__proto__ || Object.getPrototypeOf(MainRoom)).call(this, props));
-	  }
-
-	  _createClass(MainRoom, [{
-	    key: 'componentWillMount',
-	    value: function componentWillMount() {
-	      console.log('Mounting');
-	      _axios2.default.get('/redirect_to_auth').then(function (resp) {
-	        console.log(resp);
-	      }).catch(function (err) {
-	        console.log(err);
-	      });
-	    }
-	  }, {
-	    key: 'render',
-	    value: function render() {
-	      return _react2.default.createElement(
-	        'div',
-	        { className: 'Room' },
-	        _react2.default.createElement(
-	          'div',
-	          { className: 'container' },
-	          _react2.default.createElement(
-	            'p',
-	            null,
-	            'Funishment'
-	          ),
-	          _react2.default.createElement(ChannelForm, null),
-	          _react2.default.createElement(ChannelList, null)
-	        )
-	      );
-	    }
-	  }]);
-
-	  return MainRoom;
-	}(_react2.default.Component);
-
-	var ChannelForm = function (_React$Component2) {
-	  _inherits(ChannelForm, _React$Component2);
-
-	  function ChannelForm(props) {
-	    _classCallCheck(this, ChannelForm);
-
-	    var _this2 = _possibleConstructorReturn(this, (ChannelForm.__proto__ || Object.getPrototypeOf(ChannelForm)).call(this, props));
-
-	    _this2.onAddChannel = _this2.onAddChannel.bind(_this2);
-	    _this2.state = {
-	      channelName: ''
-	    };
-	    return _this2;
-	  }
-
-	  _createClass(ChannelForm, [{
-	    key: 'onAddChannel',
-	    value: function onAddChannel(event) {
-	      event.preventDefault();
-	      this.setState({
-	        channelName: this.refs.inputText.value
-	      });
-	      (0, _store2.default)('channelName', this.refs.inputText.value);
-	      window.location = '/';
-	    }
-	  }, {
-	    key: 'render',
-	    value: function render() {
-	      return _react2.default.createElement(
-	        'div',
-	        { className: 'ChannelForm' },
-	        _react2.default.createElement(
-	          'form',
-	          { onSubmit: this.onAddChannel },
-	          _react2.default.createElement('input', { type: 'text', className: 'form-control', id: 'test',
-	            placeholder: 'Ryan\'s Magical Palace',
-	            ref: 'inputText',
-	            'aria-describedby': 'basic-addon1' }),
-	          _react2.default.createElement(
-	            'button',
-	            { type: 'submit', className: 'btn btn-md btn-default' },
-	            'Create Channel'
-	          )
-	        )
-	      );
-	    }
-	  }]);
-
-	  return ChannelForm;
-	}(_react2.default.Component);
-
-	var ChannelList = function (_React$Component3) {
-	  _inherits(ChannelList, _React$Component3);
-
-	  function ChannelList(props) {
-	    _classCallCheck(this, ChannelList);
-
-	    var _this3 = _possibleConstructorReturn(this, (ChannelList.__proto__ || Object.getPrototypeOf(ChannelList)).call(this, props));
-
-	    _this3.state = {
-	      channelList: ['Channel 1', 'Channel 2', 'Channel 3']
-	    };
-	    return _this3;
-	  }
-
-	  _createClass(ChannelList, [{
-	    key: 'render',
-	    value: function render() {
-	      return _react2.default.createElement(
-	        'div',
-	        { className: 'ChannelList' },
-	        this.state.channelList.map(function (name, index) {
-	          return _react2.default.createElement(
-	            'button',
-	            { className: 'btn btn-lg btn-default', key: index },
-	            'Go to ' + name
-	          );
-	        })
-	      );
-	    }
-	  }]);
-
-	  return ChannelList;
-	}(_react2.default.Component);
-
-	module.exports = MainRoom;
-
-/***/ },
-/* 230 */
 /***/ function(module, exports) {
 
 	/*! store2 - v2.5.0 - 2017-01-09
@@ -21752,6 +21586,220 @@
 
 	})(this, this.define);
 
+
+/***/ },
+/* 230 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _reactDom = __webpack_require__(158);
+
+	var _reactDom2 = _interopRequireDefault(_reactDom);
+
+	var _classnames = __webpack_require__(160);
+
+	var _classnames2 = _interopRequireDefault(_classnames);
+
+	var _store = __webpack_require__(229);
+
+	var _store2 = _interopRequireDefault(_store);
+
+	var _axios = __webpack_require__(163);
+
+	var _axios2 = _interopRequireDefault(_axios);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var MainRoom = function (_React$Component) {
+	  _inherits(MainRoom, _React$Component);
+
+	  function MainRoom(props) {
+	    _classCallCheck(this, MainRoom);
+
+	    return _possibleConstructorReturn(this, (MainRoom.__proto__ || Object.getPrototypeOf(MainRoom)).call(this, props));
+	  }
+
+	  _createClass(MainRoom, [{
+	    key: 'componentWillMount',
+	    value: function componentWillMount() {
+	      console.log('Mounting');
+	      _axios2.default.get('/redirect_to_auth').then(function (resp) {
+	        console.log(resp);
+	      }).catch(function (err) {
+	        console.log(err);
+	      });
+	    }
+	  }, {
+	    key: 'render',
+	    value: function render() {
+	      return _react2.default.createElement(
+	        'div',
+	        { className: 'Room' },
+	        _react2.default.createElement(
+	          'div',
+	          { className: 'container' },
+	          _react2.default.createElement(
+	            'p',
+	            null,
+	            'Funishment'
+	          ),
+	          _react2.default.createElement(ChannelForm, null),
+	          _react2.default.createElement(ChannelList, null)
+	        )
+	      );
+	    }
+	  }]);
+
+	  return MainRoom;
+	}(_react2.default.Component);
+
+	var ChannelForm = function (_React$Component2) {
+	  _inherits(ChannelForm, _React$Component2);
+
+	  function ChannelForm(props) {
+	    _classCallCheck(this, ChannelForm);
+
+	    var _this2 = _possibleConstructorReturn(this, (ChannelForm.__proto__ || Object.getPrototypeOf(ChannelForm)).call(this, props));
+
+	    _this2.onAddChannel = _this2.onAddChannel.bind(_this2);
+	    _this2.state = {
+	      channelName: ''
+	    };
+	    return _this2;
+	  }
+
+	  _createClass(ChannelForm, [{
+	    key: 'onAddChannel',
+	    value: function onAddChannel(event) {
+	      event.preventDefault();
+	      this.setState({
+	        channelName: this.refs.inputText.value
+	      });
+	      (0, _store2.default)('channelName', this.refs.inputText.value);
+	      window.location = '/';
+	    }
+	  }, {
+	    key: 'render',
+	    value: function render() {
+	      return _react2.default.createElement(
+	        'div',
+	        { className: 'ChannelForm' },
+	        _react2.default.createElement(
+	          'form',
+	          { onSubmit: this.onAddChannel },
+	          _react2.default.createElement('input', { type: 'text', className: 'form-control', id: 'test',
+	            placeholder: 'Ryan\'s Magical Palace',
+	            ref: 'inputText',
+	            'aria-describedby': 'basic-addon1' }),
+	          _react2.default.createElement(
+	            'button',
+	            { type: 'submit', className: 'btn btn-md btn-default' },
+	            'Create Channel'
+	          )
+	        )
+	      );
+	    }
+	  }]);
+
+	  return ChannelForm;
+	}(_react2.default.Component);
+
+	var ChannelList = function (_React$Component3) {
+	  _inherits(ChannelList, _React$Component3);
+
+	  function ChannelList(props) {
+	    _classCallCheck(this, ChannelList);
+
+	    var _this3 = _possibleConstructorReturn(this, (ChannelList.__proto__ || Object.getPrototypeOf(ChannelList)).call(this, props));
+
+	    _this3.pubnubDemo = new PubNub({
+	      publishKey: 'pub-c-89d8d3f5-9d58-4c24-94e7-1c89f243296a',
+	      subscribeKey: 'sub-c-99748e0e-df8d-11e6-989b-02ee2ddab7fe',
+	      presenceTimeout: 10,
+	      heartbeatInterval: 5
+	    });
+	    _this3.state = {
+	      channelList: [],
+	      occupancyList: []
+	    };
+	    return _this3;
+	  }
+
+	  _createClass(ChannelList, [{
+	    key: 'componentWillMount',
+	    value: function componentWillMount() {
+	      this.pubnubDemo.hereNow({
+	        includeState: true,
+	        includeUUIDs: true
+	      }, function (status, response) {
+	        var tempArray = [];
+	        var tempArray2 = [];
+	        var channel;
+	        console.log(response);
+	        for (channel in response.channels) {
+	          tempArray.push(channel);
+	          tempArray2.push(response.channels[channel].occupancy);
+	        }
+	        this.setState({
+	          channelList: tempArray,
+	          occupancyList: tempArray2
+	        });
+	      }.bind(this));
+	    }
+	  }, {
+	    key: 'goToChannel',
+	    value: function goToChannel(name, event) {
+	      event.preventDefault();
+	      this.setState({
+	        channelName: name
+	      });
+	      (0, _store2.default)('channelName', name);
+	      window.location = '/';
+	    }
+	  }, {
+	    key: 'render',
+	    value: function render() {
+	      var _this4 = this;
+
+	      return _react2.default.createElement(
+	        'div',
+	        { className: 'ChannelList' },
+	        _react2.default.createElement(
+	          'h3',
+	          null,
+	          ' Current Active Channels '
+	        ),
+	        this.state.channelList.map(function (name, index) {
+	          return _react2.default.createElement(
+	            'button',
+	            { onClick: _this4.goToChannel.bind(_this4, name),
+	              className: 'btn btn-lg btn-default', key: index },
+	            name,
+	            _react2.default.createElement('br', null),
+	            'Occupancy: ' + _this4.state.occupancyList[index]
+	          );
+	        })
+	      );
+	    }
+	  }]);
+
+	  return ChannelList;
+	}(_react2.default.Component);
+
+	module.exports = MainRoom;
 
 /***/ }
 /******/ ]);

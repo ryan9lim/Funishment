@@ -19786,6 +19786,10 @@
 
 	var _TweetInput2 = _interopRequireDefault(_TweetInput);
 
+	var _store = __webpack_require__(229);
+
+	var _store2 = _interopRequireDefault(_store);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -19816,14 +19820,13 @@
 	    _this.state = {
 	      host: false,
 	      gameStarted: false,
-	      countdown: 3,
-	      isSelected: false,
+	      countdown: 5,
 	      isReady: false,
 	      usersReady: [],
 	      usersPlaying: null
 	    };
 
-	    _this.channelName = 'testChannel1';
+	    _this.channelName = _store2.default.get('channelName');
 	    return _this;
 	  }
 
@@ -19831,7 +19834,7 @@
 	    key: 'assignHost',
 	    value: function assignHost(presenceEvent) {
 	      if (presenceEvent.action == "join") {
-	        console.log(presenceEvent.uuid + " has joined.");
+	        console.log(presenceEvent.uuid + " has joined " + presenceEvent.channel);
 	      }
 	      // first one here is host
 	      if (presenceEvent.action == "join" && presenceEvent.occupancy == 1) {
@@ -19988,7 +19991,7 @@
 	          if (status.error) {
 	            console.log(status);
 	          } else {
-	            console.log("message Published w/ timetoken", response.timetoken);
+	            // console.log("message Published w/ timetoken", response.timetoken);
 	          }
 	        });
 	        this.setState({
@@ -20002,10 +20005,11 @@
 	  }, {
 	    key: 'gameStart',
 	    value: function gameStart() {
-	      if (!this.state.host) return;
+	      if (!this.state.host || !this.state.isReady) return;
 	      this.pubnubDemo.publish({
 	        message: {
-	          game: 'start_countdown'
+	          game: 'start_countdown',
+	          usersPlaying: this.state.usersReady
 	        },
 	        channel: this.channelName
 	      }, function (status, response) {
@@ -20021,9 +20025,9 @@
 	    value: function startCountdown() {
 	      if (this.state.countdown <= 0) {
 	        console.log("GAME IS STARTING");
+	        console.log(this.state.usersPlaying);
 	        this.setState({
-	          gameStarted: true,
-	          usersPlaying: this.state.usersReady
+	          gameStarted: true
 	        });
 	      } else {
 	        this.setState({
@@ -20035,46 +20039,43 @@
 	  }, {
 	    key: 'render',
 	    value: function render() {
-	      var cssClasses = (0, _classnames2.default)({
+	      var buttonCSS = (0, _classnames2.default)({
 	        'btn': true,
-	        'btn-lg': true,
 	        'btn-default': true,
 	        'Button': true,
-	        'is-selected': this.state.isSelected
+	        'is-ready': this.state.isReady ? true : false
+	      });
+
+	      var countdownCSS = (0, _classnames2.default)({
+	        'should-hide': this.state.gameStarted ? true : false
 	      });
 
 	      return _react2.default.createElement(
 	        'div',
-	        { className: 'Index' },
+	        { className: 'Index container' },
 	        _react2.default.createElement(
-	          'button',
-	          { type: 'button',
-	            onClick: this.getReady,
-	            className: 'btn btn-lg btn-default' },
-	          'Ready'
+	          'p',
+	          { className: countdownCSS + " countdown-label" },
+	          'Countdown'
+	        ),
+	        _react2.default.createElement(
+	          'p',
+	          { className: countdownCSS + " countdown-number" },
+	          this.state.countdown
 	        ),
 	        _react2.default.createElement(
 	          'button',
-	          { type: 'button',
-	            onClick: this.gameStart,
-	            className: 'btn btn-lg btn-default' },
+	          { type: 'button', onClick: this.getReady,
+	            className: buttonCSS + ' ready-button' },
+	          this.state.isReady ? "Ready" : "Not Ready Yet"
+	        ),
+	        _react2.default.createElement(
+	          'button',
+	          { type: 'button', onClick: this.gameStart,
+	            className: buttonCSS + ' start-button' },
 	          'Start game'
 	        ),
-	        _react2.default.createElement(
-	          'h1',
-	          null,
-	          ' ',
-	          this.state.isReady ? "READY" : "NOT READY YET",
-	          ' '
-	        ),
-	        _react2.default.createElement(
-	          'h1',
-	          { style: { display: this.state.gameStarted ? "none" : "block" } },
-	          ' COUNTDOWN: ',
-	          this.state.countdown,
-	          ' '
-	        ),
-	        _react2.default.createElement(_Game2.default, { gameStarted: this.state.gameStarted }),
+	        _react2.default.createElement(_Game2.default, { isHost: this.state.isHost, usersPlaying: this.state.usersPlaying, gameStarted: this.state.gameStarted, pubnubDemo: this.pubnubDemo, channelName: this.channelName }),
 	        _react2.default.createElement(_TweetInput2.default, null)
 	      );
 	    }
@@ -20180,24 +20181,497 @@
 
 	    var _this = _possibleConstructorReturn(this, (Game.__proto__ || Object.getPrototypeOf(Game)).call(this, props));
 
+	    _this.yusef = _this.yusef.bind(_this);
+	    _this.drawFromDeck = _this.drawFromDeck.bind(_this);
+	    _this.drawFromDiscard = _this.drawFromDiscard.bind(_this);
+	    _this.select = _this.select.bind(_this);
+	    _this.playCards = _this.playCards.bind(_this);
+	    _this.playHand = _this.playHand.bind(_this);
+	    _this.dealCards = _this.dealCards.bind(_this);
+	    _this.updateOnListener = _this.updateOnListener.bind(_this);
 	    _this.state = {
-	      deck: ['AC', '2C', '3C', '4C', '5C', '6C', '7C', '8C', '9C', '10C', 'JC', 'QC', 'KC', 'AD', '2D', '3D', '4D', '5D', '6D', '7D', '8D', '9D', '10D', 'JD', 'QD', 'KD', 'AH', '2H', '3H', '4H', '5H', '6H', '7H', '8H', '9H', '10H', 'JH', 'QH', 'KH', 'AS', '2S', '3S', '4S', '5S', '6S', '7S', '8S', '9S', '10S', 'JS', 'QS', 'KS']
+	      deck: ['DECK NOT INIITIALIZED'],
+	      handDealt: false,
+	      discard: [],
+	      hand: [],
+	      callStatus: 0, // 1 is you win, -1 is you lose, 2 is someone else won, -2 is someone else lost
+	      turn: 0,
+	      chosenCards: '',
+	      isTurn: false,
+	      canDeal: true,
+	      playing: false,
+	      hasDrawn: false
 	    };
+	    _this.gameChannel = _this.props.channelName + 'gameChannel';
 	    return _this;
 	  }
+	  /*
+	   * Callback of element initialization
+	   */
+
 
 	  _createClass(Game, [{
+	    key: 'componentWillMount',
+	    value: function componentWillMount() {
+	      this.props.pubnubDemo.setState({
+	        state: {
+	          "host": this.props.isHost
+	        },
+	        channels: [this.channelName, this.gameChannel]
+	      });
+	      this.props.pubnubDemo.addListener({
+	        message: this.updateOnListener
+	      });
+	      this.props.pubnubDemo.subscribe({
+	        channels: [this.gameChannel]
+	      });
+	    }
+	  }, {
+	    key: 'getUserIndex',
+	    value: function getUserIndex() {
+	      var i;
+	      for (i = 0; i < this.props.usersPlaying.length; i++) {
+	        if (this.props.usersPlaying[i] == this.props.pubnubDemo.getUUID()) {
+	          return i;
+	          break;
+	        }
+	      }
+	      return -1;
+	    }
+	  }, {
+	    key: 'updateOnListener',
+	    value: function updateOnListener(response) {
+	      // updates deck
+	      if (response.message.deck != null) {
+	        console.log("size of deck is ", response.message.deck.length);
+	        this.setState({
+	          deck: response.message.deck
+	        });
+	      }
+	      // updates discard
+	      if (response.message.discard != null) {
+	        console.log("size of discard is ", response.message.discard.length);
+	        this.setState({
+	          discard: response.message.discard
+	        });
+	      }
+	      if (response.message.playing && response.message.turn != null) {
+	        this.setState({
+	          turn: response.message.turn
+	        });
+	        console.log("changing turns to " + response.message.turn.toString());
+	        var indexInUsers = this.getUserIndex();
+	        if (indexInUsers == response.message.turn) {
+	          console.log("it is my turn");
+	          this.playHand();
+	        } else {
+	          console.log(this.props.usersPlaying[response.message.turn] + " turn to play!");
+	        }
+	      } else if (response.message.dealing) {
+	        var indexInUsers = this.getUserIndex();
+
+	        console.log("current user has index in array of ", indexInUsers, "and nextToDraw is", response.message.nextToDraw);
+	        console.log("array of users is ", this.props.usersPlaying);
+	        console.log("size of array of users is ", this.props.usersPlaying.length);
+
+	        if (indexInUsers == response.message.nextToDraw) {
+	          var han = response.message.deck.slice(0, 5);
+	          var deq = response.message.deck.slice(5);
+
+	          if (response.message.nextToDraw + 1 < this.props.usersPlaying.length) {
+	            this.props.pubnubDemo.publish({
+	              message: {
+	                dealing: true,
+	                nextToDraw: response.message.nextToDraw + 1,
+	                deck: deq
+	              },
+	              channel: this.gameChannel
+	            });
+	          } else {
+	            console.log("finished dealing!");
+	            this.props.pubnubDemo.publish({
+	              message: {
+	                dealing: false,
+	                playing: true,
+	                turn: 0,
+	                deck: deq
+	              },
+	              channel: this.gameChannel
+	            });
+	          }
+
+	          console.log("I AM UPDATING ON DEAL");
+
+	          this.setState({
+	            discard: [],
+	            handDealt: true,
+	            deck: deq,
+	            hand: han,
+	            canDeal: false,
+	            callStatus: 0 // 1 is you win, -1 is you lose, 2 is someone else won, -2 is someone else lost
+	          });
+	        }
+	      } else if (response.message.checkingYusef) {
+	        if (response.message.nextToCheck >= this.props.usersPlaying.length && response.message.callerId == this.props.pubnubDemo.getUUID()) {
+	          var pf;
+	          if (response.message.failed) {
+	            pf = -1;
+	          } else {
+	            pf = 1;
+	          }
+
+	          console.log("check came back around and the result was ", pf);
+
+	          this.props.pubnubDemo.publish({
+	            message: {
+	              dealing: false,
+	              checkingYusef: false,
+	              confirmingYusef: true,
+	              callerId: this.props.pubnubDemo.getUUID(),
+	              callStatus: pf
+	            },
+	            channel: this.gameChannel
+	          });
+	        } else {
+	          var indexInUsers = -1;
+	          var i;
+	          for (i = 0; i < this.props.usersPlaying.length; i++) {
+	            if (this.props.usersPlaying[i] == this.props.pubnubDemo.getUUID()) {
+	              indexInUsers = i;
+	              break;
+	            }
+	          }
+
+	          if (indexInUsers == response.message.nextToCheck) {
+	            console.log("checked yusef. their call was ", response.message.count, " and mine was ", this.summ(this.state.hand));
+	            var fail = response.message.failed;
+	            if (!response.message.failed && response.message.callerId != this.props.pubnubDemo.getUUID() && response.message.count >= this.summ(this.state.hand)) {
+	              fail = true;
+	            }
+
+	            console.log("fail is", fail);
+	            this.props.pubnubDemo.publish({
+	              message: {
+	                dealing: false,
+	                checkingYusef: true,
+	                nextToCheck: response.message.nextToCheck + 1,
+	                callerId: response.message.callerId,
+	                count: response.message.count,
+	                failed: fail
+	              },
+	              channel: this.gameChannel
+	            });
+	          }
+	        }
+	      } else if (response.message.confirmingYusef) {
+	        var stat;
+	        if (response.message.callStatus > 0) {
+	          if (response.message.callerId == this.props.pubnubDemo.getUUID()) {
+	            stat = 1;
+	          } else {
+	            stat = 2;
+	          }
+	        } else {
+	          if (response.message.callerId == this.props.pubnubDemo.getUUID()) {
+	            stat = -1;
+	          } else {
+	            stat = -2;
+	          }
+	        }
+
+	        this.setState({
+	          callStatus: stat,
+	          canDeal: true
+	        });
+	      }
+	    }
+	  }, {
+	    key: 'select',
+	    value: function select(index) {
+	      console.log("selected", index, "for playing");
+	      this.setState({
+	        chosenCards: this.state.chosenCards + index.toString()
+	      });
+	    }
+	  }, {
+	    key: 'playCards',
+	    value: function playCards() {
+	      var played = [false, false, false, false, false];
+	      var i;
+	      for (i = 0; i < this.state.chosenCards.length; i++) {
+	        played[parseInt(this.state.chosenCards.slice(i, i + 1))] = !played[parseInt(this.state.chosenCards.slice(i, i + 1))];
+	      }
+
+	      var newDiscard = this.state.discard;
+	      var newHand = this.state.hand;
+	      for (i = 4; i >= 0; i -= 1) {
+	        if (played[i]) {
+	          newDiscard.unshift(this.state.hand[i]);
+	          newHand.splice(i, 1);
+	        }
+	      }
+
+	      console.log("current turn is", this.state.turn, "...finished playing and about to change turn to", (this.state.turn + 1) % this.props.usersPlaying.length);
+	      this.props.pubnubDemo.publish({
+	        message: {
+	          playing: true,
+	          turn: (this.state.turn + 1) % this.props.usersPlaying.length,
+	          discard: this.state.discard
+	        },
+	        channel: this.gameChannel
+	      });
+	      this.setState({
+	        hand: newHand,
+	        discard: newDiscard,
+	        isTurn: false,
+	        chosenCards: '',
+	        hasDrawn: false
+	      });
+	    }
+	    // playHand(){
+
+	    // }
+
+	  }, {
+	    key: 'dealCards',
+	    value: function dealCards() {
+	      var deq = this.shuffle(['AC', '2C', '3C', '4C', '5C', '6C', '7C', '8C', '9C', '10C', 'JC', 'QC', 'KC', 'AD', '2D', '3D', '4D', '5D', '6D', '7D', '8D', '9D', '10D', 'JD', 'QD', 'KD', 'AH', '2H', '3H', '4H', '5H', '6H', '7H', '8H', '9H', '10H', 'JH', 'QH', 'KH', 'AS', '2S', '3S', '4S', '5S', '6S', '7S', '8S', '9S', '10S', 'JS', 'QS', 'KS']);
+	      this.props.pubnubDemo.publish({
+	        message: {
+	          dealing: true,
+	          nextToDraw: 0,
+	          deck: deq
+	        },
+	        channel: this.gameChannel
+	      });
+	    }
+	    /*
+	     * Shuffle function sourced from http://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
+	     */
+
+	  }, {
+	    key: 'shuffle',
+	    value: function shuffle(array) {
+	      var currentIndex = array.length,
+	          temporaryValue,
+	          randomIndex;
+
+	      // While there remain elements to shuffle...
+	      while (0 !== currentIndex) {
+
+	        // Pick a remaining element...
+	        randomIndex = Math.floor(Math.random() * currentIndex);
+	        currentIndex -= 1;
+
+	        // And swap it with the current element.
+	        temporaryValue = array[currentIndex];
+	        array[currentIndex] = array[randomIndex];
+	        array[randomIndex] = temporaryValue;
+	      }
+	      return array;
+	    }
+	  }, {
+	    key: 'drawFromDeck',
+	    value: function drawFromDeck() {
+	      var card = this.state.deck.shift();
+	      var indexInUsers = this.getUserIndex();
+	      //update hand
+	      this.state.hand.push(card);
+	      this.setState({
+	        hasDrawn: true
+	      });
+
+	      // update deck
+	      this.props.pubnubDemo.publish({
+	        message: {
+	          deck: this.state.deck
+	        },
+	        channel: this.gameChannel
+	      });
+	    }
+	  }, {
+	    key: 'drawFromDiscard',
+	    value: function drawFromDiscard() {
+	      var card = this.state.discard.shift();
+	      var indexInUsers = this.getUserIndex();
+	      //update hand
+	      this.state.hand.push(card);
+	      this.setState({
+	        hasDrawn: true
+	      });
+
+	      // update discard
+	      this.props.pubnubDemo.publish({
+	        message: {
+	          discard: this.state.discard
+	        },
+	        channel: this.gameChannel
+	      });
+	    }
+	  }, {
+	    key: 'playHand',
+	    value: function playHand() {
+	      console.log("My turn to play!");
+	      this.setState({
+	        isTurn: true
+	      });
+	    }
+	  }, {
+	    key: 'yusef',
+	    value: function yusef() {
+	      var myCount = this.summ(this.state.hand);
+	      console.log("called yusef with hand of value ", myCount);
+	      this.props.pubnubDemo.publish({
+	        message: {
+	          dealing: false,
+	          fixDeckAfterDeal: false,
+	          checkingYusef: true,
+	          nextToCheck: 0,
+	          callerId: this.props.pubnubDemo.getUUID(),
+	          count: myCount,
+	          failed: false
+	        },
+	        channel: this.gameChannel
+	      });
+	    }
+	  }, {
+	    key: 'summ',
+	    value: function summ(arr) {
+	      var count = 0;
+	      var i;
+	      console.log(this.state.hand);
+	      for (i = 0; i < this.state.hand.length; i++) {
+	        if (this.state.hand[i].charCodeAt(0) <= "9".charCodeAt(0) && this.state.hand[i].charCodeAt(0) >= "2".charCodeAt(0)) {
+	          count += this.state.hand[i].charCodeAt(0) - "0".charCodeAt(0);
+	        } else if (this.state.hand[i].slice(0, 1) == "A") {
+	          count += 1;
+	        } else {
+	          count += 10;
+	        }
+	      }
+	      console.log(count);
+	      return count;
+	    }
+	  }, {
 	    key: 'render',
 	    value: function render() {
+	      var _this2 = this;
+
 	      return _react2.default.createElement(
 	        'div',
 	        { className: 'Game', style: { display: this.props.gameStarted ? "block" : "none" } },
-	        'TEST THIS SHOULD BE INVISIBLE UNTIL START',
+	        _react2.default.createElement(
+	          'button',
+	          { type: 'button',
+	            onClick: this.dealCards,
+	            className: 'btn btn-lg btn-default',
+	            style: { display: this.state.canDeal ? "block" : "none" } },
+	          'Deal'
+	        ),
 	        _react2.default.createElement(
 	          'div',
-	          { id: 'deck' },
+	          { id: 'deck', style: { display: this.state.callStatus == 0 ? "block" : "none" } },
 	          'Deck Cards Left: ',
 	          this.state.deck.length
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          { id: 'deckCards', style: { display: this.state.callStatus == 0 ? "block" : "none" } },
+	          'Deck Cards: ',
+	          this.state.deck
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          { id: 'discard', style: { display: this.state.callStatus == 0 ? "block" : "none" } },
+	          'Discard Pile Size: ',
+	          this.state.discard.length
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          { id: 'discardCards', style: { display: this.state.callStatus == 0 ? "block" : "none" } },
+	          'Discard Cards: ',
+	          this.state.discard
+	        ),
+	        _react2.default.createElement(
+	          'button',
+	          { className: 'col-md-4', style: { display: this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn ? "block" : "none" }, onClick: this.drawFromDeck },
+	          '  DRAW A CARD FROM DECK '
+	        ),
+	        _react2.default.createElement(
+	          'button',
+	          { className: 'col-md-4', style: { display: this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn ? "block" : "none" }, onClick: this.drawFromDiscard },
+	          '  DRAW A CARD FROM DISCARD '
+	        ),
+	        _react2.default.createElement('div', { className: 'col-md-4' }),
+	        _react2.default.createElement('br', null),
+	        _react2.default.createElement(
+	          'div',
+	          { id: 'hand', style: { display: this.state.callStatus == 0 && !(this.state.isTurn && this.state.hasDrawn) ? "block" : "none" } },
+	          this.state.hand.map(function (name, index) {
+	            return _react2.default.createElement(
+	              'div',
+	              { className: 'col-md-2' },
+	              '  Card ',
+	              index + 1,
+	              ': ',
+	              _this2.state.hand[index],
+	              '  '
+	            );
+	          }),
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'col-md-2' },
+	            '  DRAWN CARD  '
+	          )
+	        ),
+	        _react2.default.createElement('br', null),
+	        _react2.default.createElement(
+	          'div',
+	          { id: 'hand', style: { display: this.state.callStatus == 0 && this.state.isTurn && this.state.hasDrawn ? "block" : "none" } },
+	          this.state.hand.map(function (name, index) {
+	            return _react2.default.createElement(
+	              'button',
+	              { className: 'col-md-2', onClick: _this2.select.bind(_this2, index) },
+	              '  Card ',
+	              index + 1,
+	              ': ',
+	              _this2.state.hand[index],
+	              '  '
+	            );
+	          }),
+	          _react2.default.createElement(
+	            'button',
+	            { className: 'col-md-2', onClick: this.playCards },
+	            '  SUBMIT CHOICES '
+	          )
+	        ),
+	        _react2.default.createElement(
+	          'button',
+	          { type: 'button',
+	            onClick: this.yusef,
+	            className: 'btn btn-lg btn-default',
+	            style: { display: this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn ? "block" : "none" } },
+	          'YUSEF!'
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          { id: 'passCall', style: { display: this.state.callStatus == 1 ? "block" : "none" } },
+	          'Your Call Passed!'
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          { id: 'failCall', style: { display: this.state.callStatus == -1 ? "block" : "none" } },
+	          'Your Call Failed!'
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          { id: 'passCall', style: { display: this.state.callStatus == 2 ? "block" : "none" } },
+	          'Another Players Call Passed!'
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          { id: 'failCall', style: { display: this.state.callStatus == -2 ? "block" : "none" } },
+	          'Another Players Call Failed!'
 	        )
 	      );
 	    }
@@ -30142,6 +30616,248 @@
 		return CryptoJS.RabbitLegacy;
 
 	}));
+
+/***/ },
+/* 229 */
+/***/ function(module, exports) {
+
+	/*! store2 - v2.5.0 - 2017-01-09
+	* Copyright (c) 2017 Nathan Bubna; Licensed MIT, GPL */
+	;(function(window, define) {
+	    var _ = {
+	        version: "2.5.0",
+	        areas: {},
+	        apis: {},
+
+	        // utilities
+	        inherit: function(api, o) {
+	            for (var p in api) {
+	                if (!o.hasOwnProperty(p)) {
+	                    o[p] = api[p];
+	                }
+	            }
+	            return o;
+	        },
+	        stringify: function(d) {
+	            return d === undefined || typeof d === "function" ? d+'' : JSON.stringify(d);
+	        },
+	        parse: function(s) {
+	            // if it doesn't parse, return as is
+	            try{ return JSON.parse(s); }catch(e){ return s; }
+	        },
+
+	        // extension hooks
+	        fn: function(name, fn) {
+	            _.storeAPI[name] = fn;
+	            for (var api in _.apis) {
+	                _.apis[api][name] = fn;
+	            }
+	        },
+	        get: function(area, key){ return area.getItem(key); },
+	        set: function(area, key, string){ area.setItem(key, string); },
+	        remove: function(area, key){ area.removeItem(key); },
+	        key: function(area, i){ return area.key(i); },
+	        length: function(area){ return area.length; },
+	        clear: function(area){ area.clear(); },
+
+	        // core functions
+	        Store: function(id, area, namespace) {
+	            var store = _.inherit(_.storeAPI, function(key, data, overwrite) {
+	                if (arguments.length === 0){ return store.getAll(); }
+	                if (typeof data === "function"){ return store.transact(key, data, overwrite); }// fn=data, alt=overwrite
+	                if (data !== undefined){ return store.set(key, data, overwrite); }
+	                if (typeof key === "string" || typeof key === "number"){ return store.get(key); }
+	                if (!key){ return store.clear(); }
+	                return store.setAll(key, data);// overwrite=data, data=key
+	            });
+	            store._id = id;
+	            try {
+	                var testKey = '_safariPrivate_';
+	                area.setItem(testKey, 'sucks');
+	                store._area = area;
+	                area.removeItem(testKey);
+	            } catch (e) {}
+	            if (!store._area) {
+	                store._area = _.inherit(_.storageAPI, { items: {}, name: 'fake' });
+	            }
+	            store._ns = namespace || '';
+	            if (!_.areas[id]) {
+	                _.areas[id] = store._area;
+	            }
+	            if (!_.apis[store._ns+store._id]) {
+	                _.apis[store._ns+store._id] = store;
+	            }
+	            return store;
+	        },
+	        storeAPI: {
+	            // admin functions
+	            area: function(id, area) {
+	                var store = this[id];
+	                if (!store || !store.area) {
+	                    store = _.Store(id, area, this._ns);//new area-specific api in this namespace
+	                    if (!this[id]){ this[id] = store; }
+	                }
+	                return store;
+	            },
+	            namespace: function(namespace, noSession) {
+	                if (!namespace){
+	                    return this._ns ? this._ns.substring(0,this._ns.length-1) : '';
+	                }
+	                var ns = namespace, store = this[ns];
+	                if (!store || !store.namespace) {
+	                    store = _.Store(this._id, this._area, this._ns+ns+'.');//new namespaced api
+	                    if (!this[ns]){ this[ns] = store; }
+	                    if (!noSession){ store.area('session', _.areas.session); }
+	                }
+	                return store;
+	            },
+	            isFake: function(){ return this._area.name === 'fake'; },
+	            toString: function() {
+	                return 'store'+(this._ns?'.'+this.namespace():'')+'['+this._id+']';
+	            },
+
+	            // storage functions
+	            has: function(key) {
+	                if (this._area.has) {
+	                    return this._area.has(this._in(key));//extension hook
+	                }
+	                return !!(this._in(key) in this._area);
+	            },
+	            size: function(){ return this.keys().length; },
+	            each: function(fn, and) {
+	                for (var i=0, m=_.length(this._area); i<m; i++) {
+	                    var key = this._out(_.key(this._area, i));
+	                    if (key !== undefined) {
+	                        if (fn.call(this, key, and || this.get(key)) === false) {
+	                            break;
+	                        }
+	                    }
+	                    if (m > _.length(this._area)) { m--; i--; }// in case of removeItem
+	                }
+	                return and || this;
+	            },
+	            keys: function() {
+	                return this.each(function(k, list){ list.push(k); }, []);
+	            },
+	            get: function(key, alt) {
+	                var s = _.get(this._area, this._in(key));
+	                return s !== null ? _.parse(s) : alt || s;// support alt for easy default mgmt
+	            },
+	            getAll: function() {
+	                return this.each(function(k, all){ all[k] = this.get(k); }, {});
+	            },
+	            transact: function(key, fn, alt) {
+	                var val = this.get(key, alt),
+	                    ret = fn(val);
+	                this.set(key, ret === undefined ? val : ret);
+	                return this;
+	            },
+	            set: function(key, data, overwrite) {
+	                var d = this.get(key);
+	                if (d != null && overwrite === false) {
+	                    return data;
+	                }
+	                return _.set(this._area, this._in(key), _.stringify(data), overwrite) || d;
+	            },
+	            setAll: function(data, overwrite) {
+	                var changed, val;
+	                for (var key in data) {
+	                    val = data[key];
+	                    if (this.set(key, val, overwrite) !== val) {
+	                        changed = true;
+	                    }
+	                }
+	                return changed;
+	            },
+	            remove: function(key) {
+	                var d = this.get(key);
+	                _.remove(this._area, this._in(key));
+	                return d;
+	            },
+	            clear: function() {
+	                if (!this._ns) {
+	                    _.clear(this._area);
+	                } else {
+	                    this.each(function(k){ _.remove(this._area, this._in(k)); }, 1);
+	                }
+	                return this;
+	            },
+	            clearAll: function() {
+	                var area = this._area;
+	                for (var id in _.areas) {
+	                    if (_.areas.hasOwnProperty(id)) {
+	                        this._area = _.areas[id];
+	                        this.clear();
+	                    }
+	                }
+	                this._area = area;
+	                return this;
+	            },
+
+	            // internal use functions
+	            _in: function(k) {
+	                if (typeof k !== "string"){ k = _.stringify(k); }
+	                return this._ns ? this._ns + k : k;
+	            },
+	            _out: function(k) {
+	                return this._ns ?
+	                    k && k.indexOf(this._ns) === 0 ?
+	                        k.substring(this._ns.length) :
+	                        undefined : // so each() knows to skip it
+	                    k;
+	            }
+	        },// end _.storeAPI
+	        storageAPI: {
+	            length: 0,
+	            has: function(k){ return this.items.hasOwnProperty(k); },
+	            key: function(i) {
+	                var c = 0;
+	                for (var k in this.items){
+	                    if (this.has(k) && i === c++) {
+	                        return k;
+	                    }
+	                }
+	            },
+	            setItem: function(k, v) {
+	                if (!this.has(k)) {
+	                    this.length++;
+	                }
+	                this.items[k] = v;
+	            },
+	            removeItem: function(k) {
+	                if (this.has(k)) {
+	                    delete this.items[k];
+	                    this.length--;
+	                }
+	            },
+	            getItem: function(k){ return this.has(k) ? this.items[k] : null; },
+	            clear: function(){ for (var k in this.list){ this.removeItem(k); } },
+	            toString: function(){ return this.length+' items in '+this.name+'Storage'; }
+	        }// end _.storageAPI
+	    };
+
+	    var store =
+	        // safely set this up (throws error in IE10/32bit mode for local files)
+	        _.Store("local", (function(){try{ return localStorage; }catch(e){}})());
+	    store.local = store;// for completeness
+	    store._ = _;// for extenders and debuggers...
+	    // safely setup store.session (throws exception in FF for file:/// urls)
+	    store.area("session", (function(){try{ return sessionStorage; }catch(e){}})());
+
+	    if (typeof define === 'function' && define.amd !== undefined) {
+	        define('store2', [], function () {
+	            return store;
+	        });
+	    } else if (typeof module !== 'undefined' && module.exports) {
+	        module.exports = store;
+	    } else {
+	        // expose the primary store fn to the global object and save conflicts
+	        if (window.store){ _.conflict = window.store; }
+	        window.store = store;
+	    }
+
+	})(this, this.define);
+
 
 /***/ }
 /******/ ]);

@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import ClassNames from 'classnames';
 import Game from './Game';
 import TweetInput from './TweetInput';
+import Store from 'store2';
 
 class Main extends React.Component{
   constructor(props) {
@@ -21,20 +22,19 @@ class Main extends React.Component{
     this.state = {
       host: false,
       gameStarted: false,
-      countdown: 3,
-      isSelected: false,
+      countdown: 5,
       isReady: false,
       usersReady: [],
       usersPlaying: null
     }
 
-    this.channelName = 'testChannel1'
+    this.channelName = Store.get('channelName');
   }
 
 
   assignHost(presenceEvent){
     if (presenceEvent.action == "join"){
-      console.log(presenceEvent.uuid + " has joined.")
+      console.log(presenceEvent.uuid + " has joined " + presenceEvent.channel)
     }
     // first one here is host
     if (presenceEvent.action == "join" && presenceEvent.occupancy == 1){
@@ -188,7 +188,7 @@ class Main extends React.Component{
         if (status.error) {
           console.log(status);
         } else {
-          console.log("message Published w/ timetoken", response.timetoken);
+          // console.log("message Published w/ timetoken", response.timetoken);
         }
       }
       );
@@ -201,12 +201,13 @@ class Main extends React.Component{
     //this.startCountdown();
   }
   gameStart() {
-    if(!this.state.host)
+    if(!this.state.host || !this.state.isReady)
       return
     this.pubnubDemo.publish(
     {
       message: {
-        game: 'start_countdown'
+        game: 'start_countdown',
+        usersPlaying: this.state.usersReady
       },
       channel: this.channelName
     },
@@ -222,9 +223,9 @@ class Main extends React.Component{
   startCountdown() {
     if (this.state.countdown <= 0) {
       console.log("GAME IS STARTING");
+      console.log(this.state.usersPlaying)
       this.setState({
         gameStarted: true,
-        usersPlaying: this.state.usersReady
       })
     } else {
       this.setState({
@@ -233,33 +234,40 @@ class Main extends React.Component{
         setTimeout(this.startCountdown, 1000); // check again in a second
       }
     }
-    render() {
-      const cssClasses = ClassNames({
-        'btn': true, 
-        'btn-lg': true, 
-        'btn-default': true,
-        'Button': true,
-        'is-selected': this.state.isSelected
-      });
+  render() {
+    const buttonCSS = ClassNames({
+      'btn': true, 
+      'btn-default': true,
+      'Button': true,
+      'is-ready': this.state.isReady ? true : false
+    });
 
-      return (
-        <div className='Index'>
-          <button type="button"
-          onClick={this.getReady}
-          className='btn btn-lg btn-default'>
-          Ready
-          </button>
-          <button type="button"
-          onClick={this.gameStart}
-          className='btn btn-lg btn-default'>
+    const countdownCSS = ClassNames({
+      'should-hide': this.state.gameStarted ? true : false
+    })
+
+    return (
+      <div className='Index container'>
+        <p className={countdownCSS + " countdown-label"}>
+          Countdown
+        </p>
+        <p className={countdownCSS + " countdown-number"}>
+          {this.state.countdown}
+        </p>
+
+        <button type="button" onClick={this.getReady}
+                className={buttonCSS + ' ready-button'}>
+          {this.state.isReady ? "Ready" : "Not Ready Yet"}
+        </button>
+        <button type="button" onClick={this.gameStart}
+                className={buttonCSS + ' start-button'}>
           Start game
-          </button>
-          <h1> {this.state.isReady ? "READY" : "NOT READY YET"} </h1>
-          <h1 style={{display: (this.state.gameStarted ? "none" : "block")}}> COUNTDOWN: {this.state.countdown} </h1>
-          <Game gameStarted={this.state.gameStarted}/>
-          <TweetInput />
-        </div>
-        )
+        </button>
+
+        <Game isHost={this.state.isHost} usersPlaying={this.state.usersPlaying} gameStarted={this.state.gameStarted} pubnubDemo={this.pubnubDemo} channelName={this.channelName}/>
+        <TweetInput />
+      </div>
+      )
     }
   }
 

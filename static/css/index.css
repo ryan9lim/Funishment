@@ -1,18 +1,64 @@
-.Index button {
-  border-radius: 25px;
-  border: 1px solid #3A6BFF;
-  color: #3A6BFF;
-  font-size: 12px;
+html {
 }
 
-.Index button.is-selected {
+.Index.container {
+  text-align: center;
+  margin-top: 200px;
+}
+
+.Index button {
+  border-radius: 5px;
   border: 1px solid #3A6BFF;
-  background-color: #3A6BFF;
+  color: #3A6BFF;
+  font-size: 16px;
+  margin: 10px;
+  width: 200px;
+  height: 40px;
+}
+
+.Index button {
+  border: 1px solid #3A6BFF;
   color: #FFFFFF;
+  background-color: #3A6BFF;
+
+  border-radius: 5px;
+  font-size: 16px;
+  margin: 10px;
+  width: 200px;
+  height: 40px;
+}
+
+.Index .ready-button:focus {
+  outline: none;
+}
+
+.Index .ready-button.is-ready {
+  border: 1px solid #3A6BFF;
+  color: #3A6BFF;
+  background-color: #FFFFFF;
 }
 
 .Index button:hover {
-  border: 1px solid #668CFF;
-  background-color: #668CFF;
-  color: #FFFFFF;
+  border: 1px solid #3A6BFF;
+  color: #3A6BFF;
+  background-color: #FFFFFF;
+}
+
+.Index .countdown-number {
+  font-size: 96px;
+  color: #3A6BFF;
+  margin-top: -40px;
+  margin-bottom: 0px;
+}
+
+.Index .countdown-label {
+  color: #3A6BFF;
+}
+
+.Index .countdown-number.should-hide {
+  display: none;
+}
+
+.Index .countdown-label.should-hide {
+  display: none;
 }
