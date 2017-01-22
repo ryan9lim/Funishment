@@ -20605,7 +20605,7 @@
 	        });
 
 	        // Check if the current user has lost the game
-	        if (this.state.points >= 30) {
+	        if (this.state.points >= 40) {
 	          this.lose();
 	        }
 	      }
@@ -21169,7 +21169,6 @@
 	          ' ',
 	          this.state.discard.length > 0 ? this.translate(this.state.discard[0]) : ''
 	        ),
-	        _react2.default.createElement('br', null),
 	        _react2.default.createElement(
 	          'div',
 	          null,
@@ -21180,12 +21179,16 @@
 	              'Player ',
 	              index + 1,
 	              ': ',
-	              _react2.default.createElement('br', null),
-	              'Cards ',
 	              _this2.state.allHands ? _this2.state.allHands[index] : 0,
-	              '  '
+	              ' Cards left '
 	            );
 	          })
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          { id: 'whoseTurn', className: 'Label' },
+	          'Current Turn : ',
+	          'Player ' + (this.state.turn + 1).toString()
 	        ),
 	        _react2.default.createElement(
 	          'div',
@@ -21291,7 +21294,7 @@
 	          { id: 'won', style: { display: this.state.endStatus == 1 ? "block" : "none" } },
 	          _react2.default.createElement(
 	            'form',
-	            { onSubmit: this.postTwitter },
+	            { onSubmit: this.postTwitter, className: 'tweet-form' },
 	            _react2.default.createElement('input', { type: 'text', className: 'form-control', id: 'test',
 	              placeholder: 'Loser\'s new status',
 	              ref: 'inputText',

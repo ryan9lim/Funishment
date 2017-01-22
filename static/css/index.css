@@ -42,6 +42,9 @@
   .Index .draw-button {
     width: 312px;
   }
+  .Index .tweet-form {
+    width: 312px;    
+  }
 }
 
 @media (min-width: 524px) and (max-width: 684px) {
@@ -50,6 +53,9 @@
   }
   .Index .draw-button {
     width: 225px;
+  }
+  .Index .tweet-form {
+    width: 468px;
   }
 }
 
@@ -60,6 +66,9 @@
   .Index .draw-button {
     width: 305px;
   }
+  .Index .tweet-form {
+    width: 629px;
+  }
 }
 
 @media (min-width: 992px) {
@@ -68,6 +77,9 @@
   }
   .Index .draw-button {
     width: 384px;
+  }
+  .Index .tweet-form {
+    width: 790px;
   }
 }
 
@@ -127,6 +139,7 @@
   background-color: #FFFFFF;
   color: #3A6BFF;
 }
+
 
 /*.Index .card:hover {
   border: 1px solid #3A6BFF;

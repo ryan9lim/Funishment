@@ -320,7 +320,7 @@ class Game extends React.Component {
       });
 
       // Check if the current user has lost the game
-      if(this.state.points >= 30){
+      if(this.state.points >= 40){
         this.lose();
       }
     }
@@ -870,15 +870,20 @@ class Game extends React.Component {
         <div id='topCard' className={'Label ' + this.shouldHide(this.state.callStatus == 0)}>
           Top Card of Discard Pile : <br/> {(this.state.discard.length > 0) ? this.translate(this.state.discard[0]) : ''}
         </div>
-        <br />
         <div>
           {Array(this.props.usersPlaying ? this.props.usersPlaying.length : 0).fill(" ").map((name, index) => 
-            (<div className='Label' style={{display: ((index != this.getUserIndex()) ? "block" : "none")}}>Player {index+1}: <br/>Cards {this.state.allHands ? this.state.allHands[index] : 0}  </div>)
+            (<div className='Label' style={{display: ((index != this.getUserIndex()) ? "block" : "none")}}>Player {index+1}: {this.state.allHands ? this.state.allHands[index] : 0} Cards left </div>)
           )}
         </div>
+        <div id='whoseTurn' className="Label">
+          Current Turn : {'Player ' + (this.state.turn + 1).toString()}
+        </div>
+
         <div id='points' className="scoreboard">
           Total Points : {this.state.points}
         </div>
+
+
 
 
         {/* Draw Buttons */}
@@ -974,7 +979,7 @@ class Game extends React.Component {
         </div>
 
         <div id='won' style={{display: ((this.state.endStatus == 1) ? "block" : "none")}}>
-          <form onSubmit={this.postTwitter}>
+          <form onSubmit={this.postTwitter} className={'tweet-form'}>
             <input type="text" className="form-control" id="test"
                    placeholder="Loser's new status" 
                    ref="inputText"
