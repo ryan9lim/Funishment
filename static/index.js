@@ -19828,6 +19828,10 @@
 	    };
 
 	    _this.channelName = _store2.default.get('channelName');
+<<<<<<< HEAD
+=======
+	    _this.channelName = 'stupidChannel1111';
+>>>>>>> f04840e47cbe3673cb9ed3647c10b409c41baf2a
 	    return _this;
 	  }
 
@@ -20185,15 +20189,17 @@
 
 	    var _this = _possibleConstructorReturn(this, (Game.__proto__ || Object.getPrototypeOf(Game)).call(this, props));
 
+	    _this.yusef = _this.yusef.bind(_this);
 	    _this.dealCards = _this.dealCards.bind(_this);
 	    _this.updateOnListener = _this.updateOnListener.bind(_this);
 	    _this.state = {
 	      deck: ['DECK NOT INIITIALIZED'],
 	      handDealt: false,
 	      discard: [],
-	      hand: ['test1', 'test2', 'test3', 'test4', 'test5']
+	      hand: ['empty', 'empty', 'empty', 'empty', 'empty'],
+	      callStatus: 0 // 1 is you win, -1 is you lose, 2 is someone else won, -2 is someone else lost
 	    };
-	    _this.gameChannel = 'gameChannel6';
+	    _this.gameChannel = 'gameChannel0011';
 	    return _this;
 	  }
 	  /*
@@ -20231,6 +20237,8 @@
 	        }
 
 	        console.log("current user has index in array of ", indexInUsers);
+	        console.log("array of users is ", this.props.usersPlaying);
+	        console.log("size of array of users is ", this.props.usersPlaying.length);
 
 	        if (indexInUsers == response.message.nextToDraw) {
 	          var han = response.message.deck.slice(0, 5);
@@ -20243,7 +20251,16 @@
 	                nextToDraw: response.message.nextToDraw + 1,
 	                deck: deq
 	              },
-	              channel: this.props.gameChannel
+	              channel: this.gameChannel
+	            });
+	          } else {
+	            this.props.pubnubDemo.publish({
+	              message: {
+	                dealing: false,
+	                fixDeckAfterDeal: true,
+	                deck: deq
+	              },
+	              channel: this.gameChannel
 	            });
 	          } else {
 	            this.props.pubnubDemo.publish({
@@ -20266,6 +20283,82 @@
 	        this.setState({
 	          deck: response.message.deck
 	        });
+<<<<<<< HEAD
+=======
+	      } else if (response.message.checkingYusef) {
+	        if (response.message.nextToCheck >= this.props.usersPlaying.length && response.message.callerId == this.props.pubnubDemo.getUUID()) {
+	          var pf;
+	          if (response.message.failed) {
+	            pf = -1;
+	          } else {
+	            pf = 1;
+	          }
+
+	          console.log("check came back around and the result was ", pf);
+
+	          this.props.pubnubDemo.publish({
+	            message: {
+	              dealing: false,
+	              fixDeckAfterDeal: false,
+	              checkingYusef: false,
+	              confirmingYusef: true,
+	              callerId: this.props.pubnubDemo.getUUID(),
+	              callStatus: pf
+	            },
+	            channel: this.gameChannel
+	          });
+	        } else {
+	          var indexInUsers = -1;
+	          var i;
+	          for (i = 0; i < this.props.usersPlaying.length; i++) {
+	            if (this.props.usersPlaying[i] == this.props.pubnubDemo.getUUID()) {
+	              indexInUsers = i;
+	              break;
+	            }
+	          }
+
+	          if (indexInUsers == response.message.nextToCheck) {
+	            console.log("checked yusef. their call was ", response.message.count, " and mine was ", this.summ(this.state.hand));
+	            var fail = response.message.failed;
+	            if (!response.message.failed && response.message.callerId != this.props.pubnubDemo.getUUID() && response.message.count >= this.summ(this.state.hand)) {
+	              fail = true;
+	            }
+
+	            console.log("fail is", fail);
+	            this.props.pubnubDemo.publish({
+	              message: {
+	                dealing: false,
+	                fixDeckAfterDeal: false,
+	                checkingYusef: true,
+	                nextToCheck: response.message.nextToCheck + 1,
+	                callerId: response.message.callerId,
+	                count: response.message.count,
+	                failed: fail
+	              },
+	              channel: this.gameChannel
+	            });
+	          }
+	        }
+	      } else if (response.message.confirmingYusef) {
+	        var stat;
+	        if (response.message.callStatus > 0) {
+	          if (response.message.callerId == this.props.pubnubDemo.getUUID()) {
+	            stat = 1;
+	          } else {
+	            stat = 2;
+	          }
+	        } else {
+	          if (response.message.callerId == this.props.pubnubDemo.getUUID()) {
+	            stat = -1;
+	          } else {
+	            stat = -2;
+	          }
+	        }
+
+	        this.setState({
+	          callStatus: stat
+	        });
+>>>>>>> f04840e47cbe3673cb9ed3647c10b409c41baf2a
 	      }
 	    }
 	  }, {
@@ -20308,6 +20401,42 @@
 	      return array;
 	    }
 	  }, {
+	    key: 'yusef',
+	    value: function yusef() {
+	      var myCount = this.summ(this.state.hand);
+	      console.log("called yusef with hand of value ", myCount);
+	      this.props.pubnubDemo.publish({
+	        message: {
+	          dealing: false,
+	          fixDeckAfterDeal: false,
+	          checkingYusef: true,
+	          nextToCheck: 0,
+	          callerId: this.props.pubnubDemo.getUUID(),
+	          count: myCount,
+	          failed: false
+	        },
+	        channel: this.gameChannel
+	      });
+	    }
+	  }, {
+	    key: 'summ',
+	    value: function summ(arr) {
+	      var count = 0;
+	      var i;
+	      console.log(this.state.hand);
+	      for (i = 0; i < this.state.hand.length && this.state.hand[i] != "empty"; i++) {
+	        if (this.state.hand[i].charCodeAt(0) <= "9".charCodeAt(0) && this.state.hand[i].charCodeAt(0) >= "2".charCodeAt(0)) {
+	          count += this.state.hand[i].charCodeAt(0) - "0".charCodeAt(0);
+	        } else if (this.state.hand[i].slice(0, 1) == "A") {
+	          count += 1;
+	        } else {
+	          count += 10;
+	        }
+	      }
+	      console.log(count);
+	      return count;
+	    }
+	  }, {
 	    key: 'render',
 	    value: function render() {
 	      return _react2.default.createElement(
@@ -20322,63 +20451,63 @@
 	        ),
 	        _react2.default.createElement(
 	          'div',
-	          { id: 'deck' },
+	          { id: 'deck', style: { display: this.state.callStatus == 0 ? "block" : "none" } },
 	          'Deck Cards Left: ',
 	          this.state.deck.length
 	        ),
 	        _react2.default.createElement(
 	          'div',
-	          { id: 'deckCards' },
+	          { id: 'deckCards', style: { display: this.state.callStatus == 0 ? "block" : "none" } },
 	          'Deck Cards: ',
 	          this.state.deck
 	        ),
 	        _react2.default.createElement(
 	          'div',
-	          { id: 'discard' },
+	          { id: 'discard', style: { display: this.state.callStatus == 0 ? "block" : "none" } },
 	          'Discard Pile Size: ',
 	          this.state.discard.length
 	        ),
 	        _react2.default.createElement(
 	          'div',
-	          { id: 'discardCards' },
+	          { id: 'discardCards', style: { display: this.state.callStatus == 0 ? "block" : "none" } },
 	          'Discard Cards: ',
 	          this.state.discard
 	        ),
 	        _react2.default.createElement(
 	          'div',
-	          { id: 'hand' },
+	          { id: 'hand', style: { display: this.state.callStatus == 0 ? "block" : "none" } },
 	          _react2.default.createElement(
 	            'div',
 	            { className: 'col-md-2' },
-	            '  ',
+	            '  Card 1: ',
 	            this.state.hand[0],
 	            '  '
 	          ),
 	          _react2.default.createElement(
 	            'div',
 	            { className: 'col-md-2' },
-	            '  ',
+	            '  Card 2: ',
 	            this.state.hand[1],
 	            '  '
 	          ),
 	          _react2.default.createElement(
 	            'div',
 	            { className: 'col-md-2' },
-	            '  ',
+	            '  Card 3: ',
 	            this.state.hand[2],
 	            '  '
 	          ),
 	          _react2.default.createElement(
 	            'div',
 	            { className: 'col-md-2' },
-	            '  ',
+	            '  Card 4: ',
 	            this.state.hand[3],
 	            '  '
 	          ),
 	          _react2.default.createElement(
 	            'div',
 	            { className: 'col-md-2' },
-	            '  ',
+	            '  Card 5: ',
 	            this.state.hand[4],
 	            '  '
 	          ),
@@ -20387,6 +20516,34 @@
 	            { className: 'col-md-2' },
 	            '  DRAWN CARD  '
 	          )
+	        ),
+	        _react2.default.createElement(
+	          'button',
+	          { type: 'button',
+	            onClick: this.yusef,
+	            className: 'btn btn-lg btn-default',
+	            style: { display: this.state.callStatus == 0 ? "block" : "none" } },
+	          'YUSEF!'
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          { id: 'passCall', style: { display: this.state.callStatus == 1 ? "block" : "none" } },
+	          'Your Call Passed!'
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          { id: 'failCall', style: { display: this.state.callStatus == -1 ? "block" : "none" } },
+	          'Your Call Failed!'
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          { id: 'passCall', style: { display: this.state.callStatus == 2 ? "block" : "none" } },
+	          'Another Players Call Passed!'
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          { id: 'failCall', style: { display: this.state.callStatus == -2 ? "block" : "none" } },
+	          'Another Players Call Failed!'
 	        )
 	      );
 	    }

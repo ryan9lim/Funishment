@@ -29,7 +29,6 @@ class Main extends React.Component{
       usersPlaying: null
     }
 
-
     this.channelName = Store.get('channelName');
   }
 
@@ -209,7 +208,7 @@ class Main extends React.Component{
     {
       message: {
         game: 'start_countdown',
-        usersPlaying:this.state.usersReady
+        usersPlaying: this.state.usersReady
       },
       channel: this.channelName
     },
