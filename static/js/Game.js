@@ -109,6 +109,7 @@ class Game extends React.Component {
     // Updates discard and lastPlay
     if (response.message.discard != null) {
       console.log("size of discard is ", response.message.discard.length);
+      console.log("lastPlay is ", response.message.lastPlay);
       this.setState({
         discard: response.message.discard,
         lastPlay: response.message.lastPlay
@@ -183,7 +184,6 @@ class Game extends React.Component {
 
         // Set own state to reflect the cards I just drew
         this.setState({
-          discard: [],
           deck: deq,
           hand: han,
           canDeal: false,
@@ -526,12 +526,22 @@ class Game extends React.Component {
       'AS', '2S', '3S', '4S', '5S', '6S', '7S', '8S', '9S', '10S', 'JS', 'QS', 'KS'
     ]);
 
+    // Take the first card and make it the first discard card
+    var disc = [];
+    disc.unshift(deq[0]);
+    deq = deq.slice(1);
+
+    console.log("initial discard pile is", disc);
+    console.log("initial deck is", deq);
+
     // Publish packet with deck for the sake of dealing starting hands
     this.props.pubnubDemo.publish({
       message: {
         dealing: true,
         nextToDraw: 0,
-        deck: deq
+        deck: deq,
+        discard: disc,
+        lastPlay: []
       },
       channel: this.gameChannel
     });
@@ -630,7 +640,7 @@ class Game extends React.Component {
     // Publish packet telling users to update discard and lastPlay
     this.props.pubnubDemo.publish({
       message: {
-        discard: this.state.discard,
+        discard: this.state.discard.slice(1),
         lastPlay: this.state.lastPlay
       },
       channel: this.gameChannel
