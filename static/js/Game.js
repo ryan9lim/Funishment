@@ -20,10 +20,9 @@ class Game extends React.Component {
       discard: [],
       hand: [],
       callStatus: 0, // 1 is you win, -1 is you lose, 2 is someone else won, -2 is someone else lost
-      hand: ['empty', 'empty', 'empty','empty','empty'],
-      callStatus: 0, // 1 is you win, -1 is you lose, 2 is someone else won, -2 is someone else lost
       turn: 0,
-      canDeal: true
+      canDeal: true,
+      chosenCards: ''
     }
     this.gameChannel = this.props.channelName + 'gameChannel';
   }
@@ -187,6 +186,33 @@ class Game extends React.Component {
       });
     }
   }
+  select(index) {
+    this.setState({
+      chosenCards: this.state.chosenCards + index.toString()
+    });
+  }
+  playCards(){
+    var played = [false, false, false, false, false];
+    var i;
+    for (i = 0; i < this.state.chosenCards.length; i++) {
+      played[parseInt(this.state.chosenCards.slice(i,i+1))] = !played[parseInt(this.state.chosenCards.slice(i,i+1))];
+    }
+
+    var newDiscard = this.state.discard;
+    var newHand = this.state.hand;
+    for (i = 4; i >= 0; i -= 1) {
+      if (played[i]) {
+        newDiscard.unshift(this.state.hand[i]);
+        newHand.splice(i, 1);
+      }
+    }
+    this.setState({
+      hand: newHand,
+      discard: newDiscard,
+      turn: (this.state.turn + 1) % this.usersPlaying,
+      chosenCards: ''
+    });
+  }
   // playHand(){
 
   // }
@@ -318,14 +344,18 @@ class Game extends React.Component {
           Discard Cards: {this.state.discard}
         </div>
 
-        
-
-
         <div id='hand' style={{display: ((this.state.callStatus == 0) ? "block" : "none")}}>
           {this.state.hand.map((name, index) => 
               (<div className='col-md-2'>  Card {index+1}: {this.state.hand[index]}  </div>)
           )}
           <div className='col-md-2'>  DRAWN CARD  </div>
+        </div>
+
+        <div id='hand' style={{display: ((this.state.callStatus == 0) ? "block" : "none")}}>
+          {this.state.hand.map((name, index) => 
+              (<button className='col-md-2' onClick={this.select.bind(this,index)}>  Card {index+1}: {this.state.hand[index]}  </button>)
+          )}
+          <button className='col-md-2' onClick={this.playCards}>  SUBMIT CHOICES </button>
         </div>
 
         <button type="button"

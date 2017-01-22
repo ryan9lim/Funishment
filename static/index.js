@@ -20166,8 +20166,6 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -20183,8 +20181,6 @@
 	  _inherits(Game, _React$Component);
 
 	  function Game(props) {
-	    var _this$state;
-
 	    _classCallCheck(this, Game);
 
 	    var _this = _possibleConstructorReturn(this, (Game.__proto__ || Object.getPrototypeOf(Game)).call(this, props));
@@ -20192,19 +20188,16 @@
 	    _this.yusef = _this.yusef.bind(_this);
 	    _this.dealCards = _this.dealCards.bind(_this);
 	    _this.updateOnListener = _this.updateOnListener.bind(_this);
-	    _this.state = (_this$state = {
+	    _this.state = {
 	      deck: ['DECK NOT INIITIALIZED'],
 	      handDealt: false,
 	      discard: [],
-<<<<<<< HEAD
-	      hand: ['empty', 'empty', 'empty', 'empty', 'empty'],
-	      callStatus: 0, // 1 is you win, -1 is you lose, 2 is someone else won, -2 is someone else lost
-	      turn: 0
-	    };
-=======
 	      hand: [],
-	      callStatus: 0 }, _defineProperty(_this$state, 'hand', ['empty', 'empty', 'empty', 'empty', 'empty']), _defineProperty(_this$state, 'callStatus', 0), _defineProperty(_this$state, 'canDeal', true), _this$state);
->>>>>>> 87a7209d370f34a95e607dbbe3ba63ac96145428
+	      callStatus: 0, // 1 is you win, -1 is you lose, 2 is someone else won, -2 is someone else lost
+	      turn: 0,
+	      canDeal: true,
+	      chosenCards: ''
+	    };
 	    _this.gameChannel = _this.props.channelName + 'gameChannel';
 	    return _this;
 	  }
@@ -20244,9 +20237,6 @@
 	  }, {
 	    key: 'updateOnListener',
 	    value: function updateOnListener(response) {
-<<<<<<< HEAD
-	      console.log(this.props.usersPlaying);
-=======
 	      // updates deck
 	      if (response.message.deck != null) {
 	        console.log("size of deck is ", response.message.deck.length);
@@ -20262,7 +20252,6 @@
 	        });
 	      }
 
->>>>>>> 87a7209d370f34a95e607dbbe3ba63ac96145428
 	      if (response.message.dealing) {
 	        var indexInUsers = this.getUserIndex();
 
@@ -20377,6 +20366,37 @@
 	          canDeal: true
 	        });
 	      }
+	    }
+	  }, {
+	    key: 'select',
+	    value: function select(index) {
+	      this.setState({
+	        chosenCards: this.state.chosenCards + index.toString()
+	      });
+	    }
+	  }, {
+	    key: 'playCards',
+	    value: function playCards() {
+	      var played = [false, false, false, false, false];
+	      var i;
+	      for (i = 0; i < this.state.chosenCards.length; i++) {
+	        played[parseInt(this.state.chosenCards.slice(i, i + 1))] = !played[parseInt(this.state.chosenCards.slice(i, i + 1))];
+	      }
+
+	      var newDiscard = this.state.discard;
+	      var newHand = this.state.hand;
+	      for (i = 4; i >= 0; i -= 1) {
+	        if (played[i]) {
+	          newDiscard.unshift(this.state.hand[i]);
+	          newHand.splice(i, 1);
+	        }
+	      }
+	      this.setState({
+	        hand: newHand,
+	        discard: newDiscard,
+	        turn: (this.state.turn + 1) % this.usersPlaying,
+	        chosenCards: ''
+	      });
 	    }
 	    // playHand(){
 
@@ -20551,6 +20571,26 @@
 	            'div',
 	            { className: 'col-md-2' },
 	            '  DRAWN CARD  '
+	          )
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          { id: 'hand', style: { display: this.state.callStatus == 0 ? "block" : "none" } },
+	          this.state.hand.map(function (name, index) {
+	            return _react2.default.createElement(
+	              'button',
+	              { className: 'col-md-2', onClick: _this2.select.bind(_this2, index) },
+	              '  Card ',
+	              index + 1,
+	              ': ',
+	              _this2.state.hand[index],
+	              '  '
+	            );
+	          }),
+	          _react2.default.createElement(
+	            'button',
+	            { className: 'col-md-2', onClick: this.playCards },
+	            '  SUBMIT CHOICES '
 	          )
 	        ),
 	        _react2.default.createElement(
