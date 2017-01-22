@@ -19,7 +19,7 @@ class Game extends React.Component {
       handDealt: false,
       discard: [],
       hand: [],
-      callStatus: 0 // 1 is you win, -1 is you lose, 2 is someone else won, -2 is someone else lost
+      callStatus: 0, // 1 is you win, -1 is you lose, 2 is someone else won, -2 is someone else lost
       hand: ['empty', 'empty', 'empty','empty','empty'],
       callStatus: 0, // 1 is you win, -1 is you lose, 2 is someone else won, -2 is someone else lost
       canDeal: true
