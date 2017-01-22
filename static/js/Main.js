@@ -15,10 +15,7 @@ class Main extends React.Component{
     this.gameStart = this.gameStart.bind(this);
     this.updateMessageOnListener = this.updateMessageOnListener.bind(this);
 
-<<<<<<< HEAD
-=======
     // Instantiating a PubNub object
->>>>>>> 0ba3f7effa5f8b4109b7778a171d7f6651603e25
     this.pubnubDemo = new PubNub({
       publishKey: 'pub-c-89d8d3f5-9d58-4c24-94e7-1c89f243296a',
       subscribeKey: 'sub-c-99748e0e-df8d-11e6-989b-02ee2ddab7fe',
@@ -318,23 +315,6 @@ class Main extends React.Component{
 
     return (
       <div className='Index container'>
-<<<<<<< HEAD
-        <p className={countdownCSS + " countdown-label"}>
-          Countdown
-        </p>
-        <p className={countdownCSS + " countdown-number"}>
-          {this.state.countdown}
-        </p>
-
-        <button type="button" onClick={this.getReady}
-                className={buttonCSS + ' ready-button'}>
-          {this.state.isReady ? "Ready" : "Not Ready Yet"}
-        </button>
-        <button type="button" onClick={this.gameStart}
-                className={buttonCSS + ' start-button'}>
-          Start Game
-        </button>
-=======
         <div style={{display: (!this.state.gameStarted ? "block" : "none")}}>
           <p className={countdownCSS + " countdown-label"}>
             Countdown
@@ -352,7 +332,6 @@ class Main extends React.Component{
             Start game
           </button>
         </div>
->>>>>>> 0ba3f7effa5f8b4109b7778a171d7f6651603e25
 
         <Game isHost={this.state.isHost} usersPlaying={this.state.usersPlaying} gameStarted={this.state.gameStarted} pubnubDemo={this.pubnubDemo} channelName={this.channelName}/>
         <TweetInput />        
