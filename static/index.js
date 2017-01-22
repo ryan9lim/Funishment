@@ -20170,7 +20170,8 @@
 
 	{/*
 	   Props available to Game:
-	    - gameStarted (boolean)
+	  
+	   - gameStarted (boolean)
 	   - isHost (boolean)
 	   - usersPlaying (array)
 	   - pubnubDemo (Pubnub Object)
@@ -20817,6 +20818,7 @@
 
 	{/*
 	   Props available to TweetInput:
+	  
 	  */}
 
 	var TweetInput = function (_React$Component) {

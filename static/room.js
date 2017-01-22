@@ -21635,12 +21635,10 @@
 	  _createClass(MainRoom, [{
 	    key: 'componentWillMount',
 	    value: function componentWillMount() {
-	      console.log('Mounting');
-	      _axios2.default.get('/redirect_to_auth').then(function (resp) {
-	        console.log(resp);
-	      }).catch(function (err) {
-	        console.log(err);
-	      });
+	      // console.log('Mounting');
+	      // Axios.get('/redirect_to_auth')
+	      //      .then((resp) => {console.log(resp);})
+	      //      .catch((err) => {console.log(err );});
 	    }
 	  }, {
 	    key: 'render',
