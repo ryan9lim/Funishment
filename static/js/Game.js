@@ -34,7 +34,9 @@ class Game extends React.Component {
       chosenCards: '',
       isTurn: false,
       canDeal: true,
-      playing: false
+      playing: false,
+      cardToAdd: '',
+      hasDrawn: false
     }
     this.gameChannel = this.props.channelName + 'gameChannel';
   }
@@ -239,7 +241,8 @@ class Game extends React.Component {
           newHand.splice(i, 1);
         }
       }
-
+      
+      newHand.push(this.state.cardToAdd);
       console.log("current turn is", this.state.turn, "...finished playing and about to change turn to", (this.state.turn+1) % this.props.usersPlaying.length);
       this.props.pubnubDemo.publish({
         message: {
@@ -253,13 +256,16 @@ class Game extends React.Component {
         hand: newHand,
         discard: newDiscard,
         isTurn: false,
-        chosenCards: ''
+        chosenCards: '',
+        cardToAdd: '',
+        hasDrawn: false
       });
     } else {
       this.setState({
         chosenCards: ''
       });
     }
+
   }
 
   checkValidPlay(bools, hand) {
@@ -418,10 +424,13 @@ class Game extends React.Component {
   drawFromDeck() {
     var card = this.state.deck.shift()
     var indexInUsers = this.getUserIndex();
-    //update hand
-    this.state.hand.push(card)
+    
+    this.setState({
+      cardToAdd: card,
+      hasDrawn: true
+    })
 
-    // update deck, next person's turn
+    // update deck
     this.props.pubnubDemo.publish({
       message: {
         deck: this.state.deck
@@ -431,11 +440,13 @@ class Game extends React.Component {
   }
   drawFromDiscard() {
     var card = this.state.discard.shift()
-    var indexInUsers = getUserIndex();
-    //update hand
-    this.state.hand.push(card)
-    
-    // update deck, next person's turn
+    var indexInUsers = this.getUserIndex();
+    this.setState({
+      cardToAdd: card,
+      hasDrawn: true
+    })
+
+    // update discard
     this.props.pubnubDemo.publish({
       message: {
         discard: this.state.discard
@@ -508,18 +519,17 @@ class Game extends React.Component {
         </div>
 
         <div style={{display: ((!this.state.canDeal) ? "block" : "none")}}>
-          <button className='col-md-4' onClick={this.drawFromDeck}>  DRAW A CARD FROM DECK </button>
-          <button className='col-md-4' onClick={this.drawFromDiscard}>  DRAW A CARD FROM DISCARD </button>
+          <button className='col-md-4' style={{display: ((this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn) ? "block" : "none")}} onClick={this.drawFromDeck}>  DRAW A CARD FROM DECK </button>
+          <button className='col-md-4' style={{display: ((this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn && this.state.discard.length > 0) ? "block" : "none")}} onClick={this.drawFromDiscard}>  DRAW A CARD FROM DISCARD </button>
           <div className='col-md-4'></div>
           <br />
-          <div id='hand' style={{display: ((this.state.callStatus == 0 && !this.state.isTurn) ? "block" : "none")}}>
+          <div id='hand' style={{display: ((this.state.callStatus == 0 && !(this.state.isTurn && this.state.hasDrawn)) ? "block" : "none")}}>
             {this.state.hand.map((name, index) => 
                 (<div className='col-md-2'>  Card {index+1}: {this.state.hand[index]}  </div>)
             )}
-            <div className='col-md-2'>  DRAWN CARD  </div>
           </div>
           <br />
-          <div id='hand' style={{display: ((this.state.callStatus == 0 && this.state.isTurn) ? "block" : "none")}}>
+          <div id='hand' style={{display: ((this.state.callStatus == 0 && this.state.isTurn && this.state.hasDrawn) ? "block" : "none")}}>
             {this.state.hand.map((name, index) => 
                 (<button className='col-md-2' onClick={this.select.bind(this,index)}>  Card {index+1}: {this.state.hand[index]}  </button>)
             )}
@@ -529,7 +539,7 @@ class Game extends React.Component {
           <button type="button"
             onClick={this.yusef}
             className='btn btn-lg btn-default'
-            style={{display: ((this.state.callStatus == 0) ? "block" : "none")}}>
+            style={{display: ((this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn) ? "block" : "none")}}>
             YUSEF!
           </button>
         </div>
