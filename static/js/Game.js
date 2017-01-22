@@ -320,7 +320,7 @@ class Game extends React.Component {
       });
 
       // Check if the current user has lost the game
-      if(this.state.points >= 100){
+      if(this.state.points >= 40){
         this.lose();
       }
     }
@@ -876,8 +876,13 @@ class Game extends React.Component {
             (<div className='Label' style={{display: ((index != this.getUserIndex()) ? "block" : "none")}}>Player {index+1}: <br/>Cards {this.state.allHands ? this.state.allHands[index] : 0}  </div>)
           )}
         </div>
+
         <div id='points' className="scoreboard">
           Total Points : {this.state.points}
+        </div>
+
+        <div id='whoseTurn' className="scoreboard">
+          Current Turn : {'Player ' + (this.state.turn + 1).toString()}
         </div>
 
 
