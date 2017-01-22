@@ -394,7 +394,6 @@ class Game extends React.Component {
           {this.state.hand.map((name, index) => 
               (<div className='col-md-2'>  Card {index+1}: {this.state.hand[index]}  </div>)
           )}
-          <div className='col-md-2'>  DRAWN CARD  </div>
         </div>
         <br />
         <div id='hand' style={{display: ((this.state.callStatus == 0 && this.state.isTurn && this.state.hasDrawn) ? "block" : "none")}}>
