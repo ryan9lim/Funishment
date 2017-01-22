@@ -23,8 +23,13 @@ class Game extends React.Component {
       hand: ['empty', 'empty', 'empty','empty','empty'],
       callStatus: 0, // 1 is you win, -1 is you lose, 2 is someone else won, -2 is someone else lost
       turn: 0,
+<<<<<<< HEAD
       isTurn: false,
       canDeal: true
+=======
+      canDeal: true,
+      playing: false
+>>>>>>> 32b60736bc64c73cdf576b83a6fba4c92a9602c5
     }
     this.gameChannel = this.props.channelName + 'gameChannel';
   }
@@ -89,7 +94,13 @@ class Game extends React.Component {
       }
       console.log("It's now " + this.props.usersPlaying[this.state.turn] + "'s turn.");
     }
-    if (response.message.dealing) {
+    if (response.message.playing){
+      var indexInUsers = this.getUserIndex()
+      if (indexInUsers == response.message.turn) {
+        this.playHand();
+      }
+    }
+    else if (response.message.dealing) {
       var indexInUsers = this.getUserIndex()
 
       console.log("current user has index in array of ", indexInUsers, "and nextToDraw is", response.message.nextToDraw);
@@ -113,6 +124,7 @@ class Game extends React.Component {
           this.props.pubnubDemo.publish({
             message: {
               dealing: false,
+              playing: true,
               deck: deq
             },
             channel: this.gameChannel
@@ -269,7 +281,7 @@ class Game extends React.Component {
     this.props.pubnubDemo.publish({
       message: {
         turn: (this.state.turn+1) % this.state.usersPlaying.length,
-        deck: this.state.deck
+        discard: this.state.discard
       },
       channel: this.gameChannel
     });
