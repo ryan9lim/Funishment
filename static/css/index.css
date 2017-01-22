@@ -1,27 +1,74 @@
 .Index.container {
   text-align: center;
-  margin-top: 160px;
+  margin-top: 80px;
+  margin-bottom: 80px;
 }
 
-/*.Index button {
-  border-radius: 5px;
-  border: 1px solid #3A6BFF;
+.Index .Label {
   color: #3A6BFF;
   font-size: 16px;
-  margin: 10px;
-  width: 200px;
-  height: 40px;
-}*/
+  border-bottom: 1px solid #3A6BFF;
+  padding: 5px 5px 5px 40px; 
+  width: 300px;
+  margin: 0 auto;
+  text-align: left;
+}
+
+.Index .LabelRow {
+  text-align: center;
+}
+
+.Index .scoreboard {
+  font-size: 36px;
+  color: #3A6BFF;
+  font-weight: bolder;
+}
 
 .Index button {
   border: 1px solid #3A6BFF;
   color: #FFFFFF;
   background-color: #3A6BFF;
   border-radius: 5px;
-  font-size: 16px;
+  font-size: 14px;
   margin: 10px;
   width: 300px;  
   height: 40px;
+}
+
+@media (min-width: 0px) and (max-width: 524px) {
+  .Index .yusef-button {
+    width: 312px;
+  }
+  .Index .draw-button {
+    width: 312px;
+  }
+}
+
+@media (min-width: 524px) and (max-width: 684px) {
+  .Index .yusef-button {
+    width: 468px;
+  }
+  .Index .draw-button {
+    width: 225px;
+  }
+}
+
+@media (min-width: 684px) and (max-width: 992px) {
+  .Index .yusef-button {
+    width: 629px;
+  }
+  .Index .draw-button {
+    width: 305px;
+  }
+}
+
+@media (min-width: 992px) {
+  .Index .yusef-button {
+    width: 790px;
+  }
+  .Index .draw-button {
+    width: 384px;
+  }
 }
 
 .Index .ready-button:focus {

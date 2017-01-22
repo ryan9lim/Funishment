@@ -1,25 +1,60 @@
 .Room .container{
-  margin-top: 150px;
+  margin-top: 100px;
   text-align: center;
 }
 
 .Room p{
   font-size: 63px;
   text-align: center;
-}
-
-.Room button {
-  display: inline-block;
-  margin-left: 5px;
+  color: #3A6BFF;
+  font-family: 'Raleway', sans-serif;
 }
 
 .Room .form-control {
   display: inline-block;
-  width: 450px;
+}
+
+@media (max-width: 648px) {
+  .Room .form-control {
+    width: 300px;
+  }
+  .Room button {
+    margin-top: 5px;
+    width: 300px;
+  }
+}
+
+@media (min-width: 648px) {
+  .Room .form-control {
+    width: 450px;
+  }
+  .Room button {
+    width: 150px;
+    margin-left: 5px;
+  }
 }
 
 .Room .ChannelList {
   margin-top: 20px;
+}
+
+.Room h3 {
+  text-align: center;
+  color: #3A6BFF;
+}
+
+.Room .ChannelForm .btn {
+  text-align: center;
+  border: 1px solid #3A6BFF;
+  color: #FFFFFF;
+  background-color: #3A6BFF;
+  border-radius: 5px;
+}
+
+.Room .ChannelForm .btn:hover {
+  border: 1px solid #3A6BFF;
+  color: #3A6BFF;
+  background-color: #FFFFFF;
 }
 
 .Room .ChannelList .btn {
@@ -27,5 +62,15 @@
   width: 300px;
   height: 100px;
   text-align: center;
-  font-size: 14px;
+  border: 1px solid #3A6BFF;
+  color: #FFFFFF;
+  background-color: #3A6BFF;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+.Room .ChannelList .btn:hover {
+  border: 1px solid #3A6BFF;
+  color: #3A6BFF;
+  background-color: #FFFFFF;
 }
