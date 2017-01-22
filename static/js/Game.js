@@ -320,7 +320,7 @@ class Game extends React.Component {
       });
 
       // Check if the current user has lost the game
-      if(this.state.points >= 30){
+      if(this.state.points >= 100){
         this.lose();
       }
     }
