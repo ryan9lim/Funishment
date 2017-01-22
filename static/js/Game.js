@@ -185,6 +185,7 @@ class Game extends React.Component {
 
         // Set own state to reflect the cards I just drew
         this.setState({
+          turnNumber: 1,
           deck: deq,
           hand: han,
           canDeal: false,
