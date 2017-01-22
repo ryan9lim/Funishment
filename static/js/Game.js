@@ -29,7 +29,8 @@ class Game extends React.Component {
       chosenCards: '',
       isTurn: false,
       canDeal: true,
-      playing: false
+      playing: false,
+      cardToAdd: ''
     }
     this.gameChannel = this.props.channelName + 'gameChannel';
   }
@@ -230,6 +231,8 @@ class Game extends React.Component {
       }
     }
 
+    newHand.push(this.state.cardToAdd);
+
     console.log("current turn is", this.state.turn, "...finished playing and about to change turn to", (this.state.turn+1) % this.props.usersPlaying.length);
     this.props.pubnubDemo.publish({
       message: {
@@ -243,7 +246,8 @@ class Game extends React.Component {
       hand: newHand,
       discard: newDiscard,
       isTurn: false,
-      chosenCards: ''
+      chosenCards: '',
+      cardToAdd: ''
     });
   }
   // playHand(){
@@ -289,8 +293,13 @@ class Game extends React.Component {
   drawFromDeck() {
     var card = this.state.deck.shift()
     var indexInUsers = this.getUserIndex();
+    
+    this.setState({
+      cardToAdd: card
+    })
+
     //update hand
-    this.state.hand.push(card)
+    // this.state.hand.push(card)
 
     // update deck, next person's turn
     this.props.pubnubDemo.publish({
@@ -302,9 +311,14 @@ class Game extends React.Component {
   }
   drawFromDiscard() {
     var card = this.state.discard.shift()
-    var indexInUsers = getUserIndex();
+    var indexInUsers = this.getUserIndex();
+    
+    this.setState({
+      cardToAdd: card
+    })
+
     //update hand
-    this.state.hand.push(card)
+    // this.state.hand.push(card)
     
     // update deck, next person's turn
     this.props.pubnubDemo.publish({

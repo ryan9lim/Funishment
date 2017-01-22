@@ -20174,8 +20174,7 @@
 
 	{/*
 	   Props available to Game:
-	  
-	   - gameStarted (boolean)
+	    - gameStarted (boolean)
 	  */}
 
 	var Game = function (_React$Component) {
@@ -20204,7 +20203,8 @@
 	      chosenCards: '',
 	      isTurn: false,
 	      canDeal: true,
-	      playing: false
+	      playing: false,
+	      cardToAdd: ''
 	    };
 	    _this.gameChannel = _this.props.channelName + 'gameChannel';
 	    return _this;
@@ -20415,6 +20415,8 @@
 	        }
 	      }
 
+	      newHand.push(this.state.cardToAdd);
+
 	      console.log("current turn is", this.state.turn, "...finished playing and about to change turn to", (this.state.turn + 1) % this.props.usersPlaying.length);
 	      this.props.pubnubDemo.publish({
 	        message: {
@@ -20428,7 +20430,8 @@
 	        hand: newHand,
 	        discard: newDiscard,
 	        isTurn: false,
-	        chosenCards: ''
+	        chosenCards: '',
+	        cardToAdd: ''
 	      });
 	    }
 	    // playHand(){
@@ -20478,8 +20481,13 @@
 	    value: function drawFromDeck() {
 	      var card = this.state.deck.shift();
 	      var indexInUsers = this.getUserIndex();
+
+	      this.setState({
+	        cardToAdd: card
+	      });
+
 	      //update hand
-	      this.state.hand.push(card);
+	      // this.state.hand.push(card)
 
 	      // update deck, next person's turn
 	      this.props.pubnubDemo.publish({
@@ -20493,9 +20501,14 @@
 	    key: 'drawFromDiscard',
 	    value: function drawFromDiscard() {
 	      var card = this.state.discard.shift();
-	      var indexInUsers = getUserIndex();
+	      var indexInUsers = this.getUserIndex();
+
+	      this.setState({
+	        cardToAdd: card
+	      });
+
 	      //update hand
-	      this.state.hand.push(card);
+	      // this.state.hand.push(card)
 
 	      // update deck, next person's turn
 	      this.props.pubnubDemo.publish({
@@ -20715,7 +20728,6 @@
 
 	{/*
 	   Props available to TweetInput:
-	  
 	  */}
 
 	var TweetInput = function (_React$Component) {
