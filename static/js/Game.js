@@ -100,8 +100,16 @@ class Game extends React.Component {
 
         console.log("check came back around and the result was ", pf);
 
-        this.setState({
-          callStatus: pf,
+        this.props.pubnubDemo.publish({
+          message: {
+            dealing: false,
+            fixDeckAfterDeal: false,
+            checkingYusef: false,
+            confirmingYusef: true,
+            callerId: this.props.pubnubDemo.getUUID(),
+            callStatus: pf
+          },
+          channel: this.gameChannel
         });
       } else {
         var indexInUsers = -1;
@@ -135,6 +143,25 @@ class Game extends React.Component {
           });
         }
       }
+    } else if (response.message.confirmingYusef) {
+      var stat;
+      if(response.message.callStatus > 0) {
+        if (response.message.callerId == this.props.pubnubDemo.getUUID()) {
+          stat = 1;
+        } else {
+          stat = 2;
+        }
+      } else {
+        if (response.message.callerId == this.props.pubnubDemo.getUUID()) {
+          stat = -1;
+        } else {
+          stat = -2;
+        }
+      }
+
+      this.setState({
+        callStatus: stat
+      });
     }
   }
   dealCards() {
@@ -254,6 +281,14 @@ class Game extends React.Component {
 
         <div id='failCall' style={{display: ((this.state.callStatus == -1) ? "block" : "none")}}>
           Your Call Failed!
+        </div>
+
+        <div id='passCall' style={{display: ((this.state.callStatus == 2) ? "block" : "none")}}>
+          Another Players Call Passed!
+        </div>
+
+        <div id='failCall' style={{display: ((this.state.callStatus == -2) ? "block" : "none")}}>
+          Another Players Call Failed!
         </div>
       </div>
     )

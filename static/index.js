@@ -19828,7 +19828,7 @@
 	    };
 
 	    _this.channelName = _store2.default.get('channelName');
-	    _this.channelName = 'stupidChannel';
+	    _this.channelName = 'stupidChannel1111';
 	    return _this;
 	  }
 
@@ -20282,8 +20282,16 @@
 
 	          console.log("check came back around and the result was ", pf);
 
-	          this.setState({
-	            callStatus: pf
+	          this.props.pubnubDemo.publish({
+	            message: {
+	              dealing: false,
+	              fixDeckAfterDeal: false,
+	              checkingYusef: false,
+	              confirmingYusef: true,
+	              callerId: this.props.pubnubDemo.getUUID(),
+	              callStatus: pf
+	            },
+	            channel: this.gameChannel
 	          });
 	        } else {
 	          var indexInUsers = -1;
@@ -20317,6 +20325,25 @@
 	            });
 	          }
 	        }
+	      } else if (response.message.confirmingYusef) {
+	        var stat;
+	        if (response.message.callStatus > 0) {
+	          if (response.message.callerId == this.props.pubnubDemo.getUUID()) {
+	            stat = 1;
+	          } else {
+	            stat = 2;
+	          }
+	        } else {
+	          if (response.message.callerId == this.props.pubnubDemo.getUUID()) {
+	            stat = -1;
+	          } else {
+	            stat = -2;
+	          }
+	        }
+
+	        this.setState({
+	          callStatus: stat
+	        });
 	      }
 	    }
 	  }, {
@@ -20492,6 +20519,16 @@
 	          'div',
 	          { id: 'failCall', style: { display: this.state.callStatus == -1 ? "block" : "none" } },
 	          'Your Call Failed!'
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          { id: 'passCall', style: { display: this.state.callStatus == 2 ? "block" : "none" } },
+	          'Another Players Call Passed!'
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          { id: 'failCall', style: { display: this.state.callStatus == -2 ? "block" : "none" } },
+	          'Another Players Call Failed!'
 	        )
 	      );
 	    }
