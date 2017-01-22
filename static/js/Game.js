@@ -38,7 +38,8 @@ class Game extends React.Component {
       playing: false,
       cardToAdd: '',
       hasDrawn: false,
-      points: 0
+      points: 0,
+      turnNumber: 1
     }
     this.gameChannel = this.props.channelName + 'gameChannel';
   }
@@ -272,7 +273,8 @@ class Game extends React.Component {
         isTurn: false,
         chosenCards: '',
         cardToAdd: '',
-        hasDrawn: false
+        hasDrawn: false,
+        turnNumber: this.state.turnNumber + 1
       });
     } else {
       this.setState({
@@ -475,6 +477,10 @@ class Game extends React.Component {
       });
   }
   yusef() {
+    if(this.state.turnNumber < 3){
+      console.log("Can't call yusef yet!");
+      return;
+    }
     var myCount = this.summ(this.state.hand);
     console.log("called yusef with hand of value ", myCount);
     this.props.pubnubDemo.publish({
