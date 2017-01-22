@@ -29,7 +29,8 @@ class Game extends React.Component {
       chosenCards: '',
       isTurn: false,
       canDeal: true,
-      playing: false
+      playing: false,
+      hasDrawn: false
     }
     this.gameChannel = this.props.channelName + 'gameChannel';
   }
@@ -243,7 +244,8 @@ class Game extends React.Component {
       hand: newHand,
       discard: newDiscard,
       isTurn: false,
-      chosenCards: ''
+      chosenCards: '',
+      hasDrawn: false
     });
   }
   // playHand(){
@@ -291,8 +293,11 @@ class Game extends React.Component {
     var indexInUsers = this.getUserIndex();
     //update hand
     this.state.hand.push(card)
+    this.setState({
+      hasDrawn: true
+    });
 
-    // update deck, next person's turn
+    // update deck
     this.props.pubnubDemo.publish({
       message: {
         deck: this.state.deck
@@ -302,11 +307,14 @@ class Game extends React.Component {
   }
   drawFromDiscard() {
     var card = this.state.discard.shift()
-    var indexInUsers = getUserIndex();
+    var indexInUsers = this.getUserIndex();
     //update hand
     this.state.hand.push(card)
-    
-    // update deck, next person's turn
+    this.setState({
+      hasDrawn: true
+    });
+
+    // update discard
     this.props.pubnubDemo.publish({
       message: {
         discard: this.state.discard
@@ -378,18 +386,18 @@ class Game extends React.Component {
           Discard Cards: {this.state.discard}
         </div>
 
-        <button className='col-md-4' onClick={this.drawFromDeck}>  DRAW A CARD FROM DECK </button>
-        <button className='col-md-4' onClick={this.drawFromDiscard}>  DRAW A CARD FROM DISCARD </button>
+        <button className='col-md-4' style={{display: ((this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn) ? "block" : "none")}} onClick={this.drawFromDeck}>  DRAW A CARD FROM DECK </button>
+        <button className='col-md-4' style={{display: ((this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn) ? "block" : "none")}} onClick={this.drawFromDiscard}>  DRAW A CARD FROM DISCARD </button>
         <div className='col-md-4'></div>
         <br />
-        <div id='hand' style={{display: ((this.state.callStatus == 0 && !this.state.isTurn) ? "block" : "none")}}>
+        <div id='hand' style={{display: ((this.state.callStatus == 0 && !(this.state.isTurn && this.state.hasDrawn)) ? "block" : "none")}}>
           {this.state.hand.map((name, index) => 
               (<div className='col-md-2'>  Card {index+1}: {this.state.hand[index]}  </div>)
           )}
           <div className='col-md-2'>  DRAWN CARD  </div>
         </div>
         <br />
-        <div id='hand' style={{display: ((this.state.callStatus == 0 && this.state.isTurn) ? "block" : "none")}}>
+        <div id='hand' style={{display: ((this.state.callStatus == 0 && this.state.isTurn && this.state.hasDrawn) ? "block" : "none")}}>
           {this.state.hand.map((name, index) => 
               (<button className='col-md-2' onClick={this.select.bind(this,index)}>  Card {index+1}: {this.state.hand[index]}  </button>)
           )}
@@ -399,7 +407,7 @@ class Game extends React.Component {
         <button type="button"
           onClick={this.yusef}
           className='btn btn-lg btn-default'
-          style={{display: ((this.state.callStatus == 0) ? "block" : "none")}}>
+          style={{display: ((this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn) ? "block" : "none")}}>
           YUSEF!
         </button>
 

@@ -20204,7 +20204,8 @@
 	      chosenCards: '',
 	      isTurn: false,
 	      canDeal: true,
-	      playing: false
+	      playing: false,
+	      hasDrawn: false
 	    };
 	    _this.gameChannel = _this.props.channelName + 'gameChannel';
 	    return _this;
@@ -20428,7 +20429,8 @@
 	        hand: newHand,
 	        discard: newDiscard,
 	        isTurn: false,
-	        chosenCards: ''
+	        chosenCards: '',
+	        hasDrawn: false
 	      });
 	    }
 	    // playHand(){
@@ -20480,8 +20482,11 @@
 	      var indexInUsers = this.getUserIndex();
 	      //update hand
 	      this.state.hand.push(card);
+	      this.setState({
+	        hasDrawn: true
+	      });
 
-	      // update deck, next person's turn
+	      // update deck
 	      this.props.pubnubDemo.publish({
 	        message: {
 	          deck: this.state.deck
@@ -20493,11 +20498,14 @@
 	    key: 'drawFromDiscard',
 	    value: function drawFromDiscard() {
 	      var card = this.state.discard.shift();
-	      var indexInUsers = getUserIndex();
+	      var indexInUsers = this.getUserIndex();
 	      //update hand
 	      this.state.hand.push(card);
+	      this.setState({
+	        hasDrawn: true
+	      });
 
-	      // update deck, next person's turn
+	      // update discard
 	      this.props.pubnubDemo.publish({
 	        message: {
 	          discard: this.state.discard
@@ -20591,19 +20599,19 @@
 	        ),
 	        _react2.default.createElement(
 	          'button',
-	          { className: 'col-md-4', onClick: this.drawFromDeck },
+	          { className: 'col-md-4', style: { display: this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn ? "block" : "none" }, onClick: this.drawFromDeck },
 	          '  DRAW A CARD FROM DECK '
 	        ),
 	        _react2.default.createElement(
 	          'button',
-	          { className: 'col-md-4', onClick: this.drawFromDiscard },
+	          { className: 'col-md-4', style: { display: this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn ? "block" : "none" }, onClick: this.drawFromDiscard },
 	          '  DRAW A CARD FROM DISCARD '
 	        ),
 	        _react2.default.createElement('div', { className: 'col-md-4' }),
 	        _react2.default.createElement('br', null),
 	        _react2.default.createElement(
 	          'div',
-	          { id: 'hand', style: { display: this.state.callStatus == 0 && !this.state.isTurn ? "block" : "none" } },
+	          { id: 'hand', style: { display: this.state.callStatus == 0 && !(this.state.isTurn && this.state.hasDrawn) ? "block" : "none" } },
 	          this.state.hand.map(function (name, index) {
 	            return _react2.default.createElement(
 	              'div',
@@ -20624,7 +20632,7 @@
 	        _react2.default.createElement('br', null),
 	        _react2.default.createElement(
 	          'div',
-	          { id: 'hand', style: { display: this.state.callStatus == 0 && this.state.isTurn ? "block" : "none" } },
+	          { id: 'hand', style: { display: this.state.callStatus == 0 && this.state.isTurn && this.state.hasDrawn ? "block" : "none" } },
 	          this.state.hand.map(function (name, index) {
 	            return _react2.default.createElement(
 	              'button',
@@ -20647,7 +20655,7 @@
 	          { type: 'button',
 	            onClick: this.yusef,
 	            className: 'btn btn-lg btn-default',
-	            style: { display: this.state.callStatus == 0 ? "block" : "none" } },
+	            style: { display: this.state.callStatus == 0 && this.state.isTurn && !this.state.hasDrawn ? "block" : "none" } },
 	          'YUSEF!'
 	        ),
 	        _react2.default.createElement(
