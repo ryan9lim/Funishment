@@ -20221,7 +20221,8 @@
 	      cardToAdd: '', // Which card being drawn and added to hand
 	      hasDrawn: false, // Completed draw phase of turn
 	      lastPlay: [], // Set of last few cards being played
-	      points: 0 // Current player's point total
+	      points: 0, // Current player's point total
+	      allHands: [] // Set of number of cards in each player's hands
 	    };
 
 	    // Channel for the game data to be sent on
@@ -20793,14 +20794,14 @@
 	        _react2.default.createElement(
 	          'div',
 	          null,
-	          this.state.allHands.map(function (name, index) {
+	          Array(this.props.usersPlaying ? this.props.usersPlaying.length : 0).fill(" ").map(function (name, index) {
 	            return _react2.default.createElement(
 	              'div',
 	              { className: 'col-md-2', style: { display: index != _this2.getUserIndex() ? "block" : "none" } },
 	              'Player ',
 	              index + 1,
 	              ' : Cards ',
-	              _this2.state.allHands[index],
+	              _this2.state.allHands ? _this2.state.allHands[index] : 0,
 	              '  '
 	            );
 	          })

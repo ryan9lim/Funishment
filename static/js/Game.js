@@ -46,7 +46,8 @@ class Game extends React.Component {
       cardToAdd: '', // Which card being drawn and added to hand
       hasDrawn: false, // Completed draw phase of turn
       lastPlay: [], // Set of last few cards being played
-      points: 0 // Current player's point total
+      points: 0, // Current player's point total
+      allHands: [] // Set of number of cards in each player's hands
     }
 
     // Channel for the game data to be sent on
@@ -604,8 +605,8 @@ class Game extends React.Component {
         </div>
         <br />
         <div>
-          {this.state.allHands.map((name, index) => 
-            (<div className='col-md-2' style={{display: ((index != this.getUserIndex()) ? "block" : "none")}}>Player {index+1} : Cards {this.state.allHands[index]}  </div>)
+          {Array(this.props.usersPlaying ? this.props.usersPlaying.length : 0).fill(" ").map((name, index) => 
+            (<div className='col-md-2' style={{display: ((index != this.getUserIndex()) ? "block" : "none")}}>Player {index+1} : Cards {this.state.allHands ? this.state.allHands[index] : 0}  </div>)
           )}
         </div>
         <br />
