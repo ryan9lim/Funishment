@@ -23,6 +23,7 @@ class Game extends React.Component {
       hand: ['empty', 'empty', 'empty','empty','empty'],
       callStatus: 0, // 1 is you win, -1 is you lose, 2 is someone else won, -2 is someone else lost
       turn: 0,
+      isTurn: false,
       canDeal: true
     }
     this.gameChannel = this.props.channelName + 'gameChannel';
@@ -71,7 +72,23 @@ class Game extends React.Component {
         discard: response.message.discard
       });
     }
-
+    //updates turn
+    if(response.message.turn != null) {
+      this.setState({
+        turn: response.message.turn
+      });
+      if(this.getUserIndex() == this.state.turn){
+        this.setState({
+          isTurn: true
+        });
+      }
+      else{
+        this.setState({
+          isTurn: false
+        });
+      }
+      console.log("It's now " + this.props.usersPlaying[this.state.turn] + "'s turn.");
+    }
     if (response.message.dealing) {
       var indexInUsers = this.getUserIndex()
 
