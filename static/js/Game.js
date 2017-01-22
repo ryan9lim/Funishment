@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import ClassNames from 'classnames';
+import Axios from 'axios';
 
 {/*
   Props available to Game:
@@ -30,6 +31,7 @@ class Game extends React.Component {
     this.dealCards = this.dealCards.bind(this);
     this.lose = this.lose.bind(this);
     this.updateOnListener = this.updateOnListener.bind(this);
+    this.postTwitter = this.postTwitter.bind(this);
 
     // Initialize the state of Game
     this.state = {
@@ -47,7 +49,11 @@ class Game extends React.Component {
       hasDrawn: false, // Completed draw phase of turn
       lastPlay: [], // Set of last few cards being played
       points: 0, // Current player's point total
-      turnNumber: 1
+      allHands: [], // Set of number of cards in each player's hands
+      turnNumber: 1,
+      endStatus: 0,
+      loserID: '',
+      tweet:''
     }
 
     // Channel for the game data to be sent on
@@ -97,6 +103,21 @@ class Game extends React.Component {
    * Callback of listener when packets sent regarding the game
    */
   updateOnListener(response) {
+
+    // Someone lost
+    if (response.message.lost != null) {
+      if(response.message.lost == this.props.pubnubDemo.getUUID()){
+        this.setState({
+          endStatus: -1
+        });
+      }
+      else{
+        this.setState({
+          endStatus: 1,
+          loserID: response.message.lost
+        });
+      }
+    }
     // Updates deck
     if (response.message.deck != null) {
       console.log("size of deck is ", response.message.deck.length);
@@ -295,7 +316,7 @@ class Game extends React.Component {
       });
 
       // Check if the current user has lost the game
-      if(this.state.points >= 200){
+      if(this.state.points >= 30){
         this.lose();
       }
     }
@@ -305,7 +326,13 @@ class Game extends React.Component {
    * Function to deal with loss / end of game
    */
   lose(){
-    console.log("YOU LOST");
+    this.props.pubnubDemo.publish({
+      message: {
+        lost: this.props.pubnubDemo.getUUID()
+      },
+
+      channel: this.gameChannel
+    })
   }
 
   /*
@@ -563,20 +590,28 @@ class Game extends React.Component {
    * Draw a card from the deck
    */
   drawFromDeck() {
-    var card = this.state.deck[0];
+    var card = this.state.deck[0]; // Top card of deck
+
+    // Update the deck in this user's state
     this.setState({
       deck: this.state.deck.slice(1)
     });
+
+    // Current user's index in the array of usersPlaying
     var indexInUsers = this.getUserIndex();
     
+    // Update the card to be added and whether the user has drawn in the user's state
     this.setState({
       cardToAdd: card,
       hasDrawn: true
     })
 
-    // update deck
+    // Update the deck
+    // If there are cards left, just remove the card
+    // If there are no cards left, reshuffle the discard (except top card) back into deck
     if (this.state.deck.length > 1) {
-      // deck still valid
+      // Deck still valid
+      // Publish a packet with the new deck
       this.props.pubnubDemo.publish({
         message: {
           deck: this.state.deck.slice(1)
@@ -584,8 +619,9 @@ class Game extends React.Component {
         channel: this.gameChannel
       });
     } else {
-      // deck out and need to reshuffle discard into it
+      // Deck out and need to reshuffle discard into it
       var newDeck = this.shuffle(this.state.discard.slice(1));
+      // Publish a packet with the new deck
       this.props.pubnubDemo.publish({
         message: {
           deck: newDeck,
@@ -597,15 +633,27 @@ class Game extends React.Component {
     }
   }
 
+  /*
+   * Draw a card from the discard pile
+   */
   drawFromDiscard() {
-    var card = this.state.discard.shift()
+    var card = this.state.discard[0]; // Top card of discard
+
+    // Update the discard in this user's state
+    this.setState({
+      discard: this.state.discard.slice(1)
+    });
+
+    // Current user's index in the array of usersPlaying
     var indexInUsers = this.getUserIndex();
+    
+    // Update the card to be added and whether the user has drawn in the user's state
     this.setState({
       cardToAdd: card,
       hasDrawn: true
     })
 
-    // update discard
+    // Publish packet telling users to update discard and lastPlay
     this.props.pubnubDemo.publish({
       message: {
         discard: this.state.discard,
@@ -614,19 +662,31 @@ class Game extends React.Component {
       channel: this.gameChannel
     });
   }
+
+  /*
+   * Callback handler for playing a hand
+   */
   playHand(){
     console.log("My turn to play!")
-      this.setState({
-        isTurn: true
-      });
+    // It is the current user's turn
+    this.setState({
+      isTurn: true
+    });
   }
+
+  /*
+   * Callback handler for when Yusef is called
+   */
   yusef() {
+    // Cannot call Yusef until 3rd turn
     if(this.state.turnNumber < 3){
       console.log("Can't call yusef yet!");
       return;
     }
-    var myCount = this.summ(this.state.hand);
+    var myCount = this.summ(this.state.hand); // Determine the score of the current user's hand
     console.log("called yusef with hand of value ", myCount);
+
+    // Publish a packet for other users to check the Yusef call of the current user
     this.props.pubnubDemo.publish({
       message: {
         dealing: false,
@@ -640,22 +700,60 @@ class Game extends React.Component {
       channel: this.gameChannel
     });
   }
+
+  /*
+   * Determine the score of a hand
+   */
   summ(arr) {
-    var count = 0;
+    var count = 0; // Initialize the count
     var i;
     console.log(this.state.hand);
+
+    // For each card, add its value to the total count
     for(i = 0; i < this.state.hand.length; i++) {
       if(this.state.hand[i].charCodeAt(0) <= "9".charCodeAt(0) && this.state.hand[i].charCodeAt(0) >= "2".charCodeAt(0)) {
+        // Card between 2 and 9
         count += this.state.hand[i].charCodeAt(0) - "0".charCodeAt(0);
       } else if (this.state.hand[i].slice(0,1) == "A"){
+        // Card is an Ace
         count += 1;
       } else {
+        // Card is a royal (10 J Q K)
         count += 10;
       }
     }
+
     console.log(count);
     return count;
   }
+
+  postTwitter(event){
+    event.preventDefault();
+    this.setState({
+      tweet: this.refs.inputText.value
+    },
+    function(response){
+      Axios.get('/post_status', {
+        params: {
+          ID: this.state.loserID,
+          message: this.state.tweet
+        }
+      })
+      .then(function (response){
+        console.log(response);
+      })
+      .catch(function (error){
+        console.log(error);
+      });
+      window.location = '/';
+    }.bind(this));
+  }
+
+    
+
+  /*
+   * Render the HTML for this React element
+   */
   render() {
     return (
       <div className='Game' style={{display: (this.props.gameStarted ? "block" : "none")}}>
@@ -670,16 +768,8 @@ class Game extends React.Component {
           Deck Cards Left: {this.state.deck.length}
         </div>
 
-        <div id='deckCards' style={{display: ((this.state.callStatus == 0) ? "block" : "none")}}>
-          Deck Cards: {this.state.deck}
-        </div>
-
         <div id='discard' style={{display: ((this.state.callStatus == 0) ? "block" : "none")}}>
           Discard Pile Size: {this.state.discard.length}
-        </div>
-
-        <div id='discardCards' style={{display: ((this.state.callStatus == 0) ? "block" : "none")}}>
-          Discard Cards: {this.state.discard}
         </div>
 
         <div id='lastPlay' style={{display: ((this.state.callStatus == 0) ? "block" : "none")}}>
@@ -691,8 +781,8 @@ class Game extends React.Component {
         </div>
         <br />
         <div>
-          {this.state.allHands.map((name, index) => 
-            (<div className='col-md-2' style={{display: ((index != this.getUserIndex()) ? "block" : "none")}}>Player {index+1} : Cards {this.state.allHands[index]}  </div>)
+          {Array(this.props.usersPlaying ? this.props.usersPlaying.length : 0).fill(" ").map((name, index) => 
+            (<div className='col-md-2' style={{display: ((index != this.getUserIndex()) ? "block" : "none")}}>Player {index+1} : Cards {this.state.allHands ? this.state.allHands[index] : 0}  </div>)
           )}
         </div>
         <br />
@@ -741,6 +831,22 @@ class Game extends React.Component {
 
         <div id='failCall' style={{display: ((this.state.callStatus == -2) ? "block" : "none")}}>
           Another Players Call Failed!
+        </div>
+
+        <div id='lost' style={{display: ((this.state.endStatus == -1) ? "block" : "none")}}>
+          Oh no! You lost! Players are currently posting on your Twitter.
+        </div>
+
+        <div id='won' style={{display: ((this.state.endStatus == 1) ? "block" : "none")}}>
+          <form onSubmit={this.postTwitter}>
+            <input type="text" className="form-control" id="test"
+                   placeholder="Loser's new status" 
+                   ref="inputText"
+                   aria-describedby="basic-addon1"/>
+            <button type="submit" className="btn btn-md btn-default">
+              Post!
+            </button>
+          </form>
         </div>
       </div>
     )

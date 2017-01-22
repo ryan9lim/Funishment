@@ -36,6 +36,8 @@ def redirect_to_auth():
 
     userID = request.args['ID']
 
+    print(userID)
+
     AUTH_OAUTH_TOKEN = auth['oauth_token']
     AUTH_OAUTH_TOKEN_SECRET = auth['oauth_token_secret']
     auth_url = auth['auth_url']
@@ -78,21 +80,20 @@ def serve_twitter_auth():
                       USER_OAUTH_TOKEN_SECRET)
 
     print('Created user twitter object')
-    try:
-        twitter.update_status(status='Testing Twython @ PennApps')
-    except TwythonError as e:
-        print(e)
 
     return Response(response={'status_code': 200},
                     status=200,
-                    mimetype='application/json') 
+                    mimetype='application/json')
 
 @app.route('/post_status', methods=['GET'])
 def post_Twitter_Status():
     global APP_KEY, APP_SECRET, AUTH_OAUTH_TOKEN, AUTH_OAUTH_TOKEN_SECRET, AUTH_OAUTH_VERIFIER, tDict
 
+    print("we made it hellllooooo")
     user = request.args['ID']
     message = request.args['message']
+    print(user)
+    print(message)
 
     twitter = Twython(APP_KEY, APP_SECRET,
                       tDict[user][0],
@@ -102,6 +103,10 @@ def post_Twitter_Status():
         twitter.update_status(status=message)
     except TwythonError as e:
         print(e)
+
+    return Response(response={'status_code': 200},
+                    status=200,
+                    mimetype='application/json')
 
 
 if __name__ == '__main__':

@@ -19839,6 +19839,7 @@
 	    _this.channelName = _store2.default.get('channelName');
 	    return _this;
 	  }
+
 	  /*
 	   * Callback of element initialization
 	   */
@@ -19870,12 +19871,13 @@
 	      });
 	    }
 
-	    // Callback function called when message is received by listener 
+	    /*
+	     * Callback function called when message is received by listener
+	     */
 
 	  }, {
 	    key: 'updateMessageOnListener',
 	    value: function updateMessageOnListener(response) {
-
 	      // Game start message
 	      if (response.message.game == "start_countdown") {
 	        if (this.state.isReady) {
@@ -19914,13 +19916,15 @@
 	        });
 	      }
 	    }
-	    // Assigns host to a user in the room / channel. Host holds certain room info
-	    // and is the only one that can start the game
+
+	    /*
+	     * Assigns host to a user in the room / channel. Host holds certain room info
+	     * and is the only one that can start the game
+	     */
 
 	  }, {
 	    key: 'assignHost',
 	    value: function assignHost(presenceEvent) {
-
 	      // Display when a user has joined
 	      if (presenceEvent.action == "join") {
 	        console.log(presenceEvent.uuid + " has joined " + presenceEvent.channel);
@@ -19929,11 +19933,14 @@
 	      if (presenceEvent.action == "join" && presenceEvent.occupancy == 1) {
 
 	        console.log("You, " + presenceEvent.uuid + ", are Host.");
+
+	        // Set the current state's host and usersReady
 	        this.setState({
 	          host: true,
 	          usersReady: []
 	        });
 
+	        // Update the pubnubDemo state
 	        this.pubnubDemo.setState({
 	          state: {
 	            "host": true,
@@ -19944,23 +19951,31 @@
 	        });
 	      }
 
-	      //if host leaves, someone else takes over
+	      // If host leaves, someone else takes over
 	      if (presenceEvent.action == "leave" || presenceEvent.action == "timeout") {
 	        console.log(presenceEvent.uuid + " has left.");
 	        console.log("Occupancy is now at ", presenceEvent.occupancy);
 	        console.log(presenceEvent);
+
+	        // If the current user is the host, set up the states
 	        if (this.state.host) {
-	          var tempArray = this.state.usersReady;
-	          var index = tempArray.indexOf(presenceEvent.uuid);
+	          var tempArray = this.state.usersReady; // Current list of ready users
+	          var index = tempArray.indexOf(presenceEvent.uuid); // Index of current user in list of ready users
+
+	          // If current user is in list of ready users, make tempArray the list without this user
 	          if (index > -1) {
 	            tempArray.splice(index, 1);
 	          }
+
 	          console.log(tempArray.toString() + " is ready");
+
+	          // Update the state as necessary
 	          this.setState({
 	            host: this.state.host,
 	            usersReady: tempArray
 	          });
 
+	          // Update the pubnubDemo's state as necessary
 	          this.pubnubDemo.setState({
 	            state: {
 	              host: this.state.host,
@@ -19971,8 +19986,12 @@
 	          });
 	        }
 	      }
+
+	      // If a host leave's or times out, shift the host responsibility
 	      if ((presenceEvent.action == "leave" || presenceEvent.action == "timeout") && presenceEvent.state.host == true) {
 	        console.log(presenceEvent.uuid + " is no longer Host.");
+
+	        // Display pubnubDemo info in console
 	        this.pubnubDemo.hereNow({
 	          channels: [this.channelName],
 	          includeUUIDs: true,
@@ -19981,17 +20000,26 @@
 	          if (response.channels[this.channelName].occupants[0].uuid == this.pubnubDemo.getUUID()) {
 	            console.log("You, " + presenceEvent.uuid + ", are Host.");
 	            console.log(presenceEvent.state);
-	            var tempArray = presenceEvent.state.usersReady;
-	            var index = tempArray.indexOf(presenceEvent.uuid);
+
+	            // Note this code is exactly the same as assigning host from above
+	            // Assign a new host when the current one leaves
+	            var tempArray = presenceEvent.state.usersReady; // Current list of ready users
+	            var index = tempArray.indexOf(presenceEvent.uuid); // Index of current user in list of ready users
+
+	            // If current user is in list of ready users, make tempArray the list without this user
 	            if (index > -1) {
 	              tempArray.splice(index, 1);
 	            }
+
 	            console.log(tempArray.toString() + " is ready");
+
+	            // Update the state as necessary
 	            this.setState({
 	              host: true,
 	              usersReady: tempArray
 	            });
 
+	            // Update the pubnubDemo's state as necessary
 	            this.pubnubDemo.setState({
 	              state: {
 	                "host": true,
@@ -20001,14 +20029,21 @@
 	              channels: [this.channelName]
 	            });
 	          } else {
+	            // Host has not left, so display who is the host
 	            console.log(response.channels[this.channelName].occupants[0].uuid + " is Host.");
 	          }
 	        }.bind(this));
 	      }
 	    }
+
+	    /*
+	     * Callback handler for when ready button is pressed
+	     */
+
 	  }, {
 	    key: 'getReady',
 	    value: function getReady() {
+	      // If the user is not already ready, get ready
 	      if (!this.state.isReady) {
 	        _axios2.default.get('/redirect_to_auth', {
 	          params: {
@@ -20017,33 +20052,40 @@
 	        }).then(function (response) {
 	          console.log(response);
 	        }).catch(function (error) {
-	          console.log(response);
+	          console.log(error);
 	        });
 
+	        // Publish a packet informing other users that you are ready
 	        this.pubnubDemo.publish({
 	          message: {
 	            ready: this.pubnubDemo.getUUID()
 	          },
 	          channel: this.channelName
 	        }, function (status, response) {
+	          // Check for errors in a callback
 	          if (status.error) {
 	            console.log(status);
-	          } else {
-	            // console.log("message Published w/ timetoken", response.timetoken);
 	          }
 	        });
+
+	        // Update current user's state
 	        this.setState({
 	          isReady: true
 	        });
 	      }
-
-	      // TODO: Do the following only if all users are in
-	      //this.startCountdown();
 	    }
+
+	    /*
+	     * Callback handler for when start button is pressed
+	     */
+
 	  }, {
 	    key: 'gameStart',
 	    value: function gameStart() {
+	      // Only the host should be allowed to start
 	      if (!this.state.host || !this.state.isReady) return;
+
+	      // Assuming we are the host, publish a packet telling users to start the countdown
 	      this.pubnubDemo.publish({
 	        message: {
 	          game: 'start_countdown',
@@ -20051,6 +20093,7 @@
 	        },
 	        channel: this.channelName
 	      }, function (status, response) {
+	        // Handle errors gracefully
 	        if (status.error) {
 	          console.log(status);
 	        } else {
@@ -20058,22 +20101,37 @@
 	        }
 	      });
 	    }
+
+	    /*
+	     * Function to start the countdown
+	     */
+
 	  }, {
 	    key: 'startCountdown',
 	    value: function startCountdown() {
+	      // If countdown has finished, start the game
+	      // If countdown is not finished, increment the countdown
 	      if (this.state.countdown <= 0) {
 	        console.log("GAME IS STARTING");
 	        console.log(this.state.usersPlaying);
+
+	        // Update the state
 	        this.setState({
 	          gameStarted: true
 	        });
 	      } else {
+	        // Update the countdown in the state and timeout until next update
 	        this.setState({
 	          countdown: this.state.countdown - 1
 	        });
 	        setTimeout(this.startCountdown, 1000); // check again in a second
 	      }
 	    }
+
+	    /*
+	     * Render the HTML for this React element
+	     */
+
 	  }, {
 	    key: 'render',
 	    value: function render() {
@@ -20202,6 +20260,10 @@
 
 	var _classnames2 = _interopRequireDefault(_classnames);
 
+	var _axios = __webpack_require__(163);
+
+	var _axios2 = _interopRequireDefault(_axios);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -20242,6 +20304,7 @@
 	    _this.dealCards = _this.dealCards.bind(_this);
 	    _this.lose = _this.lose.bind(_this);
 	    _this.updateOnListener = _this.updateOnListener.bind(_this);
+	    _this.postTwitter = _this.postTwitter.bind(_this);
 
 	    // Initialize the state of Game
 	    _this.state = {
@@ -20259,7 +20322,11 @@
 	      hasDrawn: false, // Completed draw phase of turn
 	      lastPlay: [], // Set of last few cards being played
 	      points: 0, // Current player's point total
-	      turnNumber: 1
+	      allHands: [], // Set of number of cards in each player's hands
+	      turnNumber: 1,
+	      endStatus: 0,
+	      loserID: '',
+	      tweet: ''
 	    };
 
 	    // Channel for the game data to be sent on
@@ -20320,6 +20387,20 @@
 	  }, {
 	    key: 'updateOnListener',
 	    value: function updateOnListener(response) {
+
+	      // Someone lost
+	      if (response.message.lost != null) {
+	        if (response.message.lost == this.props.pubnubDemo.getUUID()) {
+	          this.setState({
+	            endStatus: -1
+	          });
+	        } else {
+	          this.setState({
+	            endStatus: 1,
+	            loserID: response.message.lost
+	          });
+	        }
+	      }
 	      // Updates deck
 	      if (response.message.deck != null) {
 	        console.log("size of deck is ", response.message.deck.length);
@@ -20519,7 +20600,7 @@
 	        });
 
 	        // Check if the current user has lost the game
-	        if (this.state.points >= 200) {
+	        if (this.state.points >= 30) {
 	          this.lose();
 	        }
 	      }
@@ -20532,7 +20613,13 @@
 	  }, {
 	    key: 'lose',
 	    value: function lose() {
-	      console.log("YOU LOST");
+	      this.props.pubnubDemo.publish({
+	        message: {
+	          lost: this.props.pubnubDemo.getUUID()
+	        },
+
+	        channel: this.gameChannel
+	      });
 	    }
 
 	    /*
@@ -20774,20 +20861,28 @@
 	  }, {
 	    key: 'drawFromDeck',
 	    value: function drawFromDeck() {
-	      var card = this.state.deck[0];
+	      var card = this.state.deck[0]; // Top card of deck
+
+	      // Update the deck in this user's state
 	      this.setState({
 	        deck: this.state.deck.slice(1)
 	      });
+
+	      // Current user's index in the array of usersPlaying
 	      var indexInUsers = this.getUserIndex();
 
+	      // Update the card to be added and whether the user has drawn in the user's state
 	      this.setState({
 	        cardToAdd: card,
 	        hasDrawn: true
 	      });
 
-	      // update deck
+	      // Update the deck
+	      // If there are cards left, just remove the card
+	      // If there are no cards left, reshuffle the discard (except top card) back into deck
 	      if (this.state.deck.length > 1) {
-	        // deck still valid
+	        // Deck still valid
+	        // Publish a packet with the new deck
 	        this.props.pubnubDemo.publish({
 	          message: {
 	            deck: this.state.deck.slice(1)
@@ -20795,8 +20890,9 @@
 	          channel: this.gameChannel
 	        });
 	      } else {
-	        // deck out and need to reshuffle discard into it
+	        // Deck out and need to reshuffle discard into it
 	        var newDeck = this.shuffle(this.state.discard.slice(1));
+	        // Publish a packet with the new deck
 	        this.props.pubnubDemo.publish({
 	          message: {
 	            deck: newDeck,
@@ -20807,17 +20903,31 @@
 	        });
 	      }
 	    }
+
+	    /*
+	     * Draw a card from the discard pile
+	     */
+
 	  }, {
 	    key: 'drawFromDiscard',
 	    value: function drawFromDiscard() {
-	      var card = this.state.discard.shift();
+	      var card = this.state.discard[0]; // Top card of discard
+
+	      // Update the discard in this user's state
+	      this.setState({
+	        discard: this.state.discard.slice(1)
+	      });
+
+	      // Current user's index in the array of usersPlaying
 	      var indexInUsers = this.getUserIndex();
+
+	      // Update the card to be added and whether the user has drawn in the user's state
 	      this.setState({
 	        cardToAdd: card,
 	        hasDrawn: true
 	      });
 
-	      // update discard
+	      // Publish packet telling users to update discard and lastPlay
 	      this.props.pubnubDemo.publish({
 	        message: {
 	          discard: this.state.discard,
@@ -20826,23 +20936,37 @@
 	        channel: this.gameChannel
 	      });
 	    }
+
+	    /*
+	     * Callback handler for playing a hand
+	     */
+
 	  }, {
 	    key: 'playHand',
 	    value: function playHand() {
 	      console.log("My turn to play!");
+	      // It is the current user's turn
 	      this.setState({
 	        isTurn: true
 	      });
 	    }
+
+	    /*
+	     * Callback handler for when Yusef is called
+	     */
+
 	  }, {
 	    key: 'yusef',
 	    value: function yusef() {
+	      // Cannot call Yusef until 3rd turn
 	      if (this.state.turnNumber < 3) {
 	        console.log("Can't call yusef yet!");
 	        return;
 	      }
-	      var myCount = this.summ(this.state.hand);
+	      var myCount = this.summ(this.state.hand); // Determine the score of the current user's hand
 	      console.log("called yusef with hand of value ", myCount);
+
+	      // Publish a packet for other users to check the Yusef call of the current user
 	      this.props.pubnubDemo.publish({
 	        message: {
 	          dealing: false,
@@ -20856,24 +20980,60 @@
 	        channel: this.gameChannel
 	      });
 	    }
+
+	    /*
+	     * Determine the score of a hand
+	     */
+
 	  }, {
 	    key: 'summ',
 	    value: function summ(arr) {
-	      var count = 0;
+	      var count = 0; // Initialize the count
 	      var i;
 	      console.log(this.state.hand);
+
+	      // For each card, add its value to the total count
 	      for (i = 0; i < this.state.hand.length; i++) {
 	        if (this.state.hand[i].charCodeAt(0) <= "9".charCodeAt(0) && this.state.hand[i].charCodeAt(0) >= "2".charCodeAt(0)) {
+	          // Card between 2 and 9
 	          count += this.state.hand[i].charCodeAt(0) - "0".charCodeAt(0);
 	        } else if (this.state.hand[i].slice(0, 1) == "A") {
+	          // Card is an Ace
 	          count += 1;
 	        } else {
+	          // Card is a royal (10 J Q K)
 	          count += 10;
 	        }
 	      }
+
 	      console.log(count);
 	      return count;
 	    }
+	  }, {
+	    key: 'postTwitter',
+	    value: function postTwitter(event) {
+	      event.preventDefault();
+	      this.setState({
+	        tweet: this.refs.inputText.value
+	      }, function (response) {
+	        _axios2.default.get('/post_status', {
+	          params: {
+	            ID: this.state.loserID,
+	            message: this.state.tweet
+	          }
+	        }).then(function (response) {
+	          console.log(response);
+	        }).catch(function (error) {
+	          console.log(error);
+	        });
+	        window.location = '/';
+	      }.bind(this));
+	    }
+
+	    /*
+	     * Render the HTML for this React element
+	     */
+
 	  }, {
 	    key: 'render',
 	    value: function render() {
@@ -20898,21 +21058,9 @@
 	        ),
 	        _react2.default.createElement(
 	          'div',
-	          { id: 'deckCards', style: { display: this.state.callStatus == 0 ? "block" : "none" } },
-	          'Deck Cards: ',
-	          this.state.deck
-	        ),
-	        _react2.default.createElement(
-	          'div',
 	          { id: 'discard', style: { display: this.state.callStatus == 0 ? "block" : "none" } },
 	          'Discard Pile Size: ',
 	          this.state.discard.length
-	        ),
-	        _react2.default.createElement(
-	          'div',
-	          { id: 'discardCards', style: { display: this.state.callStatus == 0 ? "block" : "none" } },
-	          'Discard Cards: ',
-	          this.state.discard
 	        ),
 	        _react2.default.createElement(
 	          'div',
@@ -20930,14 +21078,14 @@
 	        _react2.default.createElement(
 	          'div',
 	          null,
-	          this.state.allHands.map(function (name, index) {
+	          Array(this.props.usersPlaying ? this.props.usersPlaying.length : 0).fill(" ").map(function (name, index) {
 	            return _react2.default.createElement(
 	              'div',
 	              { className: 'col-md-2', style: { display: index != _this2.getUserIndex() ? "block" : "none" } },
 	              'Player ',
 	              index + 1,
 	              ' : Cards ',
-	              _this2.state.allHands[index],
+	              _this2.state.allHands ? _this2.state.allHands[index] : 0,
 	              '  '
 	            );
 	          })
@@ -21028,6 +21176,28 @@
 	          'div',
 	          { id: 'failCall', style: { display: this.state.callStatus == -2 ? "block" : "none" } },
 	          'Another Players Call Failed!'
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          { id: 'lost', style: { display: this.state.endStatus == -1 ? "block" : "none" } },
+	          'Oh no! You lost! Players are currently posting on your Twitter.'
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          { id: 'won', style: { display: this.state.endStatus == 1 ? "block" : "none" } },
+	          _react2.default.createElement(
+	            'form',
+	            { onSubmit: this.postTwitter },
+	            _react2.default.createElement('input', { type: 'text', className: 'form-control', id: 'test',
+	              placeholder: 'Loser\'s new status',
+	              ref: 'inputText',
+	              'aria-describedby': 'basic-addon1' }),
+	            _react2.default.createElement(
+	              'button',
+	              { type: 'submit', className: 'btn btn-md btn-default' },
+	              'Post!'
+	            )
+	          )
 	        )
 	      );
 	    }
