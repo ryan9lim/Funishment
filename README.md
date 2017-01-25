@@ -8,7 +8,6 @@ The easiest way to run the app:
 The index page is hosted at 'localhost:8080/'
 The room page is hosted at 'localhost:8080/room'
 
-<<<<<<< HEAD
 If there are new Javascript libraries and/or Python modules to install, run:
 
 1. 'npm install'
@@ -17,4 +16,3 @@ If there are new Javascript libraries and/or Python modules to install, run:
 npm install -g webpack
 npm install
 pip install -r requirements.txt
->>>>>>> 21cbd80a333191e09d582932353c02475bbfe8e5
