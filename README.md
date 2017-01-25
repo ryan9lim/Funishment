@@ -7,9 +7,11 @@ Players start by either creating their own room or joining a preexisting room, a
 
 Funishment was built using ReactJS and PubNub's Publish/Subscribe model. We used the publish/subscribe model to buid a turn-based game with multiple channels/rooms. 
 
-How to build and run the app:
+
+#How to build and run the app:
 
 On terminal:
+
 1. Leave one tab running 'webpack --watch'
 2. Leave one tab running 'python app.py'
 
